@@ -117,7 +117,7 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Travel Smarter
+              Travel-Smarter
               <br />
               <span className="gradient-text">with AI</span>
             </motion.h1>
