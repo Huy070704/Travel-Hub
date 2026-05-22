@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { RootLayout } from "./components/RootLayout";
 import { LandingPage } from "./pages/LandingPage";
+import { AuthPage } from "./pages/AuthPage";
 import { AIRecommendationPage } from "./pages/AIRecommendationPage";
 import { DestinationDetailPage } from "./pages/DestinationDetailPage";
 import { ItineraryPlannerPage } from "./pages/ItineraryPlannerPage";
@@ -10,6 +11,10 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 
 export const router = createBrowserRouter([
+  {
+    path: "/auth",
+    Component: AuthPage,
+  },
   {
     path: "/",
     Component: RootLayout,
