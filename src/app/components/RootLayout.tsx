@@ -71,13 +71,15 @@ export function RootLayout() {
             {/* CTA Button */}
             <div className="hidden md:flex items-center gap-3">
               <DarkModeToggle />
-              <motion.button
-                className="px-6 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Sign Up
-              </motion.button>
+              <Link to="/auth">
+                <motion.button
+                  className="px-6 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Sign In
+                </motion.button>
+              </Link>
             </div>
           </div>
         </div>
