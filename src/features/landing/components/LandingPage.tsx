@@ -17,9 +17,9 @@ import {
   Heart,
   Calendar
 } from "lucide-react";
-import { GlowingButton } from "../components/GlowingButton";
-import { FloatingBlob } from "../components/AnimatedBackground";
-import { FloatingIllustrations } from "../components/FloatingIllustrations";
+import { GlowingButton } from "../../../components/shared/GlowingButton";
+import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
+import { FloatingIllustrations } from "../../../components/shared/FloatingIllustrations";
 
 export function LandingPage() {
   const trendingDestinations = [

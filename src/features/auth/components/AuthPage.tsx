@@ -13,9 +13,9 @@ import {
   Compass,
   Globe
 } from "lucide-react";
-import { FloatingBlob } from "../components/AnimatedBackground";
-import { GlowingButton } from "../components/GlowingButton";
-import { DarkModeToggle } from "../components/DarkModeToggle";
+import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
+import { GlowingButton } from "../../../components/shared/GlowingButton";
+import { DarkModeToggle } from "../../../components/shared/DarkModeToggle";
 
 export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
