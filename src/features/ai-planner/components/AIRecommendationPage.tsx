@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Star
 } from "lucide-react";
-import { FloatingBlob } from "../components/AnimatedBackground";
+import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 
 export function AIRecommendationPage() {
   const [isLoading, setIsLoading] = useState(false);

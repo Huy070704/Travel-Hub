@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Plane, Compass, Users, MessageCircle, User, Shield } from "lucide-react";
-import { AnimatedBackground } from "./AnimatedBackground";
-import { DarkModeToggle } from "./DarkModeToggle";
+import { AnimatedBackground } from "../components/shared/AnimatedBackground";
+import { DarkModeToggle } from "../components/shared/DarkModeToggle";
 import { motion, AnimatePresence } from "motion/react";
 
 export function RootLayout() {

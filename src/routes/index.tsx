@@ -1,0 +1,32 @@
+import { createBrowserRouter } from "react-router";
+import { RootLayout } from "../layouts/RootLayout";
+import { LandingPage } from "../features/landing/components/LandingPage";
+import { AuthPage } from "../features/auth/components/AuthPage";
+import { AIRecommendationPage } from "../features/ai-planner/components/AIRecommendationPage";
+import { DestinationDetailPage } from "../features/destinations/components/DestinationDetailPage";
+import { ItineraryPlannerPage } from "../features/ai-planner/components/ItineraryPlannerPage";
+import { CommunityFeedPage } from "../features/feed/components/CommunityFeedPage";
+import { ChatPage } from "../features/chat/components/ChatPage";
+import { ProfilePage } from "../features/profile/components/ProfilePage";
+import { AdminDashboardPage } from "../features/dashboard/components/AdminDashboardPage";
+
+export const router = createBrowserRouter([
+  {
+    path: "/auth",
+    Component: AuthPage,
+  },
+  {
+    path: "/",
+    Component: RootLayout,
+    children: [
+      { index: true, Component: LandingPage },
+      { path: "discover", Component: AIRecommendationPage },
+      { path: "destination/:id", Component: DestinationDetailPage },
+      { path: "itinerary/:id", Component: ItineraryPlannerPage },
+      { path: "community", Component: CommunityFeedPage },
+      { path: "chat/:userId?", Component: ChatPage },
+      { path: "profile/:userId?", Component: ProfilePage },
+      { path: "admin", Component: AdminDashboardPage },
+    ],
+  },
+]);
