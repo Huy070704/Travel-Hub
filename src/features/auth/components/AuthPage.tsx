@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Mail,
   Lock,
@@ -18,17 +19,43 @@ import { GlowingButton } from "../../../components/shared/GlowingButton";
 import { DarkModeToggle } from "../../../components/shared/DarkModeToggle";
 
 export function AuthPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle authentication logic
-    console.log("Form submitted:", formData);
+    setIsLoading(true);
+    setErrorMsg("");
+    
+    try {
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      if (error.response && error.response.data) {
+        setErrorMsg(
+          typeof error.response.data === "string" 
+            ? error.response.data 
+            : error.response.data.message || "Invalid email or password."
+        );
+      } else {
+        setErrorMsg("Network error. Please try again later.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -332,8 +359,14 @@ export function AuthPage() {
                   </button>
                 </div>
 
-                <GlowingButton className="w-full">
-                  Sign In
+                {errorMsg && (
+                  <div className="text-red-500 text-sm font-semibold text-center bg-red-500/10 py-2 rounded-lg">
+                    {errorMsg}
+                  </div>
+                )}
+
+                <GlowingButton type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </GlowingButton>
               </form>
             </div>

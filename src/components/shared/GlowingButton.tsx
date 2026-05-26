@@ -7,6 +7,8 @@ interface GlowingButtonProps {
   className?: string;
   onClick?: () => void;
   href?: string;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 export function GlowingButton({
@@ -14,7 +16,9 @@ export function GlowingButton({
   variant = "primary",
   className = "",
   onClick,
-  href
+  href,
+  disabled,
+  type
 }: GlowingButtonProps) {
   const variants = {
     primary: "from-primary to-secondary hover:shadow-primary/50",
@@ -28,6 +32,8 @@ export function GlowingButton({
     <Component
       href={href}
       onClick={onClick}
+      disabled={disabled}
+      type={type}
       className={`relative px-8 py-4 bg-gradient-to-r ${variants[variant]} text-white rounded-full font-semibold overflow-hidden group ${className}`}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}

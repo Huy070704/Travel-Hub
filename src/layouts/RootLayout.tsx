@@ -1,16 +1,25 @@
-import { Outlet, Link, useLocation } from "react-router";
-import { Plane, Compass, Users, MessageCircle, User, Shield } from "lucide-react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import { Plane, Compass, Users, MessageCircle, User, Shield, LogOut } from "lucide-react";
 import { AnimatedBackground } from "../components/shared/AnimatedBackground";
 import { DarkModeToggle } from "../components/shared/DarkModeToggle";
 import { motion, AnimatePresence } from "motion/react";
+import { useAuth } from "../contexts/AuthContext";
 
 export function RootLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const displayEmail = user?.email || user?.username || "User";
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
     if (path !== "/" && location.pathname.startsWith(path)) return true;
     return false;
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/auth", { replace: true });
   };
 
   const navLinks = [
@@ -71,15 +80,21 @@ export function RootLayout() {
             {/* CTA Button */}
             <div className="hidden md:flex items-center gap-3">
               <DarkModeToggle />
-              <Link to="/auth">
+              <div className="flex items-center gap-3">
+                <div className="max-w-[220px] truncate px-4 py-2 rounded-full bg-muted text-sm font-semibold text-foreground">
+                  {displayEmail}
+                </div>
                 <motion.button
-                  className="px-6 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary"
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Sign In
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
                 </motion.button>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -101,6 +116,14 @@ export function RootLayout() {
                 <span className="text-xs">{label}</span>
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-muted-foreground transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-xs">Logout</span>
+            </button>
           </div>
         </div>
       </nav>
