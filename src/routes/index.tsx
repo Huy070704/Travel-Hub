@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { RootLayout } from "../layouts/RootLayout";
 import { LandingPage } from "../features/landing/components/LandingPage";
 import { AuthPage } from "../features/auth/components/AuthPage";
@@ -9,15 +9,36 @@ import { CommunityFeedPage } from "../features/feed/components/CommunityFeedPage
 import { ChatPage } from "../features/chat/components/ChatPage";
 import { ProfilePage } from "../features/profile/components/ProfilePage";
 import { AdminDashboardPage } from "../features/dashboard/components/AdminDashboardPage";
+import { useAuth } from "../contexts/AuthContext";
+
+function ProtectedRoute() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <RootLayout />;
+}
+
+function PublicOnlyRoute() {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <AuthPage />;
+}
 
 export const router = createBrowserRouter([
   {
     path: "/auth",
-    Component: AuthPage,
+    Component: PublicOnlyRoute,
   },
   {
     path: "/",
-    Component: RootLayout,
+    Component: ProtectedRoute,
     children: [
       { index: true, Component: LandingPage },
       { path: "discover", Component: AIRecommendationPage },
