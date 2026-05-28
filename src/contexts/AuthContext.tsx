@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { loginRequest } from "@/api/authApi";
+import { loginRequest, googleLoginRequest } from "@/api/authApi";
 import type { AuthUser, LoginCredentials } from "@/types/auth";
 
 type AuthContextValue = {
@@ -8,6 +8,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -51,6 +52,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
   };
 
+  const googleLogin = async (idToken: string) => {
+    const data = await googleLoginRequest(idToken);
+    const loggedInUser: AuthUser = {
+      userID: data.userID,
+      username: data.username,
+      email: data.username, // using username as email fallback if needed
+    };
+
+    localStorage.setItem("token", data.accessToken);
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+    } else {
+      localStorage.removeItem("refreshToken");
+    }
+    localStorage.setItem("user", JSON.stringify(loggedInUser));
+
+    setToken(data.accessToken);
+    setUser(loggedInUser);
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -66,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAuthenticated: Boolean(token),
       login,
+      googleLogin,
       logout,
     }),
     [token, user]

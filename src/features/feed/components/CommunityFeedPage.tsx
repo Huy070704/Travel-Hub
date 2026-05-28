@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import {
   Heart,
@@ -10,103 +11,106 @@ import {
   Send,
   Filter,
   TrendingUp,
-  Plane
+  Plane,
+  Loader2
 } from "lucide-react";
+import { getPosts, createPost, toggleLike } from "@/api/feedApi";
+import { getBuddyRecommendations } from "@/api/buddiesApi";
+import { getTrendingDestinations } from "@/api/destinationsApi";
+import { getMyProfile } from "@/api/usersApi";
+import type { PostDto } from "@/types/feed";
+import type { BuddyRecommendationDto } from "@/types/buddies";
+import type { DestinationDto } from "@/types/destinations";
+import type { UserProfileDto } from "@/types/users";
+
+const getPostImage = (id: number) => {
+  const images = [
+    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800",
+    "https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=800",
+    "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
+    "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800"
+  ];
+  return images[id % images.length];
+};
+
+const getAvatar = (id: number) => {
+  const avatars = [
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"
+  ];
+  return avatars[id % avatars.length];
+};
 
 export function CommunityFeedPage() {
-  const posts = [
-    {
-      id: 1,
-      user: {
-        id: 1,
-        name: "Sarah Chen",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-        university: "UC Berkeley",
-      },
-      destination: "Tokyo, Japan",
-      dates: "Jun 15-22, 2026",
-      budget: "$800-1000",
-      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800",
-      caption:
-        "Looking for 2 travel buddies to split accommodation costs in Tokyo! Planning to explore Shibuya, visit TeamLab, and try all the ramen spots 🍜",
-      tags: ["Culture", "Food", "Photography"],
-      likes: 48,
-      comments: 12,
-      posted: "2 hours ago",
-      lookingForBuddies: true,
-      spotsLeft: 2,
-    },
-    {
-      id: 2,
-      user: {
-        id: 2,
-        name: "Marcus Johnson",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-        university: "NYU",
-      },
-      destination: "Barcelona, Spain",
-      dates: "Jul 1-8, 2026",
-      budget: "$600-800",
-      image: "https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=800",
-      caption:
-        "Just finished an amazing week in Barcelona! Here's my budget breakdown and tips. DM if you need recommendations! The beaches were incredible 🏖️",
-      tags: ["Beach", "Architecture", "Nightlife"],
-      likes: 127,
-      comments: 24,
-      posted: "1 day ago",
-      lookingForBuddies: false,
-    },
-    {
-      id: 3,
-      user: {
-        id: 3,
-        name: "Emma Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-        university: "MIT",
-      },
-      destination: "Bali, Indonesia",
-      dates: "Aug 10-20, 2026",
-      budget: "$500-700",
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
-      caption:
-        "Planning a digital nomad trip to Bali! Working remote while exploring. Looking for others who might want to join for coworking sessions ☕💻",
-      tags: ["Beach", "Digital Nomad", "Wellness"],
-      likes: 89,
-      comments: 18,
-      posted: "3 days ago",
-      lookingForBuddies: true,
-      spotsLeft: 3,
-    },
-    {
-      id: 4,
-      user: {
-        id: 4,
-        name: "Alex Kim",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-        university: "Stanford",
-      },
-      destination: "Iceland",
-      dates: "Sep 5-12, 2026",
-      budget: "$1200-1500",
-      image: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800",
-      caption:
-        "Road trip around Iceland's Ring Road! Splitting car rental costs. Experience level: beginner adventurers welcome! 🚗❄️",
-      tags: ["Adventure", "Nature", "Photography"],
-      likes: 156,
-      comments: 31,
-      posted: "5 days ago",
-      lookingForBuddies: true,
-      spotsLeft: 1,
-    },
-  ];
+  const [posts, setPosts] = useState<PostDto[]>([]);
+  const [buddies, setBuddies] = useState<BuddyRecommendationDto[]>([]);
+  const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfileDto | null>(null);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPosting, setIsPosting] = useState(false);
 
-  const trendingDestinations = [
-    { name: "Bali", posts: 234, trending: true },
-    { name: "Tokyo", posts: 189, trending: true },
-    { name: "Barcelona", posts: 167, trending: false },
-    { name: "Thailand", posts: 143, trending: true },
-    { name: "Portugal", posts: 128, trending: false },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [profile, postsData, buddiesData, trendingDests] = await Promise.all([
+          getMyProfile().catch(() => null),
+          getPosts(1, 20).catch(() => ({ items: [] as PostDto[], totalCount: 0, page: 1, pageSize: 20, totalPages: 0 })),
+          getBuddyRecommendations().catch(() => []),
+          getTrendingDestinations(5).catch(() => [])
+        ]);
+        setUserProfile(profile);
+        setPosts(postsData.items);
+        setBuddies(buddiesData);
+        setTrendingDestinations(trendingDests);
+      } catch (error) {
+        console.error("Failed to load community data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) return;
+    setIsPosting(true);
+    try {
+      await createPost({
+        postType: "Text",
+        title: "Community Update",
+        content: newPostContent
+      });
+      setNewPostContent("");
+      // Refresh posts
+      const postsData = await getPosts(1, 20);
+      setPosts(postsData.items);
+    } catch (error) {
+      console.error("Failed to create post", error);
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const handleLike = async (postId: number) => {
+    try {
+      const res = await toggleLike(postId);
+      setPosts(posts.map(p => p.postID === postId ? { ...p, likesCount: res.likesCount } : p));
+    } catch (error) {
+      console.error("Failed to toggle like", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,24 +137,35 @@ export function CommunityFeedPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center gap-4 mb-4">
                 <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200"
+                  src={userProfile?.avatarURL || getAvatar(0)}
                   alt="You"
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
                 />
                 <input
                   type="text"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
                   placeholder="Share your travel plans or experiences..."
                   className="flex-1 px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
+                  disabled={isPosting}
                 />
+                <button 
+                  onClick={handleCreatePost}
+                  disabled={isPosting || !newPostContent.trim()}
+                  className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all"
+                >
+                  {isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">Add Destination</span>
+                  <span className="text-sm font-medium">Add Destination</span>
                 </button>
                 <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
                   <Users className="w-4 h-4" />
-                  <span className="text-sm">Find Buddies</span>
+                  <span className="text-sm font-medium">Find Buddies</span>
                 </button>
               </div>
             </div>
@@ -167,110 +182,80 @@ export function CommunityFeedPage() {
               <button className="px-4 py-2 bg-white text-foreground rounded-full whitespace-nowrap hover:bg-muted transition-all">
                 Trip Reports
               </button>
-              <button className="px-4 py-2 bg-white text-foreground rounded-full whitespace-nowrap hover:bg-muted transition-all">
-                Budget Tips
-              </button>
             </div>
 
             {/* Posts */}
-            {posts.map((post) => (
-              <div key={post.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {posts.length > 0 ? posts.map((post) => (
+              <div key={post.postID} className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 {/* Post Header */}
                 <div className="p-6 pb-4">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <Link to={`/profile/${post.user.id}`}>
+                      <Link to={`/profile/${post.userID}`}>
                         <img
-                          src={post.user.avatar}
-                          alt={post.user.name}
+                          src={getAvatar(post.userID)}
+                          alt={post.username}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       </Link>
                       <div>
-                        <Link to={`/profile/${post.user.id}`} className="font-semibold hover:text-primary">
-                          {post.user.name}
+                        <Link to={`/profile/${post.userID}`} className="font-semibold hover:text-primary text-lg">
+                          {post.username}
                         </Link>
-                        <div className="text-sm text-muted-foreground">{post.user.university}</div>
-                        <div className="text-xs text-muted-foreground">{post.posted}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(post.creationDate).toLocaleString()}</div>
                       </div>
-                    </div>
-                    {post.lookingForBuddies && (
-                      <div className="px-3 py-1 bg-accent/10 text-accent rounded-full text-xs font-semibold flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        <span>{post.spotsLeft} spots left</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Trip Info */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <div className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                      <MapPin className="w-3 h-3" />
-                      <span>{post.destination}</span>
-                    </div>
-                    <div className="flex items-center gap-1 px-3 py-1 bg-muted rounded-full text-sm">
-                      <Calendar className="w-3 h-3" />
-                      <span>{post.dates}</span>
-                    </div>
-                    <div className="flex items-center gap-1 px-3 py-1 bg-muted rounded-full text-sm">
-                      <DollarSign className="w-3 h-3" />
-                      <span>{post.budget}</span>
                     </div>
                   </div>
 
                   {/* Caption */}
-                  <p className="text-foreground mb-3">{post.caption}</p>
+                  <h3 className="font-bold mb-1">{post.title}</h3>
+                  <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tag, index) => (
-                      <span key={index} className="text-xs text-primary">
-                        #{tag}
-                      </span>
-                    ))}
+                {/* Optional Post Image (simulated for realism) */}
+                {(post.postID % 2 === 0) && (
+                  <div className="relative aspect-[4/3]">
+                    <img
+                      src={getPostImage(post.postID)}
+                      alt="Post"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-
-                {/* Post Image */}
-                <div className="relative aspect-[4/3]">
-                  <img
-                    src={post.image}
-                    alt={post.destination}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                )}
 
                 {/* Post Actions */}
-                <div className="p-6 pt-4">
+                <div className="p-6 pt-4 border-t border-border/50">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-6">
-                      <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-all">
-                        <Heart className="w-5 h-5" />
-                        <span className="text-sm font-semibold">{post.likes}</span>
+                      <button 
+                        onClick={() => handleLike(post.postID)}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-all"
+                      >
+                        <Heart className={`w-5 h-5 ${post.likesCount > 0 ? "fill-red-500 text-red-500" : ""}`} />
+                        <span className="text-sm font-semibold">{post.likesCount}</span>
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
                         <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-semibold">{post.comments}</span>
+                        <span className="text-sm font-semibold">Comment</span>
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
                         <Share2 className="w-5 h-5" />
                       </button>
                     </div>
-                    {post.lookingForBuddies && (
-                      <Link
-                        to={`/chat/${post.user.id}`}
-                        className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2"
-                      >
-                        <Send className="w-4 h-4" />
-                        <span>Message</span>
-                      </Link>
-                    )}
+                    {/* Add connect button if we had lookingForBuddies flag */}
+                    <Link
+                      to={`/chat/${post.userID}`}
+                      className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Message</span>
+                    </Link>
                   </div>
 
                   {/* Comment Input */}
                   <div className="flex items-center gap-3">
                     <img
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200"
+                      src={userProfile?.avatarURL || getAvatar(0)}
                       alt="You"
                       className="w-8 h-8 rounded-full object-cover"
                     />
@@ -282,7 +267,12 @@ export function CommunityFeedPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="bg-white rounded-2xl shadow-lg p-12 text-center text-muted-foreground">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No posts yet. Be the first to share your journey!</p>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -291,72 +281,60 @@ export function CommunityFeedPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-20">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-5 h-5 text-primary" />
-                <h3 className="font-bold">Trending Destinations</h3>
+                <h3 className="font-bold">Trending Places</h3>
               </div>
               <div className="space-y-3">
-                {trendingDestinations.map((dest, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-all">
-                    <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {dest.name}
-                        {dest.trending && (
+                {trendingDestinations.length > 0 ? trendingDestinations.map((dest) => (
+                  <Link key={dest.destinationID} to={`/destination/${dest.destinationID}`}>
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-all cursor-pointer">
+                      <div>
+                        <div className="font-semibold flex items-center gap-2">
+                          {dest.name}
                           <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                        )}
+                        </div>
+                        <div className="text-xs text-muted-foreground line-clamp-1">{dest.cityProvince}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">{dest.posts} posts</div>
+                      <Plane className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <Plane className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                ))}
+                  </Link>
+                )) : (
+                  <div className="text-sm text-muted-foreground">No trending destinations.</div>
+                )}
               </div>
             </div>
 
             {/* Suggested Users */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-bold mb-4">Suggested Travel Buddies</h3>
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Suggested Buddies
+              </h3>
               <div className="space-y-4">
-                {[
-                  {
-                    id: 5,
-                    name: "Jessica Park",
-                    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200",
-                    university: "UCLA",
-                    commonInterests: 3,
-                  },
-                  {
-                    id: 6,
-                    name: "David Miller",
-                    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200",
-                    university: "Harvard",
-                    commonInterests: 5,
-                  },
-                  {
-                    id: 7,
-                    name: "Sophie Taylor",
-                    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
-                    university: "Yale",
-                    commonInterests: 4,
-                  },
-                ].map((user) => (
-                  <div key={user.id} className="flex items-center gap-3">
-                    <Link to={`/profile/${user.id}`}>
+                {buddies.length > 0 ? buddies.map((buddy) => (
+                  <div key={buddy.userID} className="flex items-center gap-3">
+                    <Link to={`/profile/${buddy.userID}`}>
                       <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
+                        src={buddy.avatarURL || getAvatar(buddy.userID)}
+                        alt={buddy.username}
+                        className="w-10 h-10 rounded-full object-cover border border-border"
                       />
                     </Link>
                     <div className="flex-1">
-                      <Link to={`/profile/${user.id}`} className="font-semibold text-sm hover:text-primary">
-                        {user.name}
+                      <Link to={`/profile/${buddy.userID}`} className="font-semibold text-sm hover:text-primary">
+                        {buddy.username}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{user.university}</div>
+                      <div className="text-xs text-muted-foreground">{buddy.matchScore}% Match</div>
                     </div>
-                    <button className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all">
-                      Follow
-                    </button>
+                    <Link 
+                      to={`/chat/${buddy.userID}`}
+                      className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all font-semibold"
+                    >
+                      Connect
+                    </Link>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-sm text-muted-foreground">No recommendations found yet. Update your profile to get matched!</div>
+                )}
               </div>
             </div>
           </div>

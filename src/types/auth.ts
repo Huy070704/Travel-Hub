@@ -9,9 +9,34 @@ export type LoginCredentials = {
   password: string;
 };
 
-export type LoginResponse = {
+export type AuthResponse = {
   accessToken: string;
-  refreshToken?: string;
-  userID?: string | number;
-  username?: string;
+  refreshToken: string;
+  userID: number;
+  username: string;
+};
+
+// Map LoginResponse to AuthResponse to maintain compatibility
+export type LoginResponse = AuthResponse;
+
+export type RegisterRequest = {
+  username: string;
+  email: string;
+  password: string;
+  fullName?: string;
+  studentCode?: string;
+};
+
+export type TokenRequest = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ChangePasswordRequest = {
+  oldPassword: string;
+  newPassword: string;
 };

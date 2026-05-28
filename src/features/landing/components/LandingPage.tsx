@@ -1,5 +1,6 @@
-import { Link } from "react-router";
-import { motion } from "motion/react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
   Sparkles,
@@ -15,39 +16,87 @@ import {
   Zap,
   Shield,
   Heart,
-  Calendar
+  Calendar,
+  CloudRain,
+  Sun,
+  Cloud,
+  Loader2,
+  X
 } from "lucide-react";
 import { GlowingButton } from "../../../components/shared/GlowingButton";
 import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 import { FloatingIllustrations } from "../../../components/shared/FloatingIllustrations";
+import { getTrendingDestinations } from "@/api/destinationsApi";
+import { getWeatherForecast } from "@/api/weatherApi";
+import { getAiRecommendations } from "@/api/aiApi";
+import type { DestinationDto } from "@/types/destinations";
+import type { WeatherForecastDto } from "@/types/weather";
+import type { AiRecommendResponse } from "@/types/ai";
+
+const getPlaceholderImage = (id: number) => {
+  const destImages = [
+    "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
+    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800",
+    "https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=800",
+    "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800",
+    "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800"
+  ];
+  return destImages[id % destImages.length];
+};
 
 export function LandingPage() {
-  const trendingDestinations = [
-    {
-      id: 1,
-      name: "Bali, Indonesia",
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
-      budget: "$400-600",
-      rating: 4.8,
-      travelers: "2.3k"
-    },
-    {
-      id: 2,
-      name: "Tokyo, Japan",
-      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800",
-      budget: "$800-1200",
-      rating: 4.9,
-      travelers: "4.2k"
-    },
-    {
-      id: 3,
-      name: "Barcelona, Spain",
-      image: "https://images.unsplash.com/photo-1562883676-8c7feb83f09b?w=800",
-      budget: "$500-700",
-      rating: 4.8,
-      travelers: "2.8k"
-    },
-  ];
+  const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
+  const [weathers, setWeathers] = useState<Record<number, WeatherForecastDto>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [aiResults, setAiResults] = useState<AiRecommendResponse[] | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const dests = await getTrendingDestinations(3);
+        setTrendingDestinations(dests);
+        
+        const weatherData: Record<number, WeatherForecastDto> = {};
+        for (const dest of dests) {
+          try {
+            const w = await getWeatherForecast(dest.destinationID, 1);
+            weatherData[dest.destinationID] = w;
+          } catch (e) {
+            console.error("Failed to load weather for", dest.name);
+          }
+        }
+        setWeathers(weatherData);
+      } catch (error) {
+        console.error("Failed to load trending", error);
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleAiSearch = async () => {
+    if (!searchQuery) return;
+    setIsAiLoading(true);
+    try {
+      const results = await getAiRecommendations({
+        budgetVND: 5000000, // Default generic budget
+        days: 3, // Default short trip
+        interests: searchQuery
+      });
+      setAiResults(results);
+    } catch (error) {
+      console.error("Failed to get AI recommendations", error);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const getWeatherIcon = (condition: string) => {
+    const c = condition.toLowerCase();
+    if (c.includes("rain") || c.includes("storm")) return <CloudRain className="w-4 h-4" />;
+    if (c.includes("cloud")) return <Cloud className="w-4 h-4" />;
+    return <Sun className="w-4 h-4" />;
+  };
 
   const features = [
     {
@@ -92,7 +141,7 @@ export function LandingPage() {
         <FloatingIllustrations />
 
         {/* Hero Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10 w-full mt-20">
           <motion.div
             className="text-center max-w-5xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
@@ -133,79 +182,78 @@ export function LandingPage() {
 
             {/* AI Search Box */}
             <motion.div
-              className="max-w-3xl mx-auto mb-12"
+              className="max-w-3xl mx-auto mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="glass rounded-2xl p-2 shadow-2xl neon-primary">
+              <div className="glass rounded-2xl p-2 shadow-2xl neon-primary relative z-50">
                 <div className="flex flex-col md:flex-row gap-2">
                   <div className="flex-1 flex items-center gap-3 px-6 py-4 bg-background/50 rounded-xl">
                     <Search className="w-5 h-5 text-muted-foreground" />
                     <input
                       type="text"
-                      placeholder="Where do you want to go? Ask our AI..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
+                      placeholder="e.g. 5 million VND budget, love beaches and food..."
                       className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
-                  <Link to="/discover">
-                    <GlowingButton>
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5" />
-                        <span>Get Started</span>
-                      </div>
-                    </GlowingButton>
-                  </Link>
+                  <GlowingButton onClick={handleAiSearch}>
+                    <div className="flex items-center gap-2">
+                      {isAiLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                      <span>{isAiLoading ? "Thinking..." : "AI Magic"}</span>
+                    </div>
+                  </GlowingButton>
                 </div>
               </div>
-            </motion.div>
 
-            {/* CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Link to="/discover">
-                <GlowingButton className="min-w-[200px]">
-                  Explore Destinations
-                </GlowingButton>
-              </Link>
-
-              {/* Google Login Button */}
-              <Link to="/auth">
-                <motion.button
-                  className="min-w-[200px] px-8 py-4 bg-white text-foreground rounded-full font-semibold shadow-lg hover:shadow-xl border border-border flex items-center justify-center gap-3"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
-                </motion.button>
-              </Link>
+              {/* Inline AI Results */}
+              <AnimatePresence>
+                {aiResults && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="overflow-hidden relative z-40"
+                  >
+                    <div className="glass rounded-2xl p-6 text-left shadow-2xl border border-primary/20">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          AI Recommendations
+                        </h3>
+                        <button onClick={() => setAiResults(null)} className="p-1 hover:bg-muted rounded-full">
+                          <X className="w-5 h-5 text-muted-foreground" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {aiResults.map((res, i) => (
+                          <div key={i} className="bg-background/80 p-4 rounded-xl border border-border">
+                            <h4 className="font-bold text-lg">{res.name}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">{res.cityProvince}</p>
+                            <p className="text-sm italic mb-2">"{res.matchReason}"</p>
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
+                              <span className="font-semibold text-primary">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(res.estimatedCostVND)}
+                              </span>
+                              <Link to={`/destination/${res.destinationID}`} className="text-sm text-primary hover:underline font-semibold">
+                                View Details &rarr;
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Stats */}
             <motion.div
-              className="flex flex-wrap items-center justify-center gap-8 text-sm"
+              className="flex flex-wrap items-center justify-center gap-8 text-sm mt-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -302,9 +350,9 @@ export function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-5 h-5 text-accent" />
-                <span className="text-sm text-accent uppercase tracking-wide font-semibold">Trending Now</span>
+                <span className="text-sm text-accent uppercase tracking-wide font-semibold">Live Data</span>
               </div>
-              <h2 className="text-4xl font-bold">Popular Destinations</h2>
+              <h2 className="text-4xl font-bold">Trending Destinations</h2>
             </div>
             <Link to="/discover">
               <motion.button
@@ -318,54 +366,71 @@ export function LandingPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {trendingDestinations.map((destination, index) => (
-              <motion.div
-                key={destination.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link to={`/destination/${destination.id}`}>
-                  <motion.div
-                    className="group relative overflow-hidden rounded-2xl glass hover:shadow-2xl transition-all"
-                    whileHover={{ y: -8 }}
-                  >
-                    <div className="aspect-[4/5] relative overflow-hidden">
-                      <motion.img
-                        src={destination.image}
-                        alt={destination.name}
-                        className="w-full h-full object-cover"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.6 }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            {trendingDestinations.map((destination, index) => {
+              const weather = weathers[destination.destinationID]?.forecasts[0];
 
-                      {/* Content */}
-                      <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <div className="flex items-center gap-2 text-white/90 text-sm mb-2">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>{destination.rating}</span>
-                          <span className="mx-1">•</span>
-                          <Users className="w-3 h-3" />
-                          <span>{destination.travelers}</span>
+              return (
+                <motion.div
+                  key={destination.destinationID}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link to={`/destination/${destination.destinationID}`}>
+                    <motion.div
+                      className="group relative overflow-hidden rounded-2xl glass hover:shadow-2xl transition-all"
+                      whileHover={{ y: -8 }}
+                    >
+                      <div className="aspect-[4/5] relative overflow-hidden">
+                        <motion.img
+                          src={getPlaceholderImage(destination.destinationID)}
+                          alt={destination.name}
+                          className="w-full h-full object-cover"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.6 }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                        {/* Weather Badge */}
+                        {weather && (
+                          <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/40 backdrop-blur-md text-white rounded-xl flex items-center gap-2 border border-white/10">
+                            {getWeatherIcon(weather.condition)}
+                            <span className="font-semibold text-sm">{weather.temperatureCelsius}°C</span>
+                          </div>
+                        )}
+
+                        {/* Trending Badge */}
+                        <div className="absolute top-4 right-4 px-3 py-1 bg-accent/90 backdrop-blur-sm text-white text-xs rounded-full font-semibold animate-pulse-glow">
+                          Trending
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">{destination.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-white/80">
-                          <DollarSign className="w-4 h-4" />
-                          <span>{destination.budget}</span>
+
+                        {/* Content */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <h3 className="text-2xl font-bold text-white mb-2">{destination.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-white/80">
+                            <DollarSign className="w-4 h-4" />
+                            <span>
+                              {destination.estimatedBaseCostVND 
+                                ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(destination.estimatedBaseCostVND) 
+                                : "N/A"
+                              }
+                            </span>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Trending Badge */}
-                      <div className="absolute top-4 right-4 px-3 py-1 bg-accent/90 backdrop-blur-sm text-white text-xs rounded-full font-semibold animate-pulse-glow">
-                        Trending
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
+                    </motion.div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+            
+            {trendingDestinations.length === 0 && (
+              <div className="col-span-3 text-center py-20 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                <p>Loading destinations...</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -432,63 +497,6 @@ export function LandingPage() {
               </motion.div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="relative py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="relative overflow-hidden rounded-3xl p-12 md:p-16 text-center text-white"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-          >
-            {/* Animated Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-purple-600 animate-gradient" />
-
-            {/* Glow Effect */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-
-            <div className="relative z-10">
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Zap className="w-4 h-4" />
-                <span className="text-sm font-semibold">Limited Time Offer</span>
-              </motion.div>
-
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Ready to Start Your Adventure?
-              </h2>
-              <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                Join thousands of students exploring the world on a budget
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/discover">
-                  <motion.button
-                    className="px-8 py-4 bg-white text-primary rounded-full font-semibold hover:shadow-2xl transition-all min-w-[200px]"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Get Started Free
-                  </motion.button>
-                </Link>
-                <Link to="/community">
-                  <motion.button
-                    className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white rounded-full font-semibold hover:bg-white/30 transition-all border border-white/30 min-w-[200px]"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Join Community
-                  </motion.button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 

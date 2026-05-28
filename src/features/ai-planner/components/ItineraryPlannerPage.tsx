@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router";
 import {
   MapPin,
   Clock,
@@ -14,508 +15,421 @@ import {
   ChevronUp,
   Sparkles,
   Navigation,
-  Star
+  Star,
+  Loader2,
+  Settings2,
+  ArrowLeft
 } from "lucide-react";
+import { generateAiItinerary } from "@/api/aiApi";
+import { getDestinationDetails } from "@/api/destinationsApi";
+import type { AiGenerateItineraryResponse, AiActivity } from "@/types/ai";
+import type { DestinationDto } from "@/types/destinations";
 
 export function ItineraryPlannerPage() {
-  const [expandedDay, setExpandedDay] = useState<number | null>(1);
+  const { id } = useParams();
+  const destinationId = Number(id);
 
-  const itinerary = [
-    {
-      day: 1,
-      title: "Arrival & Ubud Exploration",
-      activities: [
-        {
-          time: "09:00 AM",
-          period: "morning",
-          title: "Arrival at Ngurah Rai Airport",
-          description: "Pick up rental scooter or arrange airport transfer to Ubud",
-          duration: "1.5 hours",
-          cost: "$10",
-          type: "transport",
-          icon: Navigation,
-        },
-        {
-          time: "11:00 AM",
-          period: "morning",
-          title: "Check-in at Hostel",
-          description: "Drop bags at your accommodation in central Ubud",
-          duration: "30 min",
-          cost: "$15",
-          type: "accommodation",
-          icon: MapPin,
-        },
-        {
-          time: "12:00 PM",
-          period: "afternoon",
-          title: "Lunch at Local Warung",
-          description: "Try authentic Nasi Campur at Warung Biah Biah",
-          duration: "1 hour",
-          cost: "$3",
-          type: "food",
-          icon: Utensils,
-        },
-        {
-          time: "02:00 PM",
-          period: "afternoon",
-          title: "Sacred Monkey Forest Sanctuary",
-          description: "Explore the lush forest sanctuary and interact with playful monkeys",
-          duration: "2 hours",
-          cost: "$5",
-          type: "attraction",
-          icon: Camera,
-        },
-        {
-          time: "05:00 PM",
-          period: "evening",
-          title: "Ubud Traditional Art Market",
-          description: "Browse local crafts, textiles, and souvenirs",
-          duration: "1.5 hours",
-          cost: "$20",
-          type: "activity",
-          icon: MapPin,
-        },
-        {
-          time: "07:00 PM",
-          period: "evening",
-          title: "Dinner & Sunset at Café",
-          description: "Enjoy Indonesian cuisine with rice terrace views",
-          duration: "2 hours",
-          cost: "$8",
-          type: "food",
-          icon: Utensils,
-        },
-      ],
-    },
-    {
-      day: 2,
-      title: "Tegalalang & Cultural Sites",
-      activities: [
-        {
-          time: "06:30 AM",
-          period: "morning",
-          title: "Sunrise at Tegalalang Rice Terrace",
-          description: "Catch the stunning sunrise over iconic rice paddies",
-          duration: "2 hours",
-          cost: "$2",
-          type: "attraction",
-          icon: Sunrise,
-        },
-        {
-          time: "09:00 AM",
-          period: "morning",
-          title: "Breakfast with a View",
-          description: "Fresh tropical fruits and coffee overlooking terraces",
-          duration: "1 hour",
-          cost: "$5",
-          type: "food",
-          icon: Coffee,
-        },
-        {
-          time: "11:00 AM",
-          period: "afternoon",
-          title: "Tirta Empul Temple",
-          description: "Visit the holy spring water temple for cultural experience",
-          duration: "2 hours",
-          cost: "$3",
-          type: "attraction",
-          icon: Camera,
-        },
-        {
-          time: "02:00 PM",
-          period: "afternoon",
-          title: "Lunch in Tampaksiring",
-          description: "Local Indonesian dishes near the temple",
-          duration: "1 hour",
-          cost: "$4",
-          type: "food",
-          icon: Utensils,
-        },
-        {
-          time: "04:00 PM",
-          period: "afternoon",
-          title: "Coffee Plantation Tour",
-          description: "Learn about Luwak coffee and sample local varieties (free tasting!)",
-          duration: "1.5 hours",
-          cost: "Free",
-          type: "activity",
-          icon: Coffee,
-        },
-        {
-          time: "07:00 PM",
-          period: "evening",
-          title: "Traditional Dance Performance",
-          description: "Watch mesmerizing Kecak fire dance at Ubud Palace",
-          duration: "2 hours",
-          cost: "$7",
-          type: "activity",
-          icon: Camera,
-        },
-      ],
-    },
-    {
-      day: 3,
-      title: "Beach Day in Seminyak",
-      activities: [
-        {
-          time: "08:00 AM",
-          period: "morning",
-          title: "Drive to Seminyak",
-          description: "Scenic coastal drive from Ubud (rent scooter or share a ride)",
-          duration: "1.5 hours",
-          cost: "$5",
-          type: "transport",
-          icon: Navigation,
-        },
-        {
-          time: "10:00 AM",
-          period: "morning",
-          title: "Surfing Lesson",
-          description: "2-hour beginner-friendly surf lesson at Seminyak Beach",
-          duration: "2 hours",
-          cost: "$25",
-          type: "activity",
-          icon: Camera,
-        },
-        {
-          time: "12:30 PM",
-          period: "afternoon",
-          title: "Beach Club Lunch",
-          description: "Affordable lunch at beachfront café with ocean views",
-          duration: "1.5 hours",
-          cost: "$12",
-          type: "food",
-          icon: Utensils,
-        },
-        {
-          time: "03:00 PM",
-          period: "afternoon",
-          title: "Beach Relaxation",
-          description: "Sunbathe, swim, and enjoy the vibrant beach atmosphere",
-          duration: "3 hours",
-          cost: "Free",
-          type: "activity",
-          icon: Sun,
-        },
-        {
-          time: "06:00 PM",
-          period: "evening",
-          title: "Sunset at Potato Head",
-          description: "Watch spectacular sunset from iconic beach club",
-          duration: "1 hour",
-          cost: "$8",
-          type: "activity",
-          icon: Sunset,
-        },
-        {
-          time: "08:00 PM",
-          period: "evening",
-          title: "Dinner & Nightlife",
-          description: "Explore Seminyak's vibrant dining and bar scene",
-          duration: "3 hours",
-          cost: "$15",
-          type: "food",
-          icon: Utensils,
-        },
-      ],
-    },
-  ];
+  const [destination, setDestination] = useState<DestinationDto | null>(null);
+  const [itineraryData, setItineraryData] = useState<AiGenerateItineraryResponse | null>(null);
+  const [expandedDay, setExpandedDay] = useState<number | null>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Form State
+  const [days, setDays] = useState<number>(3);
+  const [travelStyle, setTravelStyle] = useState<string>("Budget");
+
+  useEffect(() => {
+    if (!destinationId) return;
+    const loadDest = async () => {
+      try {
+        const dest = await getDestinationDetails(destinationId);
+        setDestination(dest);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+    loadDest();
+  }, [destinationId]);
+
+  const handleGenerate = async () => {
+    if (!destination) return;
+    setIsLoading(true);
+    try {
+      const data = await generateAiItinerary({
+        destinationID: destination.destinationID,
+        days,
+        travelStyle
+      });
+      setItineraryData(data);
+      setExpandedDay(1);
+    } catch (error) {
+      console.error("Failed to generate", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper to infer icon/period from time string
+  const inferPeriodInfo = (timeStr: string, description: string) => {
+    const lowerTime = timeStr.toLowerCase();
+    const lowerDesc = description.toLowerCase();
+    
+    let period = "morning";
+    if (lowerTime.includes("pm")) {
+      const hourMatch = lowerTime.match(/(\d+)/);
+      if (hourMatch) {
+        const hour = parseInt(hourMatch[1]);
+        if (hour < 5 || hour === 12) period = "afternoon";
+        else period = "evening";
+      }
+    } else if (lowerTime.includes("night") || lowerTime.includes("evening")) {
+      period = "evening";
+    }
+
+    let icon = Navigation;
+    if (lowerDesc.includes("eat") || lowerDesc.includes("breakfast") || lowerDesc.includes("lunch") || lowerDesc.includes("dinner") || lowerDesc.includes("food") || lowerDesc.includes("restaurant")) {
+      icon = Utensils;
+    } else if (lowerDesc.includes("coffee") || lowerDesc.includes("cafe")) {
+      icon = Coffee;
+    } else if (lowerDesc.includes("temple") || lowerDesc.includes("museum") || lowerDesc.includes("explore") || lowerDesc.includes("visit")) {
+      icon = Camera;
+    }
+
+    return { period, icon };
+  };
 
   const getPeriodIcon = (period: string) => {
     switch (period) {
-      case "morning":
-        return Sunrise;
-      case "afternoon":
-        return Sun;
-      case "evening":
-        return Sunset;
-      default:
-        return Moon;
+      case "morning": return Sunrise;
+      case "afternoon": return Sun;
+      case "evening": return Sunset;
+      default: return Moon;
     }
   };
 
   const getPeriodColor = (period: string) => {
     switch (period) {
-      case "morning":
-        return "from-orange-400 to-yellow-400";
-      case "afternoon":
-        return "from-yellow-400 to-orange-500";
-      case "evening":
-        return "from-purple-500 to-pink-500";
-      default:
-        return "from-indigo-500 to-purple-600";
+      case "morning": return "from-orange-400 to-yellow-400";
+      case "afternoon": return "from-yellow-400 to-orange-500";
+      case "evening": return "from-purple-500 to-pink-500";
+      default: return "from-indigo-500 to-purple-600";
     }
   };
 
-  const totalCost = itinerary.reduce(
-    (sum, day) =>
-      sum +
-      day.activities.reduce((daySum, activity) => {
-        const cost = activity.cost.replace("$", "").toLowerCase();
-        return daySum + (cost === "free" ? 0 : parseFloat(cost));
-      }, 0),
+  if (isInitialLoad) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!destination) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <h2 className="text-2xl font-bold mb-4">Destination not found</h2>
+        <Link to="/discover" className="text-primary hover:underline">Go back to discover</Link>
+      </div>
+    );
+  }
+
+  const totalCost = itineraryData?.days.reduce(
+    (sum, day) => sum + day.activities.reduce((daySum, activity) => daySum + activity.estimatedCostVND, 0),
     0
-  );
+  ) || 0;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-secondary text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-br from-primary to-secondary text-white py-12 relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-black/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <Link to={`/destination/${destination.destinationID}`} className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to {destination.name}</span>
+          </Link>
+          
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold">AI-Generated Itinerary</h1>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">AI Itinerary Planner</h1>
           </div>
-          <p className="text-white/90 max-w-2xl mb-6">
-            Your personalized 7-day adventure in Bali, Indonesia
+          <p className="text-white/90 max-w-2xl mb-8 text-lg">
+            Let AI design the perfect journey for your trip to <span className="font-semibold">{destination.name}</span>
           </p>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full">
-              <MapPin className="w-4 h-4" />
-              <span>Bali, Indonesia</span>
+
+          {!itineraryData && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-2xl max-w-2xl">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Settings2 className="w-5 h-5" />
+                Customize Your Trip
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm text-white/80 mb-2">Number of Days</label>
+                  <select 
+                    value={days} 
+                    onChange={(e) => setDays(Number(e.target.value))}
+                    className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    {[1, 2, 3, 4, 5, 7].map(num => (
+                      <option key={num} value={num} className="text-black">{num} Days</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/80 mb-2">Travel Style</label>
+                  <select 
+                    value={travelStyle} 
+                    onChange={(e) => setTravelStyle(e.target.value)}
+                    className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    <option value="Budget" className="text-black">Budget / Backpacking</option>
+                    <option value="Luxury" className="text-black">Luxury / Comfort</option>
+                    <option value="Adventure" className="text-black">Adventure / Exploring</option>
+                    <option value="Relaxation" className="text-black">Relaxation / Beach</option>
+                  </select>
+                </div>
+              </div>
+              <button 
+                onClick={handleGenerate}
+                disabled={isLoading}
+                className="w-full py-4 bg-white text-primary rounded-xl font-bold text-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+              >
+                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6" />}
+                {isLoading ? "AI is generating your magical trip..." : "Generate Itinerary"}
+              </button>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full">
-              <Clock className="w-4 h-4" />
-              <span>7 Days</span>
+          )}
+
+          {itineraryData && (
+            <div className="flex flex-wrap gap-4 text-sm mt-4">
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10">
+                <MapPin className="w-4 h-4" />
+                <span className="font-medium">{destination.name}</span>
+              </div>
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10">
+                <Clock className="w-4 h-4" />
+                <span className="font-medium">{itineraryData.totalDays} Days • {travelStyle}</span>
+              </div>
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10">
+                <DollarSign className="w-4 h-4" />
+                <span className="font-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)} Est.</span>
+              </div>
+              <button onClick={() => setItineraryData(null)} className="flex items-center gap-2 px-5 py-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full transition-colors border border-white/10">
+                <Settings2 className="w-4 h-4" />
+                <span>Re-generate</span>
+              </button>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full">
-              <DollarSign className="w-4 h-4" />
-              <span>${totalCost.toFixed(0)} Total</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Timeline Navigation */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20 bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-bold mb-4">Trip Overview</h3>
-              <div className="space-y-2">
-                {itinerary.map((day) => (
-                  <button
-                    key={day.day}
-                    onClick={() => setExpandedDay(day.day)}
-                    className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                      expandedDay === day.day
-                        ? "bg-primary text-white"
-                        : "bg-muted hover:bg-muted/80"
-                    }`}
-                  >
-                    <div className="font-semibold mb-1">Day {day.day}</div>
-                    <div className={`text-sm ${expandedDay === day.day ? "text-white/80" : "text-muted-foreground"}`}>
-                      {day.title}
-                    </div>
-                  </button>
-                ))}
-              </div>
+        {!itineraryData && !isLoading && (
+          <div className="text-center py-20">
+            <Sparkles className="w-16 h-16 text-primary/20 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold text-foreground mb-2">Ready to plan?</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">Select your preferences above and let our AI craft a personalized itinerary specifically for {destination.name}.</p>
+          </div>
+        )}
 
-              {/* Quick Stats */}
-              <div className="mt-6 pt-6 border-t border-border space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total Days</span>
-                  <span className="font-semibold">{itinerary.length}</span>
+        {isLoading && (
+          <div className="text-center py-32 space-y-6">
+            <div className="relative w-24 h-24 mx-auto">
+              <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+              <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground">Crafting your perfect journey...</h3>
+            <p className="text-muted-foreground animate-pulse">Our AI is analyzing local attractions, travel times, and optimal routes in {destination.name}.</p>
+          </div>
+        )}
+
+        {itineraryData && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Timeline Navigation */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-20 bg-white rounded-2xl shadow-lg p-6 border border-border/50">
+                <h3 className="font-bold mb-4 text-lg">Trip Overview</h3>
+                <div className="space-y-2">
+                  {itineraryData.days.map((day) => (
+                    <button
+                      key={day.dayNumber}
+                      onClick={() => setExpandedDay(day.dayNumber)}
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${
+                        expandedDay === day.dayNumber
+                          ? "bg-primary text-white shadow-md"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      <div>
+                        <div className="font-semibold">Day {day.dayNumber}</div>
+                        <div className={`text-xs mt-1 ${expandedDay === day.dayNumber ? "text-white/80" : "text-muted-foreground"}`}>
+                          {day.activities.length} activities
+                        </div>
+                      </div>
+                      <ChevronRightIcon className={`w-4 h-4 ${expandedDay === day.dayNumber ? "text-white" : "text-muted-foreground opacity-50"}`} />
+                    </button>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Activities</span>
-                  <span className="font-semibold">
-                    {itinerary.reduce((sum, day) => sum + day.activities.length, 0)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Est. Cost</span>
-                  <span className="font-semibold text-primary">${totalCost.toFixed(0)}</span>
+
+                {/* Quick Stats */}
+                <div className="mt-6 pt-6 border-t border-border space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Days</span>
+                    <span className="font-semibold bg-muted px-2 py-1 rounded-md">{itineraryData.totalDays}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Activities</span>
+                    <span className="font-semibold bg-muted px-2 py-1 rounded-md">
+                      {itineraryData.days.reduce((sum, day) => sum + day.activities.length, 0)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Est. Cost</span>
+                    <span className="font-bold text-primary">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Itinerary Details */}
-          <div className="lg:col-span-3 space-y-8">
-            {itinerary.map((day) => (
-              <div key={day.day} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                {/* Day Header */}
-                <button
-                  onClick={() => setExpandedDay(expandedDay === day.day ? null : day.day)}
-                  className="w-full bg-gradient-to-r from-primary to-secondary text-white p-6 flex items-center justify-between hover:opacity-95 transition-opacity"
-                >
-                  <div className="text-left">
-                    <div className="text-2xl font-bold mb-1">Day {day.day}</div>
-                    <div className="text-white/90">{day.title}</div>
-                  </div>
-                  {expandedDay === day.day ? (
-                    <ChevronUp className="w-6 h-6" />
-                  ) : (
-                    <ChevronDown className="w-6 h-6" />
-                  )}
-                </button>
+            {/* Itinerary Details */}
+            <div className="lg:col-span-3 space-y-8">
+              {itineraryData.days.map((day) => (
+                <div key={day.dayNumber} className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-border/50 transition-all duration-300 ${expandedDay === day.dayNumber ? 'ring-2 ring-primary/20' : ''}`}>
+                  {/* Day Header */}
+                  <button
+                    onClick={() => setExpandedDay(expandedDay === day.dayNumber ? null : day.dayNumber)}
+                    className="w-full bg-gradient-to-r from-primary to-secondary text-white p-6 flex items-center justify-between hover:opacity-95 transition-opacity"
+                  >
+                    <div className="text-left flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                        <span className="text-xl font-bold">{day.dayNumber}</span>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold mb-1">Day {day.dayNumber}</div>
+                        <div className="text-white/80 text-sm">{day.activities.length} planned activities</div>
+                      </div>
+                    </div>
+                    {expandedDay === day.dayNumber ? (
+                      <ChevronUp className="w-6 h-6 bg-white/20 rounded-full p-1" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6 bg-white/20 rounded-full p-1" />
+                    )}
+                  </button>
 
-                {/* Day Activities */}
-                {expandedDay === day.day && (
-                  <div className="p-6">
-                    <div className="relative">
-                      {/* Timeline Line */}
-                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-purple-500" />
+                  {/* Day Activities */}
+                  {expandedDay === day.dayNumber && (
+                    <div className="p-6 bg-slate-50/50">
+                      <div className="relative">
+                        {/* Timeline Line */}
+                        <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-primary/80 via-secondary/80 to-purple-500/80 rounded-full" />
 
-                      {/* Activities */}
-                      <div className="space-y-6">
-                        {day.activities.map((activity, index) => {
-                          const PeriodIcon = getPeriodIcon(activity.period);
-                          const ActivityIcon = activity.icon;
+                        {/* Activities */}
+                        <div className="space-y-8 relative py-4">
+                          {day.activities.map((activity, index) => {
+                            const { period, icon: ActivityIcon } = inferPeriodInfo(activity.time, activity.description);
+                            const PeriodIcon = getPeriodIcon(period);
 
-                          return (
-                            <div key={index} className="relative pl-16">
-                              {/* Timeline Dot */}
-                              <div
-                                className={`absolute left-3 w-6 h-6 rounded-full bg-gradient-to-br ${getPeriodColor(
-                                  activity.period
-                                )} flex items-center justify-center shadow-lg`}
-                              >
-                                <PeriodIcon className="w-3 h-3 text-white" />
-                              </div>
+                            return (
+                              <div key={index} className="relative pl-16 group">
+                                {/* Timeline Dot */}
+                                <div
+                                  className={`absolute left-3 w-7 h-7 rounded-full bg-gradient-to-br ${getPeriodColor(
+                                    period
+                                  )} flex items-center justify-center shadow-md ring-4 ring-white z-10 group-hover:scale-110 transition-transform`}
+                                >
+                                  <PeriodIcon className="w-3.5 h-3.5 text-white" />
+                                </div>
 
-                              {/* Activity Card */}
-                              <div className="bg-muted/50 rounded-xl p-4 hover:bg-muted transition-all">
-                                <div className="flex items-start justify-between mb-3">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                      <ActivityIcon className="w-5 h-5 text-primary" />
+                                {/* Activity Card */}
+                                <div className="bg-white rounded-xl p-5 shadow-sm border border-border/60 hover:shadow-md hover:border-primary/30 transition-all group-hover:-translate-y-1">
+                                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+                                    <div className="flex items-start gap-4">
+                                      <div className="w-12 h-12 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shadow-inner flex-shrink-0">
+                                        <ActivityIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                      <div>
+                                        <div className="text-sm font-semibold text-primary mb-1 flex items-center gap-2">
+                                          <Clock className="w-3.5 h-3.5" />
+                                          {activity.time}
+                                        </div>
+                                        <div className="font-medium text-foreground text-base leading-snug">
+                                          {activity.description}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <div className="font-semibold mb-1">{activity.title}</div>
-                                      <div className="text-sm text-muted-foreground">
-                                        {activity.description}
+                                    <div className="text-right flex-shrink-0 sm:ml-4 bg-muted/50 px-3 py-2 rounded-lg self-start sm:self-auto border border-border">
+                                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Est. Cost</div>
+                                      <div className="font-bold text-foreground">
+                                        {activity.estimatedCostVND === 0 
+                                          ? <span className="text-green-600">Free</span>
+                                          : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(activity.estimatedCostVND)
+                                        }
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right flex-shrink-0 ml-4">
-                                    <div className="font-semibold text-primary">{activity.cost}</div>
-                                    <div className="text-xs text-muted-foreground">{activity.time}</div>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{activity.duration}</span>
-                                  </div>
-                                  <div className="px-2 py-1 bg-white rounded-full capitalize">
-                                    {activity.type}
-                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Day Summary */}
+                      <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 -mx-6 -mb-6 px-6 py-4">
+                        <div className="text-sm font-medium text-primary">
+                          Daily Total
+                        </div>
+                        <div className="text-xl font-bold text-primary">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                            day.activities.reduce((sum, activity) => sum + activity.estimatedCostVND, 0)
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    {/* Day Summary */}
-                    <div className="mt-6 pt-6 border-t border-border flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        {day.activities.length} activities planned
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        $
-                        {day.activities
-                          .reduce((sum, activity) => {
-                            const cost = activity.cost.replace("$", "").toLowerCase();
-                            return sum + (cost === "free" ? 0 : parseFloat(cost));
-                          }, 0)
-                          .toFixed(0)}{" "}
-                        total
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* AI Recommendations */}
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-white" />
+                  )}
                 </div>
-                <div>
-                  <h4 className="font-semibold mb-2">AI Travel Assistant Recommendations</h4>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>
-                      <strong>Transportation Tip:</strong> Renting a scooter for $5/day gives you freedom to explore. Always wear a helmet and drive safely.
-                    </p>
-                    <p>
-                      <strong>Food Budget:</strong> Mix street food ($2-3) with occasional sit-down meals ($8-12) to balance budget and experience.
-                    </p>
-                    <p>
-                      <strong>Flexibility:</strong> This itinerary allows for spontaneous changes. Feel free to swap activities based on weather or local recommendations!
+              ))}
+
+              {/* AI Recommendations Notice */}
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 text-purple-900">AI Travel Assistant Notice</h4>
+                    <p className="text-sm text-purple-800/80 leading-relaxed">
+                      This itinerary is dynamically generated based on current data for <strong>{destination.name}</strong>, tuned for a <strong>{travelStyle}</strong> style. Prices are estimated and may vary. We recommend booking accommodations and activities in advance.
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Restaurant Recommendations */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Utensils className="w-5 h-5 text-primary" />
-                Recommended Restaurants
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  {
-                    name: "Warung Biah Biah",
-                    cuisine: "Indonesian",
-                    price: "$2-5",
-                    rating: 4.8,
-                    location: "Ubud",
-                  },
-                  {
-                    name: "Café Pomegranate",
-                    cuisine: "International",
-                    price: "$5-10",
-                    rating: 4.7,
-                    location: "Ubud",
-                  },
-                  {
-                    name: "La Plancha",
-                    cuisine: "Beach Bar",
-                    price: "$8-15",
-                    rating: 4.6,
-                    location: "Seminyak",
-                  },
-                  {
-                    name: "Naughty Nuri's",
-                    cuisine: "BBQ",
-                    price: "$6-12",
-                    rating: 4.9,
-                    location: "Ubud",
-                  },
-                ].map((restaurant, index) => (
-                  <div key={index} className="p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold">{restaurant.name}</h4>
-                        <p className="text-sm text-muted-foreground">{restaurant.cuisine}</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>{restaurant.rating}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{restaurant.location}</span>
-                      <span className="font-semibold text-primary">{restaurant.price}</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
+}
+
+function ChevronRightIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="m9 18 6-6-6-6"/>
+    </svg>
+  )
 }
