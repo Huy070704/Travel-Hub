@@ -1,6 +1,11 @@
 import * as signalR from '@microsoft/signalr';
 import type { MessageDto } from '@/types/chat';
 
+// Lấy base URL từ biến môi trường hoặc mặc định
+const baseURL = (import.meta as any).env.VITE_API_BASE_URL
+  ? (import.meta as any).env.VITE_API_BASE_URL.replace('/api', '')
+  : 'http://localhost:5190';
+
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private isConnecting: boolean = false;
@@ -13,7 +18,7 @@ class SignalRService {
     this.isConnecting = true;
 
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:7087/hubs/chat", {
+      .withUrl(`${baseURL}/hubs/chat`, {
         accessTokenFactory: () => {
           const token = localStorage.getItem('token');
           return token ? token : '';

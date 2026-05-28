@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { getConversations, getMessages } from "@/api/chatApi";
 import { signalrService } from "@/api/signalrService";
-import { getMyProfile } from "@/api/usersApi";
+import { getMyProfile, getPublicProfile } from "@/api/usersApi";
 import type { ConversationDto, MessageDto } from "@/types/chat";
-import type { UserProfileDto } from "@/types/users";
+import type { UserProfileDto, PublicUserProfileDto } from "@/types/users";
 
 const getAvatar = (name: string) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
@@ -33,6 +33,7 @@ export function ChatPage() {
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [myProfile, setMyProfile] = useState<UserProfileDto | null>(null);
+  const [receiverProfile, setReceiverProfile] = useState<PublicUserProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -48,6 +49,15 @@ export function ChatPage() {
       try {
         const profile = await getMyProfile();
         setMyProfile(profile);
+
+        if (receiverIdFromUrl) {
+          try {
+            const receiver = await getPublicProfile(receiverIdFromUrl);
+            setReceiverProfile(receiver);
+          } catch (e) {
+            console.error("Failed to load receiver profile", e);
+          }
+        }
 
         const convos = await getConversations();
         setConversations(convos);
@@ -183,6 +193,8 @@ export function ChatPage() {
   }
 
   const currentConversationInfo = conversations.find(c => c.chatID === currentChatId);
+  const chatName = currentConversationInfo?.chatName || receiverProfile?.username || "New Conversation";
+  const chatAvatar = currentConversationInfo?.chatName || receiverProfile?.username || "New User";
 
   return (
     <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] bg-background">
@@ -256,15 +268,15 @@ export function ChatPage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <img
-                        src={getAvatar(currentConversationInfo?.chatName || "New User")}
-                        alt={currentConversationInfo?.chatName || "New User"}
+                        src={getAvatar(chatAvatar)}
+                        alt={chatAvatar}
                         className="w-12 h-12 rounded-full object-cover border border-border"
                       />
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm" />
                     </div>
                     <div>
                       <h3 className="font-bold text-lg leading-tight">
-                        {currentConversationInfo?.chatName || "New Conversation"}
+                        {chatName}
                       </h3>
                       <div className="text-sm text-green-600 font-medium flex items-center gap-1">
                         Online
