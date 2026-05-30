@@ -1,8 +1,13 @@
 import axios from 'axios';
 
-// Lấy base URL từ biến môi trường
-// Nếu không có, mặc định sẽ là localhost:5190 của backend .NET
-const baseURL = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5190/api';
+// Chọn backend để test (đổi thành true nếu muốn test với backend localhost)
+const isLocal = false; 
+
+const LOCAL_URL = 'http://localhost:5190/api';
+const RENDER_URL = 'https://travelhub-f3vu.onrender.com/api';
+
+// Lấy base URL từ biến môi trường (khi deploy Vercel) hoặc dùng cấu hình test
+const baseURL = (import.meta as any).env.VITE_API_BASE_URL || (isLocal ? LOCAL_URL : RENDER_URL);
 
 const axiosInstance = axios.create({
   baseURL,
