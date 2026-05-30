@@ -4,6 +4,9 @@ import axios from 'axios';
 // Nếu không có, mặc định sẽ là localhost:5190 của backend .NET
 // Đảm bảo baseURL kết thúc bằng /api
 const rawBase = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5190/api';
+
+// ĐỔI TÊN: Từ baseURL thành apiBaseUrl để tránh đụng độ khai báo trên Vercel
+const apiBaseUrl = rawBase.endsWith('/api') ? rawBase : rawBase.replace(/\/$/, '') + '/api';
 const baseURL = rawBase.endsWith('/api') ? rawBase : rawBase.replace(/\/$/, '') + '/api';
 // Chọn backend để test (đổi thành true nếu muốn test với backend localhost)
 const isLocal = false; 
@@ -15,7 +18,7 @@ const RENDER_URL = 'https://travelhub-f3vu.onrender.com/api';
 const baseURL = (import.meta as any).env.VITE_API_BASE_URL || (isLocal ? LOCAL_URL : RENDER_URL);
 
 const axiosInstance = axios.create({
-  baseURL,
+  baseURL: apiBaseUrl, // Truyền biến đã đổi tên vào đây
   headers: {
     'Content-Type': 'application/json',
   },
