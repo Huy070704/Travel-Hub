@@ -2,6 +2,14 @@ export type AiRecommendRequest = {
   budgetVND: number;
   days: number;
   interests?: string;
+  departure?: string;
+  transportationPreference?: string;
+  travelGroup?: string;
+  destinationType?: string;
+  mainTravelGoal?: string;
+  preferredWeather?: string;
+  accommodationType?: string;
+  budgetStyle?: string;
 };
 
 export type AiRecommendResponse = {

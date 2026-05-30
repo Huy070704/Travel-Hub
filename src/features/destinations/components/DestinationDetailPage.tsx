@@ -32,7 +32,7 @@ export function DestinationDetailPage() {
       "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200",
       "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=1200",
       "https://images.unsplash.com/photo-1559628376-f3fe5f782a2e?w=1200",
-      "https://images.unsplash.com/photo-1541186853056-e8c4fa1d1041?w=1200",
+      "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=1200",
     ],
   };
 
@@ -104,45 +104,47 @@ export function DestinationDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-12">
       {/* Image Gallery */}
-      <div className="relative">
-        <div className="grid grid-cols-4 gap-2 h-[400px] md:h-[500px]">
-          <div className="col-span-4 md:col-span-2 md:row-span-2">
-            <img
-              src={destination.images[0]}
-              alt={destination.name}
-              className="w-full h-full object-cover rounded-none md:rounded-l-2xl"
-            />
-          </div>
-          {destination.images.slice(1, 5).map((image, index) => (
-            <div key={index} className="hidden md:block">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="relative">
+          <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[400px] md:h-[500px] rounded-2xl overflow-hidden">
+            <div className="col-span-4 md:col-span-2 md:row-span-2">
               <img
-                src={image}
-                alt={`${destination.name} ${index + 2}`}
-                className={`w-full h-full object-cover ${
-                  index === 1 ? "rounded-tr-2xl" : index === 3 ? "rounded-br-2xl" : ""
-                }`}
+                src={destination.images[0]}
+                alt={destination.name}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               />
             </div>
-          ))}
-        </div>
+            {destination.images.slice(1, 5).map((image, index) => (
+              <div key={index} className="hidden md:block overflow-hidden relative group">
+                <img
+                  src={image}
+                  alt={`${destination.name} ${index + 2}`}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                {/* Optional overlay effect */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              </div>
+            ))}
+          </div>
 
-        {/* Floating Action Buttons */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          <button className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all">
-            <Share2 className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setSavedDestination(!savedDestination)}
-            className={`p-3 rounded-full shadow-lg transition-all ${
-              savedDestination
-                ? "bg-red-500 text-white"
-                : "bg-white/90 backdrop-blur-sm hover:bg-white"
-            }`}
-          >
-            <Heart className={`w-5 h-5 ${savedDestination ? "fill-white" : ""}`} />
-          </button>
+          {/* Floating Action Buttons */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white hover:scale-105 transition-all">
+              <Share2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setSavedDestination(!savedDestination)}
+              className={`p-3 rounded-full shadow-lg hover:scale-105 transition-all ${
+                savedDestination
+                  ? "bg-red-500 text-white"
+                  : "bg-white/90 backdrop-blur-sm hover:bg-white"
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${savedDestination ? "fill-white" : ""}`} />
+            </button>
+          </div>
         </div>
       </div>
 

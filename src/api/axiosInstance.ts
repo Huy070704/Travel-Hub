@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+// Lấy base URL từ biến môi trường
+// Nếu không có, mặc định sẽ là localhost:5190 của backend .NET
+// Đảm bảo baseURL kết thúc bằng /api
+const rawBase = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5190/api';
+const baseURL = rawBase.endsWith('/api') ? rawBase : rawBase.replace(/\/$/, '') + '/api';
 // Chọn backend để test (đổi thành true nếu muốn test với backend localhost)
 const isLocal = false; 
 
