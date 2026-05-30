@@ -27,6 +27,13 @@ export type RegisterRequest = {
   studentCode?: string;
 };
 
+export type RegisterOtpRequest = RegisterRequest;
+
+export type VerifyRegisterOtpRequest = {
+  email: string;
+  otp: string;
+};
+
 export type TokenRequest = {
   accessToken: string;
   refreshToken: string;
@@ -34,6 +41,12 @@ export type TokenRequest = {
 
 export type ForgotPasswordRequest = {
   email: string;
+};
+
+export type VerifyForgotPasswordOtpRequest = {
+  email: string;
+  otp: string;
+  newPassword: string;
 };
 
 export type ChangePasswordRequest = {
