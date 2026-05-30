@@ -1,10 +1,16 @@
 import * as signalR from '@microsoft/signalr';
 import type { MessageDto } from '@/types/chat';
 
-// Lấy base URL từ biến môi trường hoặc mặc định
+// Chọn backend để test (đổi thành true nếu muốn test với backend localhost)
+const isLocal = false;
+
+const LOCAL_URL = 'http://localhost:5190';
+const RENDER_URL = 'https://travelhub-f3vu.onrender.com';
+
+// Lấy base URL từ biến môi trường hoặc dùng cấu hình test
 const baseURL = (import.meta as any).env.VITE_API_BASE_URL
   ? (import.meta as any).env.VITE_API_BASE_URL.replace('/api', '')
-  : 'http://localhost:5190';
+  : (isLocal ? LOCAL_URL : RENDER_URL);
 
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
