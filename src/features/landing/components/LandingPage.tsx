@@ -101,20 +101,20 @@ export function LandingPage() {
   const features = [
     {
       icon: Sparkles,
-      title: "AI-Powered Recommendations",
-      description: "Get personalized destination suggestions based on your budget and preferences",
+      title: "Gợi ý cá nhân hóa bằng AI",
+      description: "Nhận đề xuất điểm đến theo ngân sách và sở thích của bạn",
       gradient: "from-purple-500 to-blue-500"
     },
     {
       icon: Users,
-      title: "Find Travel Buddies",
-      description: "Connect with fellow students and split costs for amazing adventures",
+      title: "Tìm bạn đồng hành",
+      description: "Kết nối với sinh viên khác và chia sẻ chi phí cho chuyến đi",
       gradient: "from-cyan-500 to-teal-500"
     },
     {
       icon: DollarSign,
-      title: "Budget-Friendly",
-      description: "Explore the world without breaking the bank with our cost-saving tips",
+      title: "Thân thiện với ngân sách",
+      description: "Khám phá nhiều nơi hơn với các gợi ý tiết kiệm chi phí",
       gradient: "from-orange-500 to-pink-500"
     },
   ];
@@ -156,7 +156,7 @@ export function LandingPage() {
               transition={{ delay: 0.2 }}
             >
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold gradient-text">AI-Powered Travel Platform</span>
+              <span className="text-sm font-semibold gradient-text">Nền tảng du lịch bằng AI</span>
             </motion.div>
 
             {/* Main Headline */}
@@ -177,7 +177,7 @@ export function LandingPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              Affordable adventures for students. Discover destinations, connect with travel buddies, and explore the world on your budget.
+              Những chuyến đi vừa túi tiền cho sinh viên. Khám phá điểm đến, kết nối bạn đồng hành và đi xa hơn trong ngân sách của bạn.
             </motion.p>
 
             {/* AI Search Box */}
@@ -196,14 +196,14 @@ export function LandingPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
-                      placeholder="e.g. 5 million VND budget, love beaches and food..."
+                      placeholder="Ví dụ: ngân sách 5 triệu, thích biển và ăn uống..."
                       className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
                   <GlowingButton onClick={handleAiSearch}>
                     <div className="flex items-center gap-2">
                       {isAiLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                      <span>{isAiLoading ? "Thinking..." : "AI Magic"}</span>
+                      <span>{isAiLoading ? "Đang suy nghĩ..." : "Gợi ý AI"}</span>
                     </div>
                   </GlowingButton>
                 </div>
@@ -222,7 +222,7 @@ export function LandingPage() {
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold flex items-center gap-2">
                           <Sparkles className="w-5 h-5 text-primary" />
-                          AI Recommendations
+                          Gợi ý từ AI
                         </h3>
                         <button onClick={() => setAiResults(null)} className="p-1 hover:bg-muted rounded-full">
                           <X className="w-5 h-5 text-muted-foreground" />
@@ -239,7 +239,7 @@ export function LandingPage() {
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(res.estimatedCostVND)}
                               </span>
                               <Link to={`/destination/${res.destinationID}`} className="text-sm text-primary hover:underline font-semibold">
-                                View Details &rarr;
+                                Xem chi tiết &rarr;
                               </Link>
                             </div>
                           </div>
@@ -259,9 +259,9 @@ export function LandingPage() {
               transition={{ delay: 0.7 }}
             >
               {[
-                { icon: Users, label: "50k+ Students" },
-                { icon: MapPin, label: "200+ Destinations" },
-                { icon: DollarSign, label: "Budget-Friendly" },
+                { icon: Users, label: "50k+ sinh viên" },
+                { icon: MapPin, label: "200+ điểm đến" },
+                { icon: DollarSign, label: "Tiết kiệm chi phí" },
               ].map((stat, index) => (
                 <motion.div
                   key={index}
@@ -302,10 +302,10 @@ export function LandingPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Why Choose <span className="gradient-text">TravelHub</span>?
+              Vì sao chọn <span className="gradient-text">TravelHub</span>?
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need for your perfect student adventure
+              Mọi thứ bạn cần cho một chuyến đi sinh viên thật trọn vẹn
             </p>
           </motion.div>
 
@@ -350,16 +350,16 @@ export function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-5 h-5 text-accent" />
-                <span className="text-sm text-accent uppercase tracking-wide font-semibold">Live Data</span>
+                <span className="text-sm text-accent uppercase tracking-wide font-semibold">Dữ liệu mới</span>
               </div>
-              <h2 className="text-4xl font-bold">Trending Destinations</h2>
+              <h2 className="text-4xl font-bold">Điểm đến đang thịnh hành</h2>
             </div>
             <Link to="/discover">
               <motion.button
                 className="flex items-center gap-2 text-primary hover:gap-3 transition-all"
                 whileHover={{ x: 5 }}
               >
-                <span className="font-semibold">View All</span>
+                <span className="font-semibold">Xem tất cả</span>
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
             </Link>
@@ -402,7 +402,7 @@ export function LandingPage() {
 
                         {/* Trending Badge */}
                         <div className="absolute top-4 right-4 px-3 py-1 bg-accent/90 backdrop-blur-sm text-white text-xs rounded-full font-semibold animate-pulse-glow">
-                          Trending
+                          Đang hot
                         </div>
 
                         {/* Content */}
@@ -428,7 +428,7 @@ export function LandingPage() {
             {trendingDestinations.length === 0 && (
               <div className="col-span-3 text-center py-20 text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-                <p>Loading destinations...</p>
+                <p>Đang tải điểm đến...</p>
               </div>
             )}
           </div>
@@ -453,19 +453,19 @@ export function LandingPage() {
               >
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="w-6 h-6 text-primary" />
-                  <span className="text-sm text-primary uppercase tracking-wide font-semibold">Community</span>
+                  <span className="text-sm text-primary uppercase tracking-wide font-semibold">Cộng đồng</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                  Find Your Travel Buddies
+                  Tìm bạn đồng hành
                 </h2>
                 <p className="text-xl text-muted-foreground mb-8">
-                  Connect with fellow student travelers, share experiences, and split costs for amazing adventures around the world.
+                  Kết nối với sinh viên cùng mê du lịch, chia sẻ kinh nghiệm và chia chi phí cho những chuyến đi đáng nhớ.
                 </p>
                 <Link to="/community">
                   <GlowingButton>
                     <div className="flex items-center gap-2">
                       <MessageCircle className="w-5 h-5" />
-                      <span>Join Community</span>
+                      <span>Tham gia cộng đồng</span>
                     </div>
                   </GlowingButton>
                 </Link>
@@ -478,10 +478,10 @@ export function LandingPage() {
                 viewport={{ once: true }}
               >
                 {[
-                  { icon: Globe, label: "50k+ Members", color: "from-blue-500 to-cyan-500" },
-                  { icon: MessageCircle, label: "Active Chat", color: "from-purple-500 to-pink-500" },
-                  { icon: Heart, label: "Safe Community", color: "from-orange-500 to-red-500" },
-                  { icon: Calendar, label: "Daily Events", color: "from-green-500 to-teal-500" },
+                  { icon: Globe, label: "50k+ thành viên", color: "from-blue-500 to-cyan-500" },
+                  { icon: MessageCircle, label: "Trò chuyện sôi nổi", color: "from-purple-500 to-pink-500" },
+                  { icon: Heart, label: "Cộng đồng an toàn", color: "from-orange-500 to-red-500" },
+                  { icon: Calendar, label: "Hoạt động mỗi ngày", color: "from-green-500 to-teal-500" },
                 ].map((item, index) => (
                   <motion.div
                     key={index}
@@ -512,22 +512,22 @@ export function LandingPage() {
                 <span className="text-xl font-bold gradient-text">TravelHub</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                AI-powered travel platform for students. Explore the world on your budget.
+                Nền tảng du lịch bằng AI dành cho sinh viên. Khám phá thế giới theo ngân sách của bạn.
               </p>
             </div>
 
             {[
               {
-                title: "Product",
-                links: ["Destinations", "AI Recommendations", "Community", "Itinerary Planner"]
+                title: "Sản phẩm",
+                links: ["Điểm đến", "Gợi ý AI", "Cộng đồng", "Lập lịch trình"]
               },
               {
-                title: "Company",
-                links: ["About Us", "Careers", "Blog", "Contact"]
+                title: "Công ty",
+                links: ["Về chúng tôi", "Tuyển dụng", "Blog", "Liên hệ"]
               },
               {
-                title: "Legal",
-                links: ["Privacy", "Terms", "Security", "Support"]
+                title: "Pháp lý",
+                links: ["Quyền riêng tư", "Điều khoản", "Bảo mật", "Hỗ trợ"]
               }
             ].map((section, index) => (
               <div key={index}>
@@ -547,7 +547,7 @@ export function LandingPage() {
 
           <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2026 TravelHub. All rights reserved.
+              © 2026 TravelHub. Đã đăng ký bản quyền.
             </p>
             <div className="flex items-center gap-4">
               {[Shield, Globe, Heart].map((Icon, index) => (
