@@ -4,7 +4,7 @@ import type { MessageDto } from '@/types/chat';
 // Chọn backend để test (đổi thành true nếu muốn test với backend localhost)
 const isLocal = false;
 
-const LOCAL_URL = 'http://localhost:5190';
+const LOCAL_URL = 'http://localhost:8080';
 const RENDER_URL = 'https://travelhub-f3vu.onrender.com';
 
 // Lấy base URL từ biến môi trường hoặc dùng cấu hình test

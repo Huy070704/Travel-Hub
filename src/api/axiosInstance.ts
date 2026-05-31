@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Lấy base URL từ biến môi trường
-// Nếu không có, mặc định sẽ là localhost:5190 của backend .NET
+// Nếu không có, mặc định sẽ là localhost:8080 của backend .NET
 // Đảm bảo baseURL kết thúc bằng /api
-const rawBase = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:5190/api';
+const rawBase = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 // ĐỔI TÊN: Từ baseURL thành apiBaseUrl để tránh đụng độ khai báo trên Vercel
 const apiBaseUrl = rawBase.endsWith('/api') ? rawBase : rawBase.replace(/\/$/, '') + '/api';

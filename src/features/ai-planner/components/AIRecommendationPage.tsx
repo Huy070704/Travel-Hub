@@ -111,19 +111,28 @@ function ChoiceGroup({ label, icon: LabelIcon, options, value, onSelect, compact
 
 export function AIRecommendationPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [formData, setFormData] = useState<PlannerFormData>({
-    departure: "",
-    budget: "",
-    days: "",
-    interests: [] as string[],
-    transportationPreference: "",
-    travelGroup: "",
-    destinationType: "",
-    mainTravelGoal: "",
-    preferredWeather: "",
-    accommodationType: "",
-    budgetStyle: "",
+  const [showResults, setShowResults] = useState(() => {
+    return localStorage.getItem("ai_showResults") === "true";
+  });
+  const [realRecommendations, setRealRecommendations] = useState<any[]>(() => {
+    const saved = localStorage.getItem("ai_recommendations");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [formData, setFormData] = useState<PlannerFormData>(() => {
+    const saved = localStorage.getItem("ai_formData");
+    return saved ? JSON.parse(saved) : {
+      departure: "",
+      budget: "",
+      days: "",
+      interests: [] as string[],
+      transportationPreference: "",
+      travelGroup: "",
+      destinationType: "",
+      mainTravelGoal: "",
+      preferredWeather: "",
+      accommodationType: "",
+      budgetStyle: "",
+    };
   });
 
   const interests = [
@@ -187,64 +196,7 @@ export function AIRecommendationPage() {
     { id: "premium", label: "Premium", icon: Gem },
   ];
 
-  const recommendations = [
-    {
-      id: 1,
-      destination: "Bali, Indonesia",
-      country: "Indonesia",
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
-      estimatedCost: "$520",
-      confidence: 95,
-      weather: { temp: "28°C", condition: "Sunny" },
-      flightDuration: "8h 30m",
-      matchScore: 98,
-      reasons: [
-        "Perfect for beach lovers with world-class surfing",
-        "Extremely budget-friendly accommodation and food",
-        "Rich cultural experiences and ancient temples",
-        "Vibrant nightlife and social scene for students"
-      ],
-      highlights: ["Uluwatu Temple", "Rice Terraces", "Beach Clubs", "Monkey Forest"],
-    },
-    {
-      id: 2,
-      destination: "Lisbon, Portugal",
-      country: "Portugal",
-      image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800",
-      estimatedCost: "$680",
-      confidence: 88,
-      weather: { temp: "22°C", condition: "Partly Cloudy" },
-      flightDuration: "6h 15m",
-      matchScore: 92,
-      reasons: [
-        "Affordable European destination with great student discounts",
-        "Beautiful coastal city with historic charm",
-        "Amazing food scene and nightlife",
-        "Easy access to nearby beaches and day trips"
-      ],
-      highlights: ["Belém Tower", "Alfama District", "Tram 28", "Coastal Views"],
-    },
-    {
-      id: 3,
-      destination: "Chiang Mai, Thailand",
-      country: "Thailand",
-      image: "https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=800",
-      estimatedCost: "$420",
-      confidence: 90,
-      weather: { temp: "30°C", condition: "Warm" },
-      flightDuration: "9h 45m",
-      matchScore: 89,
-      reasons: [
-        "Incredibly low cost of living",
-        "Perfect blend of culture and adventure activities",
-        "Digital nomad hub with great cafes and coworking",
-        "Gateway to jungle trekking and elephant sanctuaries"
-      ],
-      highlights: ["Doi Suthep", "Night Markets", "Temples", "Thai Cooking Classes"],
-    },
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const requestPayload: AiRecommendRequest = {
       budgetVND: Number(formData.budget),
@@ -260,14 +212,32 @@ export function AIRecommendationPage() {
       budgetStyle: formData.budgetStyle,
     };
 
-    void getAiRecommendations(requestPayload).catch((error) => {
-      console.error("Failed to get AI recommendations", error);
-    });
+    localStorage.setItem("ai_formData", JSON.stringify(formData));
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await getAiRecommendations(requestPayload);
+      const mapped = response.map((item, index) => ({
+        id: item.destinationID,
+        destination: `${item.name}, ${item.cityProvince}`,
+        country: "Việt Nam",
+        image: `https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=800&q=80&auto=format&fit=crop&sig=${item.destinationID}`,
+        estimatedCost: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.estimatedCostVND),
+        confidence: 90 + (index % 10),
+        weather: { temp: "28°C", condition: "Đẹp" },
+        flightDuration: "Tùy vị trí",
+        matchScore: 98 - index,
+        reasons: [item.matchReason],
+        highlights: ["Khám phá địa phương", "Ẩm thực đặc sắc", "Văn hóa phong phú"],
+      }));
+      setRealRecommendations(mapped);
       setShowResults(true);
-    }, 2500);
+      localStorage.setItem("ai_recommendations", JSON.stringify(mapped));
+      localStorage.setItem("ai_showResults", "true");
+    } catch (error) {
+      console.error("Failed to get AI recommendations", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleInterest = (id: string) => {
@@ -539,7 +509,7 @@ export function AIRecommendationPage() {
                   </div>
                 </div>
 
-                {recommendations.map((rec, index) => (
+                {realRecommendations.map((rec, index) => (
                   <motion.div
                     key={rec.id}
                     className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-primary/5 border border-white/80 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all hover-lift"

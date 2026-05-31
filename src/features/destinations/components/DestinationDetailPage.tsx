@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router";
+import { getDestinationDetails } from "@/api/destinationsApi";
+import type { DestinationDto } from "@/types/destinations";
 import {
   Heart,
   Share2,
@@ -19,16 +21,27 @@ import {
 } from "lucide-react";
 
 export function DestinationDetailPage() {
+  const { id } = useParams();
   const [savedDestination, setSavedDestination] = useState(false);
+  const [realDestination, setRealDestination] = useState<DestinationDto | null>(null);
+
+  useEffect(() => {
+    if (id) {
+      getDestinationDetails(Number(id)).then(setRealDestination).catch(console.error);
+    }
+  }, [id]);
+
+  const aiRecommendations = JSON.parse(localStorage.getItem("ai_recommendations") || "[]");
+  const aiMatch = aiRecommendations.find((rec: any) => rec.id.toString() === id);
 
   const destination = {
-    name: "Bali, Indonesia",
-    country: "Indonesia",
+    name: realDestination ? `${realDestination.name}, ${realDestination.cityProvince}` : (aiMatch ? aiMatch.destination : "Bali, Indonesia"),
+    country: "Việt Nam",
     rating: 4.8,
     reviews: 2847,
-    description: "A tropical paradise offering stunning beaches, ancient temples, lush rice terraces, and vibrant culture. Perfect for budget-conscious travelers seeking both adventure and relaxation.",
+    description: realDestination?.description || "A tropical paradise offering stunning beaches, ancient temples, lush rice terraces, and vibrant culture. Perfect for budget-conscious travelers seeking both adventure and relaxation.",
     images: [
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
+      aiMatch ? aiMatch.image : "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
       "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200",
       "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=1200",
       "https://images.unsplash.com/photo-1559628376-f3fe5f782a2e?w=1200",
@@ -259,8 +272,18 @@ export function DestinationDetailPage() {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">AI-Generated Travel Tips</h3>
+                <h3 className="text-xl font-bold">{aiMatch ? "Tại sao AI đề xuất địa điểm này?" : "AI-Generated Travel Tips"}</h3>
               </div>
+              
+              {aiMatch && (
+                <div className="mb-6 p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-primary/20 shadow-inner">
+                  <p className="text-foreground leading-relaxed text-lg">
+                    <strong className="text-primary flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4"/> Đánh giá từ AI (Match Reason):</strong> 
+                    {aiMatch.reasons[0]}
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {aiTips.map((tip, index) => (
                   <div key={index} className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl p-4">
@@ -300,7 +323,7 @@ export function DestinationDetailPage() {
                 </div>
 
                 <Link
-                  to="/itinerary/1"
+                  to={`/itinerary/${id || 1}`}
                   className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-3"
                 >
                   <span>Create Itinerary</span>
