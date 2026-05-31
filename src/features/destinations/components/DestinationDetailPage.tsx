@@ -39,7 +39,7 @@ export function DestinationDetailPage() {
     country: "Việt Nam",
     rating: 4.8,
     reviews: 2847,
-    description: realDestination?.description || "A tropical paradise offering stunning beaches, ancient temples, lush rice terraces, and vibrant culture. Perfect for budget-conscious travelers seeking both adventure and relaxation.",
+    description: realDestination?.description || "Một thiên đường nhiệt đới với những bãi biển tuyệt đẹp, những ngôi đền cổ kính, những thửa ruộng bậc thang xanh mướt và nền văn hóa sôi động. Hoàn hảo cho những sinh viên du lịch tiết kiệm đang tìm kiếm cả sự phiêu lưu và thư giãn.",
     images: [
       aiMatch ? aiMatch.image : "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
       "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200",
@@ -50,69 +50,69 @@ export function DestinationDetailPage() {
   };
 
   const weather = [
-    { day: "Mon", temp: "28°C", icon: CloudSun, condition: "Sunny" },
-    { day: "Tue", temp: "29°C", icon: CloudSun, condition: "Sunny" },
-    { day: "Wed", temp: "27°C", icon: CloudSun, condition: "Partly Cloudy" },
-    { day: "Thu", temp: "28°C", icon: CloudSun, condition: "Sunny" },
-    { day: "Fri", temp: "30°C", icon: CloudSun, condition: "Hot" },
+    { day: "Thứ 2", temp: "28°C", icon: CloudSun, condition: "Nắng" },
+    { day: "Thứ 3", temp: "29°C", icon: CloudSun, condition: "Nắng" },
+    { day: "Thứ 4", temp: "27°C", icon: CloudSun, condition: "Nhiều mây" },
+    { day: "Thứ 5", temp: "28°C", icon: CloudSun, condition: "Nắng" },
+    { day: "Thứ 6", temp: "30°C", icon: CloudSun, condition: "Nóng" },
   ];
 
   const expenses = [
-    { category: "Accommodation", icon: Hotel, daily: "$15-30", description: "Hostel dorms to budget hotels" },
-    { category: "Food", icon: Utensils, daily: "$10-20", description: "Street food to casual dining" },
-    { category: "Transportation", icon: Bus, daily: "$5-10", description: "Scooter rental or local transport" },
-    { category: "Activities", icon: Camera, daily: "$10-25", description: "Temple visits, tours, water sports" },
-    { category: "Entertainment", icon: Coffee, daily: "$5-15", description: "Cafes, nightlife, beach clubs" },
-    { category: "Shopping", icon: ShoppingBag, daily: "$10-20", description: "Souvenirs and local markets" },
+    { category: "Chỗ ở", icon: Hotel, daily: "300.000đ - 700.000đ", description: "Từ phòng dorm đến khách sạn bình dân" },
+    { category: "Ăn uống", icon: Utensils, daily: "200.000đ - 500.000đ", description: "Từ ẩm thực đường phố đến nhà hàng" },
+    { category: "Di chuyển", icon: Bus, daily: "100.000đ - 250.000đ", description: "Thuê xe máy hoặc phương tiện địa phương" },
+    { category: "Hoạt động", icon: Camera, daily: "200.000đ - 600.000đ", description: "Tham quan đền chùa, tour, thể thao dưới nước" },
+    { category: "Giải trí", icon: Coffee, daily: "100.000đ - 350.000đ", description: "Quán cafe, cuộc sống về đêm, beach clubs" },
+    { category: "Mua sắm", icon: ShoppingBag, daily: "200.000đ - 500.000đ", description: "Quà lưu niệm và chợ địa phương" },
   ];
 
   const attractions = [
     {
-      name: "Uluwatu Temple",
+      name: "Đền Uluwatu",
       image: "https://images.unsplash.com/photo-1559628376-f3fe5f782a2e?w=400",
       distance: "25km",
-      price: "$3",
+      price: "75.000đ",
       rating: 4.9,
     },
     {
-      name: "Tegalalang Rice Terrace",
+      name: "Ruộng bậc thang Tegalalang",
       image: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=400",
       distance: "18km",
-      price: "$2",
+      price: "50.000đ",
       rating: 4.7,
     },
     {
-      name: "Sacred Monkey Forest",
+      name: "Rừng khỉ Sacred",
       image: "https://images.unsplash.com/photo-1558862107-d49ef2a04d72?w=400",
       distance: "12km",
-      price: "$5",
+      price: "120.000đ",
       rating: 4.6,
     },
     {
-      name: "Seminyak Beach",
+      name: "Bãi biển Seminyak",
       image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
       distance: "8km",
-      price: "Free",
+      price: "Miễn phí",
       rating: 4.8,
     },
   ];
 
   const aiTips = [
     {
-      title: "Best Time to Visit",
-      content: "April to October offers the best weather with minimal rainfall. Avoid peak season (July-August) for better prices.",
+      title: "Thời điểm tham quan tốt nhất",
+      content: "Từ tháng 4 đến tháng 10 có thời tiết đẹp nhất với lượng mưa tối thiểu. Tránh mùa cao điểm (tháng 7-8) để có giá tốt hơn.",
     },
     {
-      title: "Money-Saving Tips",
-      content: "Rent a scooter for $5/day instead of taxis. Eat at local warungs (food stalls) for authentic meals under $3.",
+      title: "Mẹo tiết kiệm tiền",
+      content: "Thuê xe máy với giá khoảng 150k/ngày thay vì đi taxi. Ăn tại các quán ăn địa phương (warungs) để có bữa ăn ngon dưới 60k.",
     },
     {
-      title: "Student Perks",
-      content: "Many attractions offer student discounts. Bring your student ID and ask at ticket counters.",
+      title: "Ưu đãi sinh viên",
+      content: "Nhiều điểm tham quan có giảm giá cho sinh viên. Hãy mang theo thẻ sinh viên và hỏi tại quầy vé.",
     },
     {
-      title: "Safety & Health",
-      content: "Drink bottled water only. Watch for scooter traffic. Travel insurance recommended for adventure activities.",
+      title: "An toàn & Sức khỏe",
+      content: "Chỉ nên uống nước đóng chai. Chú ý giao thông xe máy. Nên mua bảo hiểm du lịch cho các hoạt động phiêu lưu.",
     },
   ];
 
@@ -176,7 +176,7 @@ export function DestinationDetailPage() {
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-semibold">{destination.rating}</span>
-                  <span className="text-muted-foreground">({destination.reviews} reviews)</span>
+                  <span className="text-muted-foreground">({destination.reviews} đánh giá)</span>
                 </div>
               </div>
               <p className="text-lg text-muted-foreground">{destination.description}</p>
@@ -184,7 +184,7 @@ export function DestinationDetailPage() {
 
             {/* Weather Forecast */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold mb-4">5-Day Weather Forecast</h3>
+              <h3 className="text-xl font-bold mb-4">Dự báo thời tiết 5 ngày tới</h3>
               <div className="grid grid-cols-5 gap-4">
                 {weather.map((day, index) => (
                   <div key={index} className="text-center">
@@ -200,8 +200,8 @@ export function DestinationDetailPage() {
             {/* Expense Breakdown */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold">Daily Expense Breakdown</h3>
-                <div className="text-2xl font-bold text-primary">$55-120</div>
+                <h3 className="text-xl font-bold">Chi phí dự kiến hàng ngày</h3>
+                <div className="text-2xl font-bold text-primary">1.100.000đ - 2.800.000đ</div>
               </div>
               <div className="space-y-4">
                 {expenses.map((expense, index) => (
@@ -212,7 +212,7 @@ export function DestinationDetailPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-semibold">{expense.category}</h4>
-                        <div className="font-semibold text-primary">{expense.daily}/day</div>
+                        <div className="font-semibold text-primary">{expense.daily}/ngày</div>
                       </div>
                       <p className="text-sm text-muted-foreground">{expense.description}</p>
                     </div>
@@ -221,18 +221,18 @@ export function DestinationDetailPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Average Daily Total</span>
-                  <span className="text-xl font-bold text-primary">$55-120</span>
+                  <span className="font-semibold">Tổng trung bình hàng ngày</span>
+                  <span className="text-xl font-bold text-primary">1.100.000đ - 2.800.000đ</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  For a 7-day trip: <span className="font-semibold">$385-840 total</span>
+                  Cho chuyến đi 7 ngày: <span className="font-semibold">~7.700.000đ - 19.600.000đ tổng cộng</span>
                 </p>
               </div>
             </div>
 
             {/* Nearby Attractions */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold mb-6">Top Attractions Nearby</h3>
+              <h3 className="text-xl font-bold mb-6">Các điểm tham quan lân cận</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {attractions.map((attraction, index) => (
                   <div key={index} className="group relative overflow-hidden rounded-xl">
@@ -272,13 +272,13 @@ export function DestinationDetailPage() {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">{aiMatch ? "Tại sao AI đề xuất địa điểm này?" : "AI-Generated Travel Tips"}</h3>
+                <h3 className="text-xl font-bold">{aiMatch ? "Tại sao AI đề xuất địa điểm này?" : "Lời khuyên du lịch từ AI"}</h3>
               </div>
               
               {aiMatch && (
                 <div className="mb-6 p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-primary/20 shadow-inner">
                   <p className="text-foreground leading-relaxed text-lg">
-                    <strong className="text-primary flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4"/> Đánh giá từ AI (Match Reason):</strong> 
+                    <strong className="text-primary flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4"/> Đánh giá từ AI:</strong> 
                     {aiMatch.reasons[0]}
                   </p>
                 </div>
@@ -301,23 +301,23 @@ export function DestinationDetailPage() {
               {/* Booking Card */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="mb-6">
-                  <div className="text-3xl font-bold text-primary mb-1">$520</div>
-                  <div className="text-sm text-muted-foreground">Estimated total cost (7 days)</div>
+                  <div className="text-3xl font-bold text-primary mb-1">11.500.000đ</div>
+                  <div className="text-sm text-muted-foreground">Tổng chi phí ước tính (7 ngày)</div>
                 </div>
 
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="text-sm mb-2 block">Check-in</label>
+                    <label className="text-sm mb-2 block">Ngày đi</label>
                     <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Select date</span>
+                      <span className="text-sm">Chọn ngày</span>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm mb-2 block">Check-out</label>
+                    <label className="text-sm mb-2 block">Ngày về</label>
                     <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Select date</span>
+                      <span className="text-sm">Chọn ngày</span>
                     </div>
                   </div>
                 </div>
@@ -326,34 +326,34 @@ export function DestinationDetailPage() {
                   to={`/itinerary/${id || 1}`}
                   className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-3"
                 >
-                  <span>Create Itinerary</span>
+                  <span>Tạo lịch trình</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <button className="w-full py-3 border-2 border-border rounded-xl hover:border-primary hover:text-primary transition-all">
-                  Save for Later
+                  Lưu lại để xem sau
                 </button>
               </div>
 
               {/* Quick Facts */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h4 className="font-semibold mb-4">Quick Facts</h4>
+                <h4 className="font-semibold mb-4">Thông tin nhanh</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Currency</span>
-                    <span className="font-semibold">IDR (Rupiah)</span>
+                    <span className="text-muted-foreground">Tiền tệ</span>
+                    <span className="font-semibold">VND (Việt Nam Đồng)</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Language</span>
-                    <span className="font-semibold">Indonesian</span>
+                    <span className="text-muted-foreground">Ngôn ngữ</span>
+                    <span className="font-semibold">Tiếng Việt</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Time Zone</span>
-                    <span className="font-semibold">GMT+8</span>
+                    <span className="text-muted-foreground">Múi giờ</span>
+                    <span className="font-semibold">GMT+7</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Visa</span>
-                    <span className="font-semibold">30-day free</span>
+                    <span className="font-semibold">Không yêu cầu</span>
                   </div>
                 </div>
               </div>

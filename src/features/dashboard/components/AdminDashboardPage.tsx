@@ -24,7 +24,7 @@ export function AdminDashboardPage() {
 
   const stats = [
     {
-      label: "Total Users",
+      label: "Tổng người dùng",
       value: "12,847",
       change: "+12.5%",
       trend: "up",
@@ -32,7 +32,7 @@ export function AdminDashboardPage() {
       color: "from-blue-500 to-cyan-500",
     },
     {
-      label: "Active Destinations",
+      label: "Điểm đến hoạt động",
       value: "234",
       change: "+8.2%",
       trend: "up",
@@ -40,7 +40,7 @@ export function AdminDashboardPage() {
       color: "from-purple-500 to-pink-500",
     },
     {
-      label: "Community Posts",
+      label: "Bài viết cộng đồng",
       value: "3,492",
       change: "+24.1%",
       trend: "up",
@@ -48,8 +48,8 @@ export function AdminDashboardPage() {
       color: "from-orange-500 to-amber-500",
     },
     {
-      label: "Revenue",
-      value: "$45,291",
+      label: "Doanh thu",
+      value: "45,291,000đ",
       change: "+18.7%",
       trend: "up",
       icon: DollarSign,
@@ -58,20 +58,20 @@ export function AdminDashboardPage() {
   ];
 
   const userGrowthData = [
-    { month: "Jan", users: 8420, active: 6234 },
-    { month: "Feb", users: 9150, active: 6891 },
-    { month: "Mar", users: 9850, active: 7420 },
-    { month: "Apr", users: 10680, active: 8156 },
-    { month: "May", users: 11520, active: 8945 },
-    { month: "Jun", users: 12847, active: 9823 },
+    { month: "Tháng 1", users: 8420, active: 6234 },
+    { month: "Tháng 2", users: 9150, active: 6891 },
+    { month: "Tháng 3", users: 9850, active: 7420 },
+    { month: "Tháng 4", users: 10680, active: 8156 },
+    { month: "Tháng 5", users: 11520, active: 8945 },
+    { month: "Tháng 6", users: 12847, active: 9823 },
   ];
 
   const destinationData = [
-    { name: "Asia", value: 45, color: "#3B82F6" },
-    { name: "Europe", value: 30, color: "#06B6D4" },
-    { name: "Americas", value: 15, color: "#FB923C" },
-    { name: "Africa", value: 7, color: "#8B5CF6" },
-    { name: "Oceania", value: 3, color: "#EC4899" },
+    { name: "Châu Á", value: 45, color: "#3B82F6" },
+    { name: "Châu Âu", value: 30, color: "#06B6D4" },
+    { name: "Châu Mỹ", value: 15, color: "#FB923C" },
+    { name: "Châu Phi", value: 7, color: "#8B5CF6" },
+    { name: "Châu Đại Dương", value: 3, color: "#EC4899" },
   ];
 
   const recentUsers = [
@@ -80,8 +80,8 @@ export function AdminDashboardPage() {
       name: "Sarah Chen",
       email: "sarah.chen@berkeley.edu",
       university: "UC Berkeley",
-      joined: "2 hours ago",
-      status: "active",
+      joined: "2 giờ trước",
+      status: "đang hoạt động",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
     },
     {
@@ -89,8 +89,8 @@ export function AdminDashboardPage() {
       name: "Marcus Johnson",
       email: "marcus.j@nyu.edu",
       university: "NYU",
-      joined: "5 hours ago",
-      status: "active",
+      joined: "5 giờ trước",
+      status: "đang hoạt động",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
     },
     {
@@ -98,8 +98,8 @@ export function AdminDashboardPage() {
       name: "Emma Rodriguez",
       email: "emma.r@mit.edu",
       university: "MIT",
-      joined: "1 day ago",
-      status: "active",
+      joined: "1 ngày trước",
+      status: "đang hoạt động",
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
     },
     {
@@ -107,23 +107,23 @@ export function AdminDashboardPage() {
       name: "Alex Kim",
       email: "alex.kim@stanford.edu",
       university: "Stanford",
-      joined: "2 days ago",
-      status: "inactive",
+      joined: "2 ngày trước",
+      status: "không hoạt động",
       avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
     },
   ];
 
   const destinations = [
-    { id: 1, name: "Bali, Indonesia", category: "Beach", users: 2847, avgBudget: "$520", status: "active" },
-    { id: 2, name: "Tokyo, Japan", category: "Culture", users: 3291, avgBudget: "$950", status: "active" },
-    { id: 3, name: "Barcelona, Spain", category: "City", users: 2156, avgBudget: "$680", status: "active" },
-    { id: 4, name: "Iceland", category: "Adventure", users: 1423, avgBudget: "$1200", status: "active" },
+    { id: 1, name: "Bali, Indonesia", category: "Biển", users: 2847, avgBudget: "12,500,000đ", status: "hoạt động" },
+    { id: 2, name: "Tokyo, Nhật Bản", category: "Văn hóa", users: 3291, avgBudget: "23,000,000đ", status: "hoạt động" },
+    { id: 3, name: "Barcelona, Tây Ban Nha", category: "Thành phố", users: 2156, avgBudget: "16,000,000đ", status: "hoạt động" },
+    { id: 4, name: "Iceland", category: "Phiêu lưu", users: 1423, avgBudget: "30,000,000đ", status: "hoạt động" },
   ];
 
   const reports = [
-    { id: 1, type: "Inappropriate Content", reporter: "User #2847", target: "Post #3921", status: "pending", date: "2h ago" },
-    { id: 2, type: "Spam Account", reporter: "User #1523", target: "User #4892", status: "reviewing", date: "5h ago" },
-    { id: 3, type: "Fake Listing", reporter: "User #8234", target: "Destination #231", status: "resolved", date: "1d ago" },
+    { id: 1, type: "Nội dung không phù hợp", reporter: "Người dùng #2847", target: "Bài viết #3921", status: "đang chờ", date: "2 giờ trước" },
+    { id: 2, type: "Tài khoản rác", reporter: "Người dùng #1523", target: "Người dùng #4892", status: "đang xem xét", date: "5 giờ trước" },
+    { id: 3, type: "Thông tin giả mạo", reporter: "Người dùng #8234", target: "Điểm đến #231", status: "đã giải quyết", date: "1 ngày trước" },
   ];
 
   return (
@@ -137,18 +137,18 @@ export function AdminDashboardPage() {
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="font-bold">Admin Panel</h2>
+                <h2 className="font-bold">Bảng quản trị</h2>
                 <p className="text-xs text-muted-foreground">TravelHub</p>
               </div>
             </div>
 
             <nav className="space-y-2">
               {[
-                { id: "overview", label: "Overview", icon: BarChart3 },
-                { id: "users", label: "Users", icon: Users },
-                { id: "destinations", label: "Destinations", icon: MapPin },
-                { id: "posts", label: "Posts", icon: MessageSquare },
-                { id: "reports", label: "Reports", icon: Activity },
+                { id: "overview", label: "Tổng quan", icon: BarChart3 },
+                { id: "users", label: "Người dùng", icon: Users },
+                { id: "destinations", label: "Điểm đến", icon: MapPin },
+                { id: "posts", label: "Bài viết", icon: MessageSquare },
+                { id: "reports", label: "Báo cáo", icon: Activity },
               ].map((item) => (
                 <button
                   key={item.id}
@@ -173,18 +173,18 @@ export function AdminDashboardPage() {
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {activeTab === "overview" && "Dashboard Overview"}
-                {activeTab === "users" && "User Management"}
-                {activeTab === "destinations" && "Destination Management"}
-                {activeTab === "posts" && "Post Management"}
-                {activeTab === "reports" && "Reports & Moderation"}
+                {activeTab === "overview" && "Tổng quan hệ thống"}
+                {activeTab === "users" && "Quản lý người dùng"}
+                {activeTab === "destinations" && "Quản lý điểm đến"}
+                {activeTab === "posts" && "Quản lý bài viết"}
+                {activeTab === "reports" && "Báo cáo & Kiểm duyệt"}
               </h1>
               <p className="text-muted-foreground">
-                {activeTab === "overview" && "Monitor your platform's performance and growth"}
-                {activeTab === "users" && "Manage and view all registered users"}
-                {activeTab === "destinations" && "Manage travel destinations and listings"}
-                {activeTab === "posts" && "Manage community posts and content"}
-                {activeTab === "reports" && "Review and handle user reports"}
+                {activeTab === "overview" && "Theo dõi hiệu suất và sự tăng trưởng của nền tảng"}
+                {activeTab === "users" && "Quản lý và xem tất cả người dùng đã đăng ký"}
+                {activeTab === "destinations" && "Quản lý các điểm đến du lịch và danh sách"}
+                {activeTab === "posts" && "Quản lý bài viết cộng đồng và nội dung"}
+                {activeTab === "reports" && "Xem xét và xử lý các báo cáo từ người dùng"}
               </p>
             </div>
 
@@ -215,7 +215,7 @@ export function AdminDashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* User Growth Chart */}
                   <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                    <h3 className="font-bold mb-6">User Growth</h3>
+                    <h3 className="font-bold mb-6">Tăng trưởng người dùng</h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={userGrowthData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -223,15 +223,15 @@ export function AdminDashboardPage() {
                         <YAxis stroke="#6b7280" />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="users" stroke="#3B82F6" strokeWidth={2} name="Total Users" />
-                        <Line type="monotone" dataKey="active" stroke="#06B6D4" strokeWidth={2} name="Active Users" />
+                        <Line type="monotone" dataKey="users" stroke="#3B82F6" strokeWidth={2} name="Tổng người dùng" />
+                        <Line type="monotone" dataKey="active" stroke="#06B6D4" strokeWidth={2} name="Người dùng hoạt động" />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
 
                   {/* Destination Distribution */}
                   <div className="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 className="font-bold mb-6">Destination Distribution</h3>
+                    <h3 className="font-bold mb-6">Phân bổ điểm đến</h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <RechartsPie>
                         <Pie
@@ -257,19 +257,19 @@ export function AdminDashboardPage() {
                 {/* Recent Users Table */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold">Recent Users</h3>
-                    <button className="text-sm text-primary hover:underline">View All</button>
+                    <h3 className="font-bold">Người dùng mới nhất</h3>
+                    <button className="text-sm text-primary hover:underline">Xem tất cả</button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">User</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">University</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Joined</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Status</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trường đại học</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -286,7 +286,7 @@ export function AdminDashboardPage() {
                             <td className="py-3 px-4 text-sm text-muted-foreground">{user.joined}</td>
                             <td className="py-3 px-4">
                               <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.status === "active"
+                                user.status === "đang hoạt động"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-gray-700"
                               }`}>
@@ -317,13 +317,13 @@ export function AdminDashboardPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder="Tìm người dùng..."
                         className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
                     <button className="px-6 py-3 bg-muted rounded-xl flex items-center gap-2 hover:bg-muted/80 transition-all">
                       <Filter className="w-5 h-5" />
-                      <span>Filters</span>
+                      <span>Bộ lọc</span>
                     </button>
                   </div>
                 </div>
@@ -334,12 +334,12 @@ export function AdminDashboardPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">User</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">University</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Joined</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Status</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trường đại học</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -356,7 +356,7 @@ export function AdminDashboardPage() {
                             <td className="py-3 px-4 text-sm text-muted-foreground">{user.joined}</td>
                             <td className="py-3 px-4">
                               <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.status === "active"
+                                user.status === "đang hoạt động"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-gray-700"
                               }`}>
@@ -395,12 +395,12 @@ export function AdminDashboardPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
-                        placeholder="Search destinations..."
+                        placeholder="Tìm điểm đến..."
                         className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
                     <button className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all">
-                      Add Destination
+                      Thêm điểm đến
                     </button>
                   </div>
                 </div>
@@ -411,12 +411,12 @@ export function AdminDashboardPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Destination</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Category</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Users</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Avg Budget</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Status</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Điểm đến</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Danh mục</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngân sách TB</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -463,11 +463,11 @@ export function AdminDashboardPage() {
                 {/* Filter Tabs */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <div className="flex gap-2 overflow-x-auto">
-                    {["All Reports", "Pending", "Reviewing", "Resolved"].map((tab) => (
+                    {["Tất cả báo cáo", "Đang chờ", "Đang xem xét", "Đã giải quyết"].map((tab) => (
                       <button
                         key={tab}
                         className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
-                          tab === "All Reports"
+                          tab === "Tất cả báo cáo"
                             ? "bg-primary text-white"
                             : "bg-muted hover:bg-muted/80"
                         }`}
@@ -484,12 +484,12 @@ export function AdminDashboardPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Type</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Reporter</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Target</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Date</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Status</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Actions</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Loại</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người báo cáo</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Đối tượng</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -501,9 +501,9 @@ export function AdminDashboardPage() {
                             <td className="py-3 px-4 text-sm text-muted-foreground">{report.date}</td>
                             <td className="py-3 px-4">
                               <span className={`px-2 py-1 rounded-full text-xs ${
-                                report.status === "pending"
+                                report.status === "đang chờ"
                                   ? "bg-yellow-100 text-yellow-700"
-                                  : report.status === "reviewing"
+                                  : report.status === "đang xem xét"
                                   ? "bg-blue-100 text-blue-700"
                                   : "bg-green-100 text-green-700"
                               }`}>
@@ -513,7 +513,7 @@ export function AdminDashboardPage() {
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:shadow-lg transition-all">
-                                  Review
+                                  Kiểm duyệt
                                 </button>
                               </div>
                             </td>

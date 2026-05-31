@@ -9,7 +9,7 @@ export function RootLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const displayEmail = user?.email || user?.username || "User";
+  const displayEmail = user?.email || user?.username || "Người dùng";
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -23,11 +23,11 @@ export function RootLayout() {
   };
 
   const navLinks = [
-    { path: "/", label: "Home", icon: Plane },
-    { path: "/discover", label: "Discover", icon: Compass },
-    { path: "/community", label: "Community", icon: Users },
-    { path: "/chat", label: "Chat", icon: MessageCircle },
-    { path: "/profile", label: "Profile", icon: User },
+    { path: "/", label: "Trang chủ", icon: Plane },
+    { path: "/discover", label: "Khám phá", icon: Compass },
+    { path: "/community", label: "Cộng đồng", icon: Users },
+    { path: "/chat", label: "Tin nhắn", icon: MessageCircle },
+    { path: "/profile", label: "Hồ sơ", icon: User },
   ];
 
   return (
@@ -73,7 +73,7 @@ export function RootLayout() {
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                <span>Admin</span>
+                <span>Quản trị</span>
               </Link>
             </div>
 
@@ -92,7 +92,7 @@ export function RootLayout() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
+                  <span>Đăng xuất</span>
                 </motion.button>
               </div>
             </div>
@@ -122,7 +122,7 @@ export function RootLayout() {
               className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-muted-foreground transition-all"
             >
               <LogOut className="w-5 h-5" />
-              <span className="text-xs">Logout</span>
+              <span className="text-xs">Đăng xuất</span>
             </button>
           </div>
         </div>

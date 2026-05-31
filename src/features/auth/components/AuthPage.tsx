@@ -36,7 +36,7 @@ const getErrorMessage = (error: any, fallback: string) => {
       : error.response.data.message || fallback;
   }
 
-  return "Network error. Please try again later.";
+  return "Lỗi mạng. Vui lòng thử lại sau.";
 };
 
 export function AuthPage() {
@@ -85,7 +85,7 @@ export function AuthPage() {
       navigate("/");
     } catch (error: any) {
       console.error("Login failed:", error);
-      setErrorMsg(getErrorMessage(error, "Invalid email or password."));
+      setErrorMsg(getErrorMessage(error, "Email hoặc mật khẩu không đúng."));
     } finally {
       setIsLoading(false);
     }
@@ -102,11 +102,11 @@ export function AuthPage() {
         password: formData.password,
         fullName: formData.fullName,
       });
-      setSuccessMsg("We sent a 6-digit OTP code to your email.");
+      setSuccessMsg("Mã OTP 6 chữ số đã được gửi đến email của bạn.");
       setMode("registerOtp");
     } catch (error: any) {
       console.error("Register OTP failed:", error);
-      setErrorMsg(getErrorMessage(error, "Could not send register OTP."));
+      setErrorMsg(getErrorMessage(error, "Không thể gửi OTP đăng ký."));
     } finally {
       setIsLoading(false);
     }
@@ -127,11 +127,11 @@ export function AuthPage() {
         email: formData.email,
         otp: otpData.otp,
       });
-      setSuccessMsg("Account created successfully. Please sign in.");
+      setSuccessMsg("Tạo tài khoản thành công. Vui lòng đăng nhập.");
       setMode("login");
     } catch (error: any) {
       console.error("Register OTP verification failed:", error);
-      setErrorMsg(getErrorMessage(error, "Invalid or expired OTP code."));
+      setErrorMsg(getErrorMessage(error, "Mã OTP không hợp lệ hoặc đã hết hạn."));
     } finally {
       setIsLoading(false);
     }
@@ -143,11 +143,11 @@ export function AuthPage() {
 
     try {
       await requestForgotPasswordOtp({ email: formData.email });
-      setSuccessMsg("We sent a 6-digit OTP code to your email.");
+      setSuccessMsg("Mã OTP 6 chữ số đã được gửi đến email của bạn.");
       setMode("forgotOtp");
     } catch (error: any) {
       console.error("Forgot password OTP failed:", error);
-      setErrorMsg(getErrorMessage(error, "Could not send password reset OTP."));
+      setErrorMsg(getErrorMessage(error, "Không thể gửi OTP đặt lại mật khẩu."));
     } finally {
       setIsLoading(false);
     }
@@ -169,11 +169,11 @@ export function AuthPage() {
         otp: otpData.otp,
         newPassword: otpData.newPassword,
       });
-      setSuccessMsg("Password reset successfully. Please sign in.");
+      setSuccessMsg("Đặt lại mật khẩu thành công. Vui lòng đăng nhập.");
       setMode("login");
     } catch (error: any) {
       console.error("Forgot password OTP verification failed:", error);
-      setErrorMsg(getErrorMessage(error, "Invalid or expired OTP code."));
+      setErrorMsg(getErrorMessage(error, "Mã OTP không hợp lệ hoặc đã hết hạn."));
     } finally {
       setIsLoading(false);
     }
@@ -190,37 +190,37 @@ export function AuthPage() {
       navigate("/");
     } catch (error: any) {
       console.error("Google Login failed:", error);
-      setErrorMsg(getErrorMessage(error, "Google Login failed."));
+      setErrorMsg(getErrorMessage(error, "Đăng nhập Google thất bại."));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleError = () => {
-    setErrorMsg("Google Login was cancelled or failed.");
+    setErrorMsg("Đăng nhập Google đã bị hủy hoặc thất bại.");
   };
 
   const title =
     mode === "register"
-      ? "Create Account"
+      ? "Tạo tài khoản"
       : mode === "forgot"
-        ? "Forgot Password"
+        ? "Quên mật khẩu"
         : mode === "registerOtp"
-          ? "Verify Your Email"
+          ? "Xác minh email"
           : mode === "forgotOtp"
-            ? "Reset Password"
-            : "Welcome Back";
+            ? "Đặt lại mật khẩu"
+            : "Chào mừng trở lại";
 
   const subtitle =
     mode === "register"
-      ? "Enter your details and we will send an OTP to your email"
+      ? "Nhập thông tin của bạn, TravelHub sẽ gửi OTP đến email"
       : mode === "forgot"
-        ? "Enter your email to receive a password reset OTP"
+        ? "Nhập email để nhận OTP đặt lại mật khẩu"
         : mode === "registerOtp"
-          ? `Enter the OTP sent to ${formData.email}`
+          ? `Nhập OTP đã gửi đến ${formData.email}`
           : mode === "forgotOtp"
-            ? `Enter the OTP sent to ${formData.email}`
-            : "Enter your credentials to continue";
+            ? `Nhập OTP đã gửi đến ${formData.email}`
+            : "Nhập thông tin đăng nhập để tiếp tục";
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -266,7 +266,7 @@ export function AuthPage() {
           whileTap={{ scale: 0.95 }}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-semibold">Back to Home</span>
+          <span className="font-semibold">Về trang chủ</span>
         </motion.button>
       </Link>
 
@@ -293,7 +293,7 @@ export function AuthPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold gradient-text">TravelHub</h1>
-                <p className="text-sm text-muted-foreground">AI-Powered Travel</p>
+                <p className="text-sm text-muted-foreground">Du lịch bằng AI</p>
               </div>
             </motion.div>
 
@@ -303,9 +303,9 @@ export function AuthPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Start Your Next
+              Bắt đầu chuyến đi
               <br />
-              <span className="gradient-text">Adventure Today</span>
+              <span className="gradient-text">tiếp theo ngay hôm nay</span>
             </motion.h2>
 
             <motion.p
@@ -314,7 +314,7 @@ export function AuthPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              Join thousands of students exploring the world on a budget. Get AI-powered recommendations and connect with travel buddies.
+              Tham gia cùng hàng nghìn sinh viên khám phá thế giới tiết kiệm. Nhận gợi ý từ AI và kết nối bạn đồng hành.
             </motion.p>
 
             <motion.div
@@ -324,9 +324,9 @@ export function AuthPage() {
               transition={{ delay: 0.5 }}
             >
               {[
-                { icon: Sparkles, text: "AI-powered destination recommendations" },
-                { icon: Globe, text: "200+ budget-friendly destinations" },
-                { icon: MapPin, text: "Connect with 50k+ student travelers" },
+                { icon: Sparkles, text: "Gợi ý điểm đến bằng AI" },
+                { icon: Globe, text: "200+ điểm đến vừa túi tiền" },
+                { icon: MapPin, text: "Kết nối với 50k+ sinh viên mê du lịch" },
               ].map((feature, index) => (
                 <motion.div
                   key={index}
@@ -389,7 +389,7 @@ export function AuthPage() {
                   transition={{ delay: 0.2 }}
                 >
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold gradient-text">Welcome to TravelHub</span>
+                  <span className="text-sm font-semibold gradient-text">Chào mừng đến TravelHub</span>
                 </motion.div>
 
                 <AnimatePresence mode="wait">
@@ -426,7 +426,7 @@ export function AuthPage() {
                       <div className="w-full border-t border-border"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-card text-muted-foreground">Or continue with email</span>
+                      <span className="px-4 bg-card text-muted-foreground">Hoặc tiếp tục bằng email</span>
                     </div>
                   </div>
                 </>
@@ -444,7 +444,7 @@ export function AuthPage() {
                   >
                     <EmailField value={formData.email} onChange={(email) => setFormData({ ...formData, email })} />
                     <PasswordField
-                      label="Password"
+                      label="Mật khẩu"
                       value={formData.password}
                       show={showPassword}
                       onToggle={() => setShowPassword(!showPassword)}
@@ -459,7 +459,7 @@ export function AuthPage() {
                           onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
                           className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
                         />
-                        <span className="text-sm text-muted-foreground">Remember me</span>
+                        <span className="text-sm text-muted-foreground">Ghi nhớ đăng nhập</span>
                       </label>
                       <div className="flex items-center gap-3">
                         <button
@@ -467,21 +467,21 @@ export function AuthPage() {
                           onClick={() => switchMode("forgot")}
                           className="text-sm text-primary hover:underline font-semibold"
                         >
-                          Forgot password?
+                          Quên mật khẩu?
                         </button>
                         <button
                           type="button"
                           onClick={() => switchMode("register")}
                           className="text-sm text-primary hover:underline font-semibold"
                         >
-                          Register
+                          Đăng ký
                         </button>
                       </div>
                     </div>
 
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Signing In..." : "Sign In"}
+                      {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </GlowingButton>
                   </motion.form>
                 )}
@@ -496,14 +496,14 @@ export function AuthPage() {
                     exit={{ opacity: 0, y: -10 }}
                   >
                     <TextField
-                      label="Full Name"
+                      label="Họ và tên"
                       icon={User}
                       value={formData.fullName}
-                      placeholder="John Doe"
+                      placeholder="Nguyễn Văn A"
                       onChange={(fullName) => setFormData({ ...formData, fullName })}
                     />
                     <TextField
-                      label="Username"
+                      label="Tên người dùng"
                       icon={User}
                       value={formData.username}
                       placeholder="johnstudent"
@@ -512,7 +512,7 @@ export function AuthPage() {
                     />
                     <EmailField value={formData.email} onChange={(email) => setFormData({ ...formData, email })} />
                     <PasswordField
-                      label="Password"
+                      label="Mật khẩu"
                       value={formData.password}
                       show={showPassword}
                       onToggle={() => setShowPassword(!showPassword)}
@@ -520,9 +520,9 @@ export function AuthPage() {
                     />
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Sending OTP..." : "Send Register OTP"}
+                      {isLoading ? "Đang gửi OTP..." : "Gửi OTP đăng ký"}
                     </GlowingButton>
-                    <AuthBackButton onClick={() => switchMode("login")} text="Back to sign in" />
+                    <AuthBackButton onClick={() => switchMode("login")} text="Quay lại đăng nhập" />
                   </motion.form>
                 )}
 
@@ -533,8 +533,8 @@ export function AuthPage() {
                     isLoading={isLoading}
                     errorMsg={errorMsg}
                     successMsg={successMsg}
-                    submitLabel="Verify & Create Account"
-                    loadingLabel="Verifying..."
+                    submitLabel="Xác minh & tạo tài khoản"
+                    loadingLabel="Đang xác minh..."
                     onOtpChange={(otp) => setOtpData({ ...otpData, otp })}
                     onSubmit={handleVerifyRegisterOtp}
                     onBack={() => switchMode("register")}
@@ -554,9 +554,9 @@ export function AuthPage() {
                     <EmailField value={formData.email} onChange={(email) => setFormData({ ...formData, email })} />
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Sending OTP..." : "Send Reset OTP"}
+                      {isLoading ? "Đang gửi OTP..." : "Gửi OTP đặt lại"}
                     </GlowingButton>
-                    <AuthBackButton onClick={() => switchMode("login")} text="Back to sign in" />
+                    <AuthBackButton onClick={() => switchMode("login")} text="Quay lại đăng nhập" />
                   </motion.form>
                 )}
 
@@ -571,7 +571,7 @@ export function AuthPage() {
                   >
                     <OtpInput value={otpData.otp} onChange={(otp) => setOtpData({ ...otpData, otp })} />
                     <PasswordField
-                      label="New Password"
+                      label="Mật khẩu mới"
                       value={otpData.newPassword}
                       show={showNewPassword}
                       onToggle={() => setShowNewPassword(!showNewPassword)}
@@ -579,7 +579,7 @@ export function AuthPage() {
                     />
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Resetting..." : "Verify & Reset Password"}
+                      {isLoading ? "Đang đặt lại..." : "Xác minh & đặt lại mật khẩu"}
                     </GlowingButton>
                     <div className="flex items-center justify-between gap-3">
                       <button
@@ -587,14 +587,14 @@ export function AuthPage() {
                         onClick={sendForgotPasswordOtp}
                         className="text-sm text-primary hover:underline font-semibold"
                       >
-                        Resend OTP
+                        Gửi lại OTP
                       </button>
                       <button
                         type="button"
                         onClick={() => switchMode("forgot")}
                         className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        Change email
+                        Đổi email
                       </button>
                     </div>
                   </motion.form>
@@ -651,7 +651,7 @@ function TextField({
 function EmailField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-semibold mb-2">Email Address</label>
+      <label className="block text-sm font-semibold mb-2">Địa chỉ email</label>
       <div className="relative">
         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
@@ -689,7 +689,7 @@ function PasswordField({
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Password"
+          placeholder="Mật khẩu"
           className="w-full pl-12 pr-12 py-3 bg-background/50 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
           required
         />
@@ -708,7 +708,7 @@ function PasswordField({
 function OtpInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-semibold mb-2">OTP Code</label>
+      <label className="block text-sm font-semibold mb-2">Mã OTP</label>
       <div className="relative">
         <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
@@ -717,7 +717,7 @@ function OtpInput({ value, onChange }: { value: string; onChange: (value: string
           maxLength={6}
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          placeholder="Enter 6-digit code"
+          placeholder="Nhập mã 6 chữ số"
           className="w-full pl-12 pr-4 py-3 bg-background/50 border border-border rounded-xl tracking-[0.4em] focus:ring-2 focus:ring-primary outline-none transition-all"
           required
         />
@@ -768,14 +768,14 @@ function OtpForm({
           onClick={onResend}
           className="text-sm text-primary hover:underline font-semibold"
         >
-          Resend OTP
+          Gửi lại OTP
         </button>
         <button
           type="button"
           onClick={onBack}
           className="text-sm text-muted-foreground hover:text-primary transition-colors"
         >
-          Change details
+          Đổi thông tin
         </button>
       </div>
     </motion.form>

@@ -130,8 +130,8 @@ export function ItineraryPlannerPage() {
   if (!destination) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <h2 className="text-2xl font-bold mb-4">Destination not found</h2>
-        <Link to="/discover" className="text-primary hover:underline">Go back to discover</Link>
+        <h2 className="text-2xl font-bold mb-4">Không tìm thấy điểm đến</h2>
+        <Link to="/discover" className="text-primary hover:underline">Quay lại khám phá</Link>
       </div>
     );
   }
@@ -154,49 +154,49 @@ export function ItineraryPlannerPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link to={`/destination/${destination.destinationID}`} className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to {destination.name}</span>
+            <span>Quay lại {destination.name}</span>
           </Link>
           
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">AI Itinerary Planner</h1>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">Lập lịch trình bằng AI</h1>
           </div>
           <p className="text-white/90 max-w-2xl mb-8 text-lg">
-            Let AI design the perfect journey for your trip to <span className="font-semibold">{destination.name}</span>
+            Để AI thiết kế hành trình phù hợp cho chuyến đi đến <span className="font-semibold">{destination.name}</span>
           </p>
 
           {!itineraryData && (
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-2xl max-w-2xl">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Settings2 className="w-5 h-5" />
-                Customize Your Trip
+                Tùy chỉnh chuyến đi
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm text-white/80 mb-2">Number of Days</label>
+                  <label className="block text-sm text-white/80 mb-2">Số ngày</label>
                   <select 
                     value={days} 
                     onChange={(e) => setDays(Number(e.target.value))}
                     className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
                   >
                     {[1, 2, 3, 4, 5, 7].map(num => (
-                      <option key={num} value={num} className="text-black">{num} Days</option>
+                      <option key={num} value={num} className="text-black">{num} ngày</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-white/80 mb-2">Travel Style</label>
+                  <label className="block text-sm text-white/80 mb-2">Phong cách du lịch</label>
                   <select 
                     value={travelStyle} 
                     onChange={(e) => setTravelStyle(e.target.value)}
                     className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
                   >
-                    <option value="Budget" className="text-black">Budget / Backpacking</option>
-                    <option value="Luxury" className="text-black">Luxury / Comfort</option>
-                    <option value="Adventure" className="text-black">Adventure / Exploring</option>
-                    <option value="Relaxation" className="text-black">Relaxation / Beach</option>
+                    <option value="Budget" className="text-black">Tiết kiệm / backpacking</option>
+                    <option value="Luxury" className="text-black">Cao cấp / thoải mái</option>
+                    <option value="Adventure" className="text-black">Phiêu lưu / khám phá</option>
+                    <option value="Relaxation" className="text-black">Nghỉ dưỡng / biển</option>
                   </select>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export function ItineraryPlannerPage() {
                 className="w-full py-4 bg-white text-primary rounded-xl font-bold text-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
               >
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6" />}
-                {isLoading ? "AI is generating your magical trip..." : "Generate Itinerary"}
+                {isLoading ? "AI đang tạo lịch trình cho bạn..." : "Tạo lịch trình"}
               </button>
             </div>
           )}
@@ -219,15 +219,15 @@ export function ItineraryPlannerPage() {
               </div>
               <div className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10">
                 <Clock className="w-4 h-4" />
-                <span className="font-medium">{itineraryData.totalDays} Days • {travelStyle}</span>
+                <span className="font-medium">{itineraryData.totalDays} ngày • {travelStyle}</span>
               </div>
               <div className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10">
                 <DollarSign className="w-4 h-4" />
-                <span className="font-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)} Est.</span>
+                <span className="font-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)} ước tính</span>
               </div>
               <button onClick={() => setItineraryData(null)} className="flex items-center gap-2 px-5 py-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full transition-colors border border-white/10">
                 <Settings2 className="w-4 h-4" />
-                <span>Re-generate</span>
+                <span>Tạo lại</span>
               </button>
             </div>
           )}
@@ -238,8 +238,8 @@ export function ItineraryPlannerPage() {
         {!itineraryData && !isLoading && (
           <div className="text-center py-20">
             <Sparkles className="w-16 h-16 text-primary/20 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Ready to plan?</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">Select your preferences above and let our AI craft a personalized itinerary specifically for {destination.name}.</p>
+            <h2 className="text-2xl font-semibold text-foreground mb-2">Sẵn sàng lên kế hoạch?</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">Chọn sở thích ở phía trên để AI tạo lịch trình cá nhân hóa riêng cho {destination.name}.</p>
           </div>
         )}
 
@@ -250,8 +250,8 @@ export function ItineraryPlannerPage() {
               <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
               <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground">Crafting your perfect journey...</h3>
-            <p className="text-muted-foreground animate-pulse">Our AI is analyzing local attractions, travel times, and optimal routes in {destination.name}.</p>
+            <h3 className="text-2xl font-bold text-foreground">Đang xây dựng hành trình phù hợp...</h3>
+            <p className="text-muted-foreground animate-pulse">AI đang phân tích điểm tham quan, thời gian di chuyển và tuyến đường tối ưu tại {destination.name}.</p>
           </div>
         )}
 
@@ -260,7 +260,7 @@ export function ItineraryPlannerPage() {
             {/* Timeline Navigation */}
             <div className="lg:col-span-1">
               <div className="sticky top-20 bg-white rounded-2xl shadow-lg p-6 border border-border/50">
-                <h3 className="font-bold mb-4 text-lg">Trip Overview</h3>
+                <h3 className="font-bold mb-4 text-lg">Tổng quan chuyến đi</h3>
                 <div className="space-y-2">
                   {itineraryData.days.map((day) => (
                     <button
@@ -273,9 +273,9 @@ export function ItineraryPlannerPage() {
                       }`}
                     >
                       <div>
-                        <div className="font-semibold">Day {day.dayNumber}</div>
+                        <div className="font-semibold">Ngày {day.dayNumber}</div>
                         <div className={`text-xs mt-1 ${expandedDay === day.dayNumber ? "text-white/80" : "text-muted-foreground"}`}>
-                          {day.activities.length} activities
+                          {day.activities.length} hoạt động
                         </div>
                       </div>
                       <ChevronRightIcon className={`w-4 h-4 ${expandedDay === day.dayNumber ? "text-white" : "text-muted-foreground opacity-50"}`} />
@@ -286,17 +286,17 @@ export function ItineraryPlannerPage() {
                 {/* Quick Stats */}
                 <div className="mt-6 pt-6 border-t border-border space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Total Days</span>
+                    <span className="text-muted-foreground">Tổng số ngày</span>
                     <span className="font-semibold bg-muted px-2 py-1 rounded-md">{itineraryData.totalDays}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Activities</span>
+                    <span className="text-muted-foreground">Hoạt động</span>
                     <span className="font-semibold bg-muted px-2 py-1 rounded-md">
                       {itineraryData.days.reduce((sum, day) => sum + day.activities.length, 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Est. Cost</span>
+                    <span className="text-muted-foreground">Chi phí ước tính</span>
                     <span className="font-bold text-primary">
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}
                     </span>
@@ -319,8 +319,8 @@ export function ItineraryPlannerPage() {
                         <span className="text-xl font-bold">{day.dayNumber}</span>
                       </div>
                       <div>
-                        <div className="text-xl font-bold mb-1">Day {day.dayNumber}</div>
-                        <div className="text-white/80 text-sm">{day.activities.length} planned activities</div>
+                        <div className="text-xl font-bold mb-1">Ngày {day.dayNumber}</div>
+                        <div className="text-white/80 text-sm">{day.activities.length} hoạt động đã lên kế hoạch</div>
                       </div>
                     </div>
                     {expandedDay === day.dayNumber ? (
@@ -372,10 +372,10 @@ export function ItineraryPlannerPage() {
                                       </div>
                                     </div>
                                     <div className="text-right flex-shrink-0 sm:ml-4 bg-muted/50 px-3 py-2 rounded-lg self-start sm:self-auto border border-border">
-                                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Est. Cost</div>
+                                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Chi phí ước tính</div>
                                       <div className="font-bold text-foreground">
                                         {activity.estimatedCostVND === 0 
-                                          ? <span className="text-green-600">Free</span>
+                                          ? <span className="text-green-600">Miễn phí</span>
                                           : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(activity.estimatedCostVND)
                                         }
                                       </div>
@@ -391,7 +391,7 @@ export function ItineraryPlannerPage() {
                       {/* Day Summary */}
                       <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 -mx-6 -mb-6 px-6 py-4">
                         <div className="text-sm font-medium text-primary">
-                          Daily Total
+                          Tổng trong ngày
                         </div>
                         <div className="text-xl font-bold text-primary">
                           {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
@@ -411,9 +411,9 @@ export function ItineraryPlannerPage() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2 text-purple-900">AI Travel Assistant Notice</h4>
+                    <h4 className="font-semibold mb-2 text-purple-900">Lưu ý từ trợ lý du lịch AI</h4>
                     <p className="text-sm text-purple-800/80 leading-relaxed">
-                      This itinerary is dynamically generated based on current data for <strong>{destination.name}</strong>, tuned for a <strong>{travelStyle}</strong> style. Prices are estimated and may vary. We recommend booking accommodations and activities in advance.
+                      Lịch trình này được tạo động dựa trên dữ liệu hiện có của <strong>{destination.name}</strong>, tối ưu theo phong cách <strong>{travelStyle}</strong>. Giá chỉ là ước tính và có thể thay đổi. Bạn nên đặt chỗ ở và hoạt động trước.
                     </p>
                   </div>
                 </div>

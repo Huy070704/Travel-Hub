@@ -136,64 +136,64 @@ export function AIRecommendationPage() {
   });
 
   const interests = [
-    { id: "beach", label: "Beach & Relaxation", icon: Waves },
-    { id: "adventure", label: "Adventure & Hiking", icon: Mountain },
-    { id: "culture", label: "Culture & History", icon: Building2 },
-    { id: "nature", label: "Nature & Wildlife", icon: Palmtree },
+    { id: "beach", label: "Biển & nghỉ dưỡng", icon: Waves },
+    { id: "adventure", label: "Phiêu lưu & leo núi", icon: Mountain },
+    { id: "culture", label: "Văn hóa & lịch sử", icon: Building2 },
+    { id: "nature", label: "Thiên nhiên", icon: Palmtree },
   ];
 
   const transportationPreferences = [
-    { id: "motorbike", label: "Motorbike", icon: Bike },
-    { id: "bus", label: "Bus", icon: Bus },
-    { id: "train", label: "Train", icon: Train },
-    { id: "airplane", label: "Airplane", icon: Plane },
-    { id: "no_preference", label: "No Preference" },
+    { id: "motorbike", label: "Xe máy", icon: Bike },
+    { id: "bus", label: "Xe khách", icon: Bus },
+    { id: "train", label: "Tàu hỏa", icon: Train },
+    { id: "airplane", label: "Máy bay", icon: Plane },
+    { id: "no_preference", label: "Không ưu tiên" },
   ];
 
   const travelGroups = [
-    { id: "solo", label: "Solo", icon: User },
-    { id: "friends", label: "Friends", icon: Users },
-    { id: "couple", label: "Couple", icon: Heart },
-    { id: "family", label: "Family", icon: Home },
-    { id: "group", label: "Group", icon: Users },
+    { id: "solo", label: "Đi một mình", icon: User },
+    { id: "friends", label: "Bạn bè", icon: Users },
+    { id: "couple", label: "Cặp đôi", icon: Heart },
+    { id: "family", label: "Gia đình", icon: Home },
+    { id: "group", label: "Nhóm", icon: Users },
   ];
 
   const destinationTypes = [
-    { id: "beach", label: "Beach", icon: Waves },
-    { id: "mountain", label: "Mountain", icon: Mountain },
-    { id: "city", label: "City", icon: Building2 },
-    { id: "island", label: "Island", icon: Palmtree },
-    { id: "camping", label: "Camping", icon: Tent },
-    { id: "food_tour", label: "Food Tour" },
+    { id: "beach", label: "Biển", icon: Waves },
+    { id: "mountain", label: "Núi", icon: Mountain },
+    { id: "city", label: "Thành phố", icon: Building2 },
+    { id: "island", label: "Đảo", icon: Palmtree },
+    { id: "camping", label: "Cắm trại", icon: Tent },
+    { id: "food_tour", label: "Ẩm thực" },
   ];
 
   const mainTravelGoals = [
-    { id: "relaxation", label: "Relaxation", icon: Waves },
-    { id: "adventure", label: "Adventure", icon: Mountain },
-    { id: "photography", label: "Photography", icon: Camera },
-    { id: "budget_travel", label: "Budget Travel", icon: DollarSign },
-    { id: "local_experience", label: "Local Experience", icon: Compass },
+    { id: "relaxation", label: "Nghỉ dưỡng", icon: Waves },
+    { id: "adventure", label: "Phiêu lưu", icon: Mountain },
+    { id: "photography", label: "Chụp ảnh", icon: Camera },
+    { id: "budget_travel", label: "Tiết kiệm", icon: DollarSign },
+    { id: "local_experience", label: "Trải nghiệm địa phương", icon: Compass },
   ];
 
   const preferredWeatherOptions = [
-    { id: "cool", label: "Cool", icon: Cloud },
-    { id: "sunny", label: "Sunny", icon: ThermometerSun },
-    { id: "cold", label: "Cold", icon: Snowflake },
-    { id: "no_preference", label: "No Preference" },
+    { id: "cool", label: "Mát mẻ", icon: Cloud },
+    { id: "sunny", label: "Nắng đẹp", icon: ThermometerSun },
+    { id: "cold", label: "Se lạnh", icon: Snowflake },
+    { id: "no_preference", label: "Không ưu tiên" },
   ];
 
   const accommodationTypes = [
-    { id: "hostel", label: "Hostel", icon: Building2 },
+    { id: "hostel", label: "Nhà nghỉ", icon: Building2 },
     { id: "homestay", label: "Homestay", icon: Home },
-    { id: "hotel", label: "Hotel", icon: Hotel },
+    { id: "hotel", label: "Khách sạn", icon: Hotel },
     { id: "resort", label: "Resort", icon: Gem },
-    { id: "no_preference", label: "No Preference" },
+    { id: "no_preference", label: "Không ưu tiên" },
   ];
 
   const budgetStyles = [
-    { id: "budget", label: "Budget", icon: DollarSign },
-    { id: "balanced", label: "Balanced", icon: WalletCards },
-    { id: "premium", label: "Premium", icon: Gem },
+    { id: "budget", label: "Tiết kiệm", icon: DollarSign },
+    { id: "balanced", label: "Cân bằng", icon: WalletCards },
+    { id: "premium", label: "Cao cấp", icon: Gem },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,16 +274,16 @@ export function AIRecommendationPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-sm font-semibold mb-5">
             <Sparkles className="w-4 h-4" />
-            <span>Smart trip matching</span>
+            <span>Gợi ý chuyến đi thông minh</span>
           </div>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-normal">AI Travel Recommendations</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-normal">Gợi ý du lịch bằng AI</h1>
           </div>
           <p className="text-white/90 max-w-2xl">
-            Tell us about your dream trip and our AI will find the perfect destinations that match your budget and interests
+            Cho TravelHub biết chuyến đi bạn mong muốn, AI sẽ tìm các điểm đến phù hợp với ngân sách và sở thích của bạn.
           </p>
         </div>
       </div>
@@ -296,8 +296,8 @@ export function AIRecommendationPage() {
               <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 p-5 md:p-6 space-y-4">
                 <div className="flex items-start justify-between gap-3 pb-2">
                   <div>
-                    <h2 className="font-bold text-xl">Plan Your Trip</h2>
-                    <p className="text-sm text-muted-foreground">Quick preferences for better matches</p>
+                    <h2 className="font-bold text-xl">Lên kế hoạch chuyến đi</h2>
+                    <p className="text-sm text-muted-foreground">Chọn nhanh sở thích để gợi ý chính xác hơn</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
                     <Compass className="w-5 h-5 text-white" />
@@ -306,36 +306,36 @@ export function AIRecommendationPage() {
 
                 <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm space-y-4">
                   <div>
-                    <FieldLabel icon={MapPin}>Departing From</FieldLabel>
+                    <FieldLabel icon={MapPin}>Xuất phát từ</FieldLabel>
                   <input
                     type="text"
                     value={formData.departure}
                     onChange={(e) => setFormData({ ...formData, departure: e.target.value })}
-                    placeholder="e.g., New York, USA"
+                    placeholder="Ví dụ: TP. Hồ Chí Minh"
                     className={inputClassName}
                     required
                   />
                   </div>
 
                   <div>
-                    <FieldLabel icon={DollarSign}>Total Budget (USD)</FieldLabel>
+                    <FieldLabel icon={DollarSign}>Tổng ngân sách (VND)</FieldLabel>
                   <input
                     type="number"
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                    placeholder="e.g., 1000"
+                    placeholder="Ví dụ: 5000000"
                     className={inputClassName}
                     required
                   />
                   </div>
 
                   <div>
-                    <FieldLabel icon={Calendar}>Number of Days</FieldLabel>
+                    <FieldLabel icon={Calendar}>Số ngày</FieldLabel>
                   <input
                     type="number"
                     value={formData.days}
                     onChange={(e) => setFormData({ ...formData, days: e.target.value })}
-                    placeholder="e.g., 7"
+                    placeholder="Ví dụ: 3"
                     className={inputClassName}
                     required
                   />
@@ -343,7 +343,7 @@ export function AIRecommendationPage() {
                 </div>
 
                 <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm">
-                  <FieldLabel icon={Heart}>Travel Interests</FieldLabel>
+                  <FieldLabel icon={Heart}>Sở thích du lịch</FieldLabel>
                   <div className="grid grid-cols-2 gap-2">
                     {interests.map(({ id, label, icon: Icon }) => (
                       <button
@@ -364,7 +364,7 @@ export function AIRecommendationPage() {
                 </div>
 
                 <ChoiceGroup
-                  label="Transportation Preference"
+                  label="Phương tiện ưu tiên"
                   icon={Plane}
                   options={transportationPreferences}
                   value={formData.transportationPreference}
@@ -372,7 +372,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Travel Group"
+                  label="Bạn đi cùng ai"
                   icon={Users}
                   options={travelGroups}
                   value={formData.travelGroup}
@@ -380,7 +380,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Destination Type"
+                  label="Loại điểm đến"
                   icon={Compass}
                   options={destinationTypes}
                   value={formData.destinationType}
@@ -388,7 +388,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Main Travel Goal"
+                  label="Mục tiêu chính"
                   icon={Sparkles}
                   options={mainTravelGoals}
                   value={formData.mainTravelGoal}
@@ -396,7 +396,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Preferred Weather"
+                  label="Thời tiết mong muốn"
                   icon={CloudSun}
                   options={preferredWeatherOptions}
                   value={formData.preferredWeather}
@@ -404,7 +404,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Accommodation Type"
+                  label="Loại chỗ ở"
                   icon={Hotel}
                   options={accommodationTypes}
                   value={formData.accommodationType}
@@ -412,7 +412,7 @@ export function AIRecommendationPage() {
                 />
 
                 <ChoiceGroup
-                  label="Budget Style"
+                  label="Phong cách chi tiêu"
                   icon={WalletCards}
                   options={budgetStyles}
                   value={formData.budgetStyle}
@@ -429,12 +429,12 @@ export function AIRecommendationPage() {
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>AI is thinking...</span>
+                      <span>AI đang suy nghĩ...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      <span>Get Recommendations</span>
+                      <span>Nhận gợi ý</span>
                     </>
                   )}
                 </motion.button>
@@ -452,9 +452,9 @@ export function AIRecommendationPage() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">AI Travel Assistant</h4>
+                    <h4 className="font-semibold mb-1">Trợ lý du lịch AI</h4>
                     <p className="text-sm text-muted-foreground">
-                      Our AI analyzes 1000+ destinations, real traveler reviews, weather patterns, and budget data to find your perfect match.
+                      AI phân tích hơn 1000 điểm đến, đánh giá thực tế, thời tiết và dữ liệu ngân sách để tìm lựa chọn hợp với bạn.
                     </p>
                   </div>
                 </div>
@@ -470,9 +470,9 @@ export function AIRecommendationPage() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center shadow-xl shadow-primary/20">
                   <Compass className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">Ready to Discover?</h3>
+                <h3 className="text-2xl font-bold mb-3">Sẵn sàng khám phá?</h3>
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  Fill in your preferences on the left and let our AI find the best destinations for your budget and interests
+                  Điền sở thích của bạn ở bên trái để AI tìm điểm đến phù hợp nhất với ngân sách và gu du lịch của bạn.
                 </p>
               </div>
             )}
@@ -482,12 +482,12 @@ export function AIRecommendationPage() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center animate-pulse shadow-xl shadow-primary/20">
                   <Sparkles className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3">AI is Analyzing...</h3>
+                <h3 className="text-2xl font-bold mb-3">AI đang phân tích...</h3>
                 <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                  Searching through thousands of destinations and matching them with your preferences
+                  Đang rà soát hàng nghìn điểm đến và đối chiếu với sở thích của bạn.
                 </p>
                 <div className="flex flex-col gap-2 max-w-md mx-auto">
-                  {["Analyzing budget options", "Checking weather conditions", "Finding best matches"].map((text, i) => (
+                  {["Phân tích lựa chọn ngân sách", "Kiểm tra điều kiện thời tiết", "Tìm điểm đến phù hợp nhất"].map((text, i) => (
                     <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
                       <div
                         className="w-2 h-2 rounded-full bg-primary animate-pulse"
@@ -504,8 +504,8 @@ export function AIRecommendationPage() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold">Top Recommendations for You</h3>
-                    <p className="text-muted-foreground">Based on your preferences and budget</p>
+                    <h3 className="text-2xl font-bold">Gợi ý hàng đầu cho bạn</h3>
+                    <p className="text-muted-foreground">Dựa trên sở thích và ngân sách của bạn</p>
                   </div>
                 </div>
 
@@ -528,10 +528,10 @@ export function AIRecommendationPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
                         <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>#{index + 1} Match</span>
+                          <span>#{index + 1} phù hợp</span>
                         </div>
                         <div className="absolute top-4 right-4 px-3 py-1 bg-primary/90 backdrop-blur-sm text-white rounded-full text-sm font-semibold shadow-sm">
-                          {rec.matchScore}% Match
+                          {rec.matchScore}% phù hợp
                         </div>
                       </div>
 
@@ -544,7 +544,7 @@ export function AIRecommendationPage() {
                           </div>
                           <div className="text-right">
                             <div className="text-2xl font-bold text-primary">{rec.estimatedCost}</div>
-                            <div className="text-xs text-muted-foreground">Total estimated cost</div>
+                            <div className="text-xs text-muted-foreground">Tổng chi phí ước tính</div>
                           </div>
                         </div>
 
@@ -561,14 +561,14 @@ export function AIRecommendationPage() {
                             <Plane className="w-4 h-4 text-primary" />
                             <div>
                               <div className="font-semibold">{rec.flightDuration}</div>
-                              <div className="text-xs text-muted-foreground">Flight time</div>
+                              <div className="text-xs text-muted-foreground">Thời gian di chuyển</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
                             <TrendingUp className="w-4 h-4 text-green-500" />
                             <div>
                               <div className="font-semibold">{rec.confidence}%</div>
-                              <div className="text-xs text-muted-foreground">Confidence</div>
+                              <div className="text-xs text-muted-foreground">Độ tin cậy</div>
                             </div>
                           </div>
                         </div>
@@ -577,7 +577,7 @@ export function AIRecommendationPage() {
                         <div className="mb-4">
                           <h5 className="font-semibold mb-2 flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-primary" />
-                            Why AI Recommends This
+                            Vì sao AI gợi ý điểm này
                           </h5>
                           <ul className="space-y-1.5">
                             {rec.reasons.map((reason, i) => (
@@ -607,7 +607,7 @@ export function AIRecommendationPage() {
                             to={`/destination/${rec.id}`}
                             className="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all text-center font-semibold"
                           >
-                            View Details
+                            Xem chi tiết
                           </Link>
                           <button className="px-6 py-3 border border-border rounded-xl hover:border-primary hover:text-primary hover:bg-primary/5 transition-all">
                             <Heart className="w-5 h-5" />

@@ -81,7 +81,7 @@ export function CommunityFeedPage() {
     try {
       await createPost({
         postType: "Text",
-        title: "Community Update",
+        title: "Cập nhật cộng đồng",
         content: newPostContent
       });
       setNewPostContent("");
@@ -121,10 +121,10 @@ export function CommunityFeedPage() {
             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold">Travel Community</h1>
+            <h1 className="text-3xl md:text-4xl font-bold">Cộng đồng du lịch</h1>
           </div>
           <p className="text-white/90 max-w-2xl">
-            Connect with fellow student travelers, find travel buddies, and share your adventures
+            Kết nối với các bạn sinh viên cùng đam mê xê dịch, tìm bạn đồng hành và chia sẻ những cuộc phiêu lưu của bạn
           </p>
         </div>
       </div>
@@ -146,7 +146,7 @@ export function CommunityFeedPage() {
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
-                  placeholder="Share your travel plans or experiences..."
+                  placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
                   className="flex-1 px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                   disabled={isPosting}
                 />
@@ -161,11 +161,11 @@ export function CommunityFeedPage() {
               <div className="flex items-center gap-2">
                 <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm font-medium">Add Destination</span>
+                  <span className="text-sm font-medium">Thêm điểm đến</span>
                 </button>
                 <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
                   <Users className="w-4 h-4" />
-                  <span className="text-sm font-medium">Find Buddies</span>
+                  <span className="text-sm font-medium">Tìm bạn đồng hành</span>
                 </button>
               </div>
             </div>
@@ -174,13 +174,13 @@ export function CommunityFeedPage() {
             <div className="flex items-center gap-3 overflow-x-auto pb-2">
               <button className="px-4 py-2 bg-primary text-white rounded-full whitespace-nowrap flex items-center gap-2 shadow-lg">
                 <Filter className="w-4 h-4" />
-                <span>All Posts</span>
+                <span>Tất cả bài viết</span>
               </button>
               <button className="px-4 py-2 bg-white text-foreground rounded-full whitespace-nowrap hover:bg-muted transition-all">
-                Looking for Buddies
+                Đang tìm bạn đồng hành
               </button>
               <button className="px-4 py-2 bg-white text-foreground rounded-full whitespace-nowrap hover:bg-muted transition-all">
-                Trip Reports
+                Review chuyến đi
               </button>
             </div>
 
@@ -202,7 +202,7 @@ export function CommunityFeedPage() {
                         <Link to={`/profile/${post.userID}`} className="font-semibold hover:text-primary text-lg">
                           {post.username}
                         </Link>
-                        <div className="text-xs text-muted-foreground">{new Date(post.creationDate).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(post.creationDate).toLocaleString('vi-VN')}</div>
                       </div>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export function CommunityFeedPage() {
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
                         <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-semibold">Comment</span>
+                        <span className="text-sm font-semibold">Bình luận</span>
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
                         <Share2 className="w-5 h-5" />
@@ -248,7 +248,7 @@ export function CommunityFeedPage() {
                       className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
                     >
                       <Send className="w-4 h-4" />
-                      <span>Message</span>
+                      <span>Nhắn tin</span>
                     </Link>
                   </div>
 
@@ -261,7 +261,7 @@ export function CommunityFeedPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Add a comment..."
+                      placeholder="Thêm bình luận..."
                       className="flex-1 px-4 py-2 bg-muted rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
                     />
                   </div>
@@ -270,7 +270,7 @@ export function CommunityFeedPage() {
             )) : (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center text-muted-foreground">
                 <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No posts yet. Be the first to share your journey!</p>
+                <p>Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ hành trình của bạn!</p>
               </div>
             )}
           </div>
@@ -281,7 +281,7 @@ export function CommunityFeedPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-20">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-5 h-5 text-primary" />
-                <h3 className="font-bold">Trending Places</h3>
+                <h3 className="font-bold">Địa điểm nổi bật</h3>
               </div>
               <div className="space-y-3">
                 {trendingDestinations.length > 0 ? trendingDestinations.map((dest) => (
@@ -298,7 +298,7 @@ export function CommunityFeedPage() {
                     </div>
                   </Link>
                 )) : (
-                  <div className="text-sm text-muted-foreground">No trending destinations.</div>
+                  <div className="text-sm text-muted-foreground">Chưa có địa điểm nổi bật.</div>
                 )}
               </div>
             </div>
@@ -307,7 +307,7 @@ export function CommunityFeedPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="font-bold mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
-                Suggested Buddies
+                Gợi ý bạn đồng hành
               </h3>
               <div className="space-y-4">
                 {buddies.length > 0 ? buddies.map((buddy) => (
@@ -323,17 +323,17 @@ export function CommunityFeedPage() {
                       <Link to={`/profile/${buddy.userID}`} className="font-semibold text-sm hover:text-primary">
                         {buddy.username}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{buddy.matchScore}% Match</div>
+                      <div className="text-xs text-muted-foreground">{buddy.matchScore}% Phù hợp</div>
                     </div>
                     <Link 
                       to={`/chat/${buddy.userID}`}
                       className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all font-semibold"
                     >
-                      Connect
+                      Kết nối
                     </Link>
                   </div>
                 )) : (
-                  <div className="text-sm text-muted-foreground">No recommendations found yet. Update your profile to get matched!</div>
+                  <div className="text-sm text-muted-foreground">Chưa tìm thấy gợi ý nào. Cập nhật hồ sơ của bạn để nhận gợi ý!</div>
                 )}
               </div>
             </div>

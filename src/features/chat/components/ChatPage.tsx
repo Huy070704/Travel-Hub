@@ -193,27 +193,27 @@ export function ChatPage() {
   }
 
   const currentConversationInfo = conversations.find(c => c.chatID === currentChatId);
-  const chatName = currentConversationInfo?.chatName || receiverProfile?.username || "New Conversation";
-  const chatAvatar = currentConversationInfo?.chatName || receiverProfile?.username || "New User";
+  const chatName = currentConversationInfo?.chatName || receiverProfile?.username || "Cuộc trò chuyện mới";
+  const chatAvatar = currentConversationInfo?.chatName || receiverProfile?.username || "Người dùng mới";
 
   return (
     <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] bg-background">
       <div className="max-w-7xl mx-auto h-full shadow-2xl overflow-hidden rounded-none md:rounded-t-2xl mt-0 md:mt-4 border border-border">
         <div className="grid grid-cols-1 md:grid-cols-12 h-full">
           {/* Conversations List */}
-          <div className="md:col-span-4 bg-white border-r border-border h-full flex flex-col z-10 shadow-lg">
+          <div className="md:col-span-4 bg-card border-r border-border h-full flex flex-col z-10 shadow-lg">
             {/* Search Header */}
             <div className="p-4 border-b border-border bg-gradient-to-br from-primary/5 to-secondary/5">
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-foreground">
                 <span className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></span>
-                Messages
+                Tin nhắn
               </h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search conversations..."
-                  className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                  placeholder="Tìm cuộc trò chuyện..."
+                  className="w-full pl-10 pr-4 py-3 bg-background rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm text-foreground"
                 />
               </div>
             </div>
@@ -222,8 +222,8 @@ export function ChatPage() {
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {conversations.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
-                  <p>No conversations yet.</p>
-                  <p className="text-sm mt-2">Go to the community feed and connect with a buddy!</p>
+                  <p>Chưa có cuộc trò chuyện.</p>
+                  <p className="text-sm mt-2">Vào bảng tin cộng đồng và kết nối với bạn bè!</p>
                 </div>
               )}
               {conversations.map((conversation) => (
@@ -243,14 +243,14 @@ export function ChatPage() {
                   </div>
                   <div className="flex-1 min-w-0 text-left pt-1">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-bold truncate text-base">{conversation.chatName}</h4>
+                      <h4 className="font-bold truncate text-base text-foreground">{conversation.chatName}</h4>
                       <span className="text-xs text-muted-foreground flex-shrink-0 font-medium">
                         {conversation.lastMessageDate ? new Date(conversation.lastMessageDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground truncate font-medium">
-                        {conversation.lastMessage || "Started a chat"}
+                        {conversation.lastMessage || "Đã bắt đầu trò chuyện"}
                       </p>
                     </div>
                   </div>
@@ -260,11 +260,11 @@ export function ChatPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="md:col-span-8 bg-slate-50 h-full flex flex-col relative">
+          <div className="md:col-span-8 bg-background h-full flex flex-col relative">
             {currentChatId || receiverIdFromUrl ? (
               <>
                 {/* Chat Header */}
-                <div className="bg-white/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <img
@@ -272,14 +272,14 @@ export function ChatPage() {
                         alt={chatAvatar}
                         className="w-12 h-12 rounded-full object-cover border border-border"
                       />
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full shadow-sm" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg leading-tight">
+                      <h3 className="font-bold text-lg leading-tight text-foreground">
                         {chatName}
                       </h3>
                       <div className="text-sm text-green-600 font-medium flex items-center gap-1">
-                        Online
+                        Đang hoạt động
                       </div>
                     </div>
                   </div>
@@ -297,15 +297,15 @@ export function ChatPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 relative">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background relative">
                   {/* Watermark/Background Pattern could go here */}
                   
                   {messages.length === 0 && (
                     <div className="text-center py-10 opacity-50">
                       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                        <MessageCircle className="w-8 h-8" />
+                        <MessageCircle className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <p>Send a message to start the conversation!</p>
+                      <p className="text-foreground">Gửi tin nhắn để bắt đầu cuộc trò chuyện!</p>
                     </div>
                   )}
 
@@ -327,7 +327,7 @@ export function ChatPage() {
                           className={`max-w-[70%] ${
                             isMe
                               ? "bg-gradient-to-r from-primary to-secondary text-white rounded-2xl rounded-br-sm shadow-md"
-                              : "bg-white border border-border text-foreground rounded-2xl rounded-bl-sm shadow-sm"
+                              : "bg-card border border-border text-foreground rounded-2xl rounded-bl-sm shadow-sm"
                           } px-5 py-3`}
                         >
                           {!isMe && <div className="text-xs font-bold mb-1 text-primary">{message.senderUsername}</div>}
@@ -347,13 +347,13 @@ export function ChatPage() {
                 </div>
 
                 {/* Message Input */}
-                <div className="bg-white border-t border-border p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                <div className="bg-card border-t border-border p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
                   {/* Travel Sticker Suggestions */}
                   <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-                    {["✈️ Let's go!", "🏖️ Beach day?", "🍜 Food tour!", "📸 Photo spot!", "Sure, I'll send the itinerary."].map((sticker, index) => (
+                    {["✈️ Đi thôi!", "🏖️ Đi biển?", "🍜 Tour ẩm thực!", "📸 Chỗ chụp ảnh!", "Được, tôi sẽ gửi hành trình."].map((sticker, index) => (
                       <button
                         key={index}
-                        className="px-4 py-1.5 bg-muted/80 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 rounded-full text-sm whitespace-nowrap transition-all font-medium"
+                        className="px-4 py-1.5 bg-muted/80 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 rounded-full text-sm whitespace-nowrap transition-all font-medium text-foreground"
                         onClick={() => setMessageInput(sticker)}
                       >
                         {sticker}
@@ -373,8 +373,8 @@ export function ChatPage() {
                         type="text"
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder="Type your message..."
-                        className="w-full px-5 py-4 bg-muted/50 rounded-2xl border border-border focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-12 text-[15px]"
+                        placeholder="Nhập tin nhắn..."
+                        className="w-full px-5 py-4 bg-muted/50 rounded-2xl border border-border focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-12 text-[15px] text-foreground placeholder:text-muted-foreground"
                       />
                       <button
                         type="button"
@@ -394,12 +394,12 @@ export function ChatPage() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50 bg-background">
                 <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
                   <MessageCircle className="w-12 h-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Your Messages</h3>
-                <p className="text-muted-foreground max-w-sm">Select a conversation from the list or start a new one from a user's profile to begin chatting.</p>
+                <h3 className="text-2xl font-bold mb-2 text-foreground">Tin nhắn của bạn</h3>
+                <p className="text-muted-foreground max-w-sm">Chọn một cuộc trò chuyện từ danh sách hoặc bắt đầu một cuộc trò chuyện mới từ hồ sơ người dùng để bắt đầu trò chuyện.</p>
               </div>
             )}
           </div>
