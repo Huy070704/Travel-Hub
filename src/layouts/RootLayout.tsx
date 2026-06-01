@@ -49,49 +49,49 @@ export function RootLayout() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-0.5">
               {navLinks.map(({ path, label, icon: Icon }) => (
                 <Link
                   key={path}
                   to={path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all whitespace-nowrap text-sm ${
                     isActive(path)
                       ? "bg-primary text-white"
                       : "text-foreground hover:bg-muted"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{label}</span>
                 </Link>
               ))}
               <Link
                 to="/admin"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all whitespace-nowrap text-sm ${
                   isActive("/admin")
                     ? "bg-primary text-white"
                     : "text-foreground hover:bg-muted"
                 }`}
               >
-                <Shield className="w-4 h-4" />
+                <Shield className="w-4 h-4 flex-shrink-0" />
                 <span>Quản trị</span>
               </Link>
             </div>
 
             {/* CTA Button */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
               <DarkModeToggle />
-              <div className="flex items-center gap-3">
-                <div className="max-w-[220px] truncate px-4 py-2 rounded-full bg-muted text-sm font-semibold text-foreground">
+              <div className="flex items-center gap-2">
+                <div className="max-w-[140px] truncate px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground">
                   {displayEmail}
                 </div>
                 <motion.button
                   type="button"
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary whitespace-nowrap text-sm"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
                   <span>Đăng xuất</span>
                 </motion.button>
               </div>
