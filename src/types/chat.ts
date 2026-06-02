@@ -5,6 +5,8 @@ export type ConversationDto = {
   lastMessage?: string;
   lastMessageDate?: string; // ISO String
   participantCount: number;
+  otherUserID?: number;
+  avatarURL?: string;
 };
 
 export type MessageDto = {
@@ -12,6 +14,7 @@ export type MessageDto = {
   chatID: number;
   senderID: number;
   senderUsername: string;
+  avatarURL?: string;
   content?: string;
   sentDate: string; // ISO String
 };

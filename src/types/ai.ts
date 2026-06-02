@@ -18,6 +18,14 @@ export type AiRecommendResponse = {
   cityProvince: string;
   matchReason: string;
   estimatedCostVND: number;
+  dailyCostBreakdown: {
+    accommodation: string;
+    food: string;
+    transportation: string;
+    activities: string;
+    entertainment: string;
+    shopping: string;
+  };
 };
 
 export type AiGenerateItineraryRequest = {

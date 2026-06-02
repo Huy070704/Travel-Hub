@@ -12,13 +12,15 @@ import {
   Filter,
   TrendingUp,
   Plane,
-  Loader2
+  Loader2,
+  X
 } from "lucide-react";
-import { getPosts, createPost, toggleLike } from "@/api/feedApi";
+import { getPosts, createPost, toggleLike, getComments, addComment } from "@/api/feedApi";
 import { getBuddyRecommendations } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getMyProfile } from "@/api/usersApi";
-import type { PostDto } from "@/types/feed";
+import { sendDirectMessage } from "@/api/chatApi";
+import type { PostDto, CommentDto } from "@/types/feed";
 import type { BuddyRecommendationDto } from "@/types/buddies";
 import type { DestinationDto } from "@/types/destinations";
 import type { UserProfileDto } from "@/types/users";
@@ -53,6 +55,16 @@ export function CommunityFeedPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
 
+  // Comments state
+  const [comments, setComments] = useState<Record<number, CommentDto[]>>({});
+  const [showComments, setShowComments] = useState<Record<number, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState<Record<number, boolean>>({});
+
+  // Share state
+  const [shareModalPostId, setShareModalPostId] = useState<number | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -66,6 +78,22 @@ export function CommunityFeedPage() {
         setPosts(postsData.items);
         setBuddies(buddiesData);
         setTrendingDestinations(trendingDests);
+
+        // Check if there is a postId in the URL to scroll to
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPostId = urlParams.get('postId');
+        if (targetPostId) {
+          setTimeout(() => {
+            const element = document.getElementById(`post-${targetPostId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Optional: Highlight the post temporarily
+              element.classList.add('ring-4', 'ring-primary/50', 'transition-all', 'duration-1000');
+              setTimeout(() => element.classList.remove('ring-4', 'ring-primary/50'), 2000);
+            }
+          }, 500); // slight delay to allow rendering
+        }
+
       } catch (error) {
         console.error("Failed to load community data", error);
       } finally {
@@ -96,11 +124,80 @@ export function CommunityFeedPage() {
   };
 
   const handleLike = async (postId: number) => {
+    // Optimistic UI update
+    const originalPosts = [...posts];
+    setPosts(posts.map(p => {
+      if (p.postID === postId) {
+        return {
+          ...p,
+          isLikedByCurrentUser: !p.isLikedByCurrentUser,
+          likesCount: p.isLikedByCurrentUser ? Math.max(0, p.likesCount - 1) : p.likesCount + 1
+        };
+      }
+      return p;
+    }));
+
     try {
       const res = await toggleLike(postId);
-      setPosts(posts.map(p => p.postID === postId ? { ...p, likesCount: res.likesCount } : p));
+      // Ensure backend sync
+      setPosts(prevPosts => prevPosts.map(p => p.postID === postId ? { ...p, likesCount: res.likesCount } : p));
     } catch (error) {
       console.error("Failed to toggle like", error);
+      // Revert optimistic update
+      setPosts(originalPosts);
+    }
+  };
+
+  const handleToggleComments = async (postId: number) => {
+    const isShowing = showComments[postId];
+    setShowComments(prev => ({ ...prev, [postId]: !isShowing }));
+
+    // Fetch comments if expanding and not loaded yet
+    if (!isShowing && !comments[postId]) {
+      try {
+        const res = await getComments(postId);
+        setComments(prev => ({ ...prev, [postId]: res.items }));
+      } catch (error) {
+        console.error("Failed to load comments", error);
+      }
+    }
+  };
+
+  const handleAddComment = async (postId: number) => {
+    const content = commentInputs[postId];
+    if (!content?.trim()) return;
+
+    setIsSubmittingComment(prev => ({ ...prev, [postId]: true }));
+    try {
+      await addComment(postId, { content });
+      
+      // Refresh comments for this post
+      const res = await getComments(postId);
+      setComments(prev => ({ ...prev, [postId]: res.items }));
+      
+      // Clear input
+      setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+    } catch (error) {
+      console.error("Failed to add comment", error);
+    } finally {
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleShareToBuddy = async (buddyId: number, post: PostDto) => {
+    if (isSharing) return;
+    setIsSharing(true);
+    try {
+      const shareLink = `${window.location.origin}/community?postId=${post.postID}`;
+      const shareContent = `Mời bạn xem bài viết của ${post.username}:\n\n"${post.title}"\n${post.content ? post.content : ''}\n\nXem bài viết: ${shareLink}`;
+      await sendDirectMessage(buddyId, shareContent);
+      alert("Đã chia sẻ bài viết thành công!");
+      setShareModalPostId(null);
+    } catch (error) {
+      console.error("Failed to share post", error);
+      alert("Có lỗi xảy ra khi chia sẻ bài viết.");
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -137,7 +234,7 @@ export function CommunityFeedPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center gap-4 mb-4">
                 <img
-                  src={userProfile?.avatarURL || getAvatar(0)}
+                  src={userProfile?.avatarURL || getAvatar(userProfile?.userID || 0)}
                   alt="You"
                   className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
                 />
@@ -186,16 +283,16 @@ export function CommunityFeedPage() {
 
             {/* Posts */}
             {posts.length > 0 ? posts.map((post) => (
-              <div key={post.postID} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <div id={`post-${post.postID}`} key={post.postID} className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 {/* Post Header */}
                 <div className="p-6 pb-4">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <Link to={`/profile/${post.userID}`}>
                         <img
-                          src={getAvatar(post.userID)}
+                          src={post.avatarURL || getAvatar(post.userID)}
                           alt={post.username}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover border border-border"
                         />
                       </Link>
                       <div>
@@ -231,15 +328,22 @@ export function CommunityFeedPage() {
                         onClick={() => handleLike(post.postID)}
                         className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-all"
                       >
-                        <Heart className={`w-5 h-5 ${post.likesCount > 0 ? "fill-red-500 text-red-500" : ""}`} />
+                        <Heart className={`w-5 h-5 ${post.isLikedByCurrentUser ? "fill-red-500 text-red-500" : ""}`} />
                         <span className="text-sm font-semibold">{post.likesCount}</span>
                       </button>
-                      <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
-                        <MessageCircle className="w-5 h-5" />
+                      <button 
+                        onClick={() => handleToggleComments(post.postID)}
+                        className={`flex items-center gap-2 transition-all ${showComments[post.postID] ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                      >
+                        <MessageCircle className={`w-5 h-5 ${showComments[post.postID] ? "fill-primary/20" : ""}`} />
                         <span className="text-sm font-semibold">Bình luận</span>
                       </button>
-                      <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all">
+                      <button 
+                        onClick={() => setShareModalPostId(post.postID)}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all"
+                      >
                         <Share2 className="w-5 h-5" />
+                        <span className="text-sm font-semibold hidden sm:inline">Chia sẻ</span>
                       </button>
                     </div>
                     {/* Add connect button if we had lookingForBuddies flag */}
@@ -248,23 +352,69 @@ export function CommunityFeedPage() {
                       className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
                     >
                       <Send className="w-4 h-4" />
-                      <span>Nhắn tin</span>
+                      <span className="hidden sm:inline">Nhắn tin</span>
                     </Link>
                   </div>
 
-                  {/* Comment Input */}
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={userProfile?.avatarURL || getAvatar(0)}
-                      alt="You"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Thêm bình luận..."
-                      className="flex-1 px-4 py-2 bg-muted rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
-                    />
-                  </div>
+                  {/* Comments Section */}
+                  {showComments[post.postID] && (
+                    <div className="mt-4 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-2">
+                      {/* Comments List */}
+                      <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                        {comments[post.postID]?.length > 0 ? (
+                          comments[post.postID].map(comment => (
+                            <div key={comment.commentID} className="flex gap-3">
+                              <Link to={`/profile/${comment.userID}`}>
+                                <img
+                                  src={comment.avatarURL || getAvatar(comment.userID)}
+                                  alt={comment.username}
+                                  className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
+                                />
+                              </Link>
+                              <div className="bg-muted p-3 rounded-2xl rounded-tl-none flex-1">
+                                <div className="flex items-baseline justify-between mb-1">
+                                  <Link to={`/profile/${comment.userID}`} className="font-semibold text-sm hover:text-primary">
+                                    {comment.username}
+                                  </Link>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(comment.commentDate).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-foreground">{comment.content}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-center text-muted-foreground py-4">Chưa có bình luận nào.</div>
+                        )}
+                      </div>
+
+                      {/* Comment Input */}
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={userProfile?.avatarURL || getAvatar(0)}
+                          alt="You"
+                          className="w-8 h-8 rounded-full object-cover shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={commentInputs[post.postID] || ""}
+                          onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.postID]: e.target.value }))}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddComment(post.postID)}
+                          placeholder="Thêm bình luận..."
+                          className="flex-1 px-4 py-2 bg-muted rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
+                          disabled={isSubmittingComment[post.postID]}
+                        />
+                        <button 
+                          onClick={() => handleAddComment(post.postID)}
+                          disabled={isSubmittingComment[post.postID] || !(commentInputs[post.postID]?.trim())}
+                          className="p-2 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50 transition-all"
+                        >
+                          {isSubmittingComment[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )) : (
@@ -276,9 +426,9 @@ export function CommunityFeedPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 sticky top-20 self-start h-fit">
             {/* Trending Destinations */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-20">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-5 h-5 text-primary" />
                 <h3 className="font-bold">Địa điểm nổi bật</h3>
@@ -340,6 +490,55 @@ export function CommunityFeedPage() {
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {shareModalPostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-border flex justify-between items-center">
+              <h2 className="font-bold text-lg">Chia sẻ đến bạn bè</h2>
+              <button 
+                onClick={() => setShareModalPostId(null)}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              {buddies.length > 0 ? (
+                <div className="space-y-3">
+                  {buddies.map(buddy => (
+                    <div key={buddy.userID} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={buddy.avatarURL || getAvatar(buddy.userID)}
+                          alt={buddy.username}
+                          className="w-10 h-10 rounded-full object-cover border border-border"
+                        />
+                        <span className="font-semibold">{buddy.username}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const post = posts.find(p => p.postID === shareModalPostId);
+                          if (post) handleShareToBuddy(buddy.userID, post);
+                        }}
+                        disabled={isSharing}
+                        className="px-4 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full text-sm font-semibold transition-all disabled:opacity-50"
+                      >
+                        Gửi
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  Chưa có bạn bè nào để chia sẻ. Hãy kết nối thêm!
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,14 @@ function ProtectedRoute() {
   return <RootLayout />;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== "Admin") {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
 function PublicOnlyRoute() {
   const { isAuthenticated } = useAuth();
 
@@ -47,7 +55,7 @@ export const router = createBrowserRouter([
       { path: "community", Component: CommunityFeedPage },
       { path: "chat/:userId?", Component: ChatPage },
       { path: "profile/:userId?", Component: ProfilePage },
-      { path: "admin", Component: AdminDashboardPage },
+      { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
     ],
   },
 ]);

@@ -64,17 +64,19 @@ export function RootLayout() {
                   <span>{label}</span>
                 </Link>
               ))}
-              <Link
-                to="/admin"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all whitespace-nowrap text-sm ${
-                  isActive("/admin")
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-muted"
-                }`}
-              >
-                <Shield className="w-4 h-4 flex-shrink-0" />
-                <span>Quản trị</span>
-              </Link>
+              {user?.role === "Admin" && (
+                <Link
+                  to="/admin"
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all whitespace-nowrap text-sm ${
+                    isActive("/admin")
+                      ? "bg-primary text-white"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Shield className="w-4 h-4 flex-shrink-0" />
+                  <span>Quản trị</span>
+                </Link>
+              )}
             </div>
 
             {/* CTA Button */}

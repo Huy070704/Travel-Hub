@@ -20,8 +20,38 @@ import { getMyProfile, getPublicProfile } from "@/api/usersApi";
 import type { ConversationDto, MessageDto } from "@/types/chat";
 import type { UserProfileDto, PublicUserProfileDto } from "@/types/users";
 
-const getAvatar = (name: string) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random&color=fff`;
+const getAvatar = (id: number) => {
+  const avatars = [
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"
+  ];
+  return avatars[id % avatars.length];
+};
+
+// Helper function to convert URLs in text to clickable links
+const renderMessageWithLinks = (text: string) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a 
+          key={index} 
+          href={part} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-600 underline underline-offset-2 break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
 };
 
 export function ChatPage() {
@@ -194,14 +224,14 @@ export function ChatPage() {
 
   const currentConversationInfo = conversations.find(c => c.chatID === currentChatId);
   const chatName = currentConversationInfo?.chatName || receiverProfile?.username || "Cuộc trò chuyện mới";
-  const chatAvatar = currentConversationInfo?.chatName || receiverProfile?.username || "Người dùng mới";
+  const chatAvatar = currentConversationInfo?.avatarURL || receiverProfile?.avatarURL || getAvatar(currentConversationInfo?.otherUserID || receiverProfile?.userID || 0);
 
   return (
-    <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] bg-background">
-      <div className="max-w-7xl mx-auto h-full shadow-2xl overflow-hidden rounded-none md:rounded-t-2xl mt-0 md:mt-4 border border-border">
-        <div className="grid grid-cols-1 md:grid-cols-12 h-full">
+    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col pt-0 md:pt-4">
+      <div className="w-full max-w-7xl mx-auto flex-1 shadow-2xl overflow-hidden rounded-none md:rounded-t-2xl border border-border bg-card">
+        <div className="grid grid-cols-1 md:grid-cols-12 h-full min-h-0">
           {/* Conversations List */}
-          <div className="md:col-span-4 bg-card border-r border-border h-full flex flex-col z-10 shadow-lg">
+          <div className="md:col-span-4 bg-card border-r border-border h-full flex flex-col min-h-0 z-10 shadow-lg">
             {/* Search Header */}
             <div className="p-4 border-b border-border bg-gradient-to-br from-primary/5 to-secondary/5">
                 <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-foreground">
@@ -219,7 +249,7 @@ export function ChatPage() {
             </div>
 
             {/* Conversations */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-y-scroll custom-scrollbar">
               {conversations.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
                   <p>Chưa có cuộc trò chuyện.</p>
@@ -236,7 +266,7 @@ export function ChatPage() {
                 >
                   <div className="relative flex-shrink-0">
                     <img
-                      src={getAvatar(conversation.chatName || "Chat")}
+                      src={conversation.avatarURL || getAvatar(conversation.otherUserID || 0)}
                       alt={conversation.chatName || "Chat"}
                       className="w-14 h-14 rounded-full object-cover shadow-sm border border-border"
                     />
@@ -260,7 +290,7 @@ export function ChatPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="md:col-span-8 bg-background h-full flex flex-col relative">
+          <div className="md:col-span-8 bg-background h-full flex flex-col min-h-0 relative">
             {currentChatId || receiverIdFromUrl ? (
               <>
                 {/* Chat Header */}
@@ -268,8 +298,8 @@ export function ChatPage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <img
-                        src={getAvatar(chatAvatar)}
-                        alt={chatAvatar}
+                        src={chatAvatar}
+                        alt={chatName}
                         className="w-12 h-12 rounded-full object-cover border border-border"
                       />
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full shadow-sm" />
@@ -297,7 +327,7 @@ export function ChatPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background relative">
+                <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 space-y-6 bg-background relative">
                   {/* Watermark/Background Pattern could go here */}
                   
                   {messages.length === 0 && (
@@ -318,8 +348,8 @@ export function ChatPage() {
                       >
                         {!isMe && (
                           <img 
-                            src={getAvatar(message.senderUsername)} 
-                            className="w-8 h-8 rounded-full mr-3 mt-auto mb-1 border border-border flex-shrink-0" 
+                            src={message.avatarURL || getAvatar(message.senderID)} 
+                            className="w-8 h-8 rounded-full mr-3 mt-auto mb-1 border border-border flex-shrink-0 object-cover" 
                             alt="avatar"
                           />
                         )}
@@ -331,7 +361,9 @@ export function ChatPage() {
                           } px-5 py-3`}
                         >
                           {!isMe && <div className="text-xs font-bold mb-1 text-primary">{message.senderUsername}</div>}
-                          <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                            {renderMessageWithLinks(message.content || "")}
+                          </p>
                           <div
                             className={`text-[10px] mt-1.5 text-right font-medium ${
                               isMe ? "text-white/80" : "text-muted-foreground"

@@ -13,3 +13,11 @@ export async function getMessages(chatId: number, page: number = 1, pageSize: nu
   });
   return response.data;
 }
+
+export async function sendDirectMessage(receiverId: number, content: string) {
+  const response = await axiosInstance.post<{ message: string, messageID: number }>("/Chat/messages/send", {
+    receiverID: receiverId,
+    content: content
+  });
+  return response.data;
+}

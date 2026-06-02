@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router";
 import { getDestinationDetails } from "@/api/destinationsApi";
+import { createItinerary } from "@/api/itinerariesApi";
 import type { DestinationDto } from "@/types/destinations";
 import {
   Heart,
@@ -24,6 +25,8 @@ export function DestinationDetailPage() {
   const { id } = useParams();
   const [savedDestination, setSavedDestination] = useState(false);
   const [realDestination, setRealDestination] = useState<DestinationDto | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -49,15 +52,88 @@ export function DestinationDetailPage() {
     ],
   };
 
-  const weather = [
-    { day: "Thứ 2", temp: "28°C", icon: CloudSun, condition: "Nắng" },
-    { day: "Thứ 3", temp: "29°C", icon: CloudSun, condition: "Nắng" },
-    { day: "Thứ 4", temp: "27°C", icon: CloudSun, condition: "Nhiều mây" },
-    { day: "Thứ 5", temp: "28°C", icon: CloudSun, condition: "Nắng" },
-    { day: "Thứ 6", temp: "30°C", icon: CloudSun, condition: "Nóng" },
-  ];
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [weatherForecast, setWeatherForecast] = useState<any[]>([]);
 
-  const expenses = [
+  const handleSaveForLater = async () => {
+    if (!startDate || !endDate) {
+      alert("Vui lòng chọn ngày đi và ngày về trước khi lưu!");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      await createItinerary({
+        tripName: `Chuyến đi tới ${destination.name}`,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        totalBudgetEstimatedVND: aiMatch?.estimatedCostValue || realDestination?.estimatedBaseCostVND || 11500000,
+        details: realDestination ? [{
+          destinationID: realDestination.destinationID,
+          dayNumber: 1,
+          activityDescription: "Tham quan tự do",
+          estimatedCostVND: 500000
+        }] : undefined
+      });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      console.error("Failed to save itinerary:", error);
+      alert("Có lỗi xảy ra khi lưu lịch trình. Vui lòng thử lại.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Function to generate mock weather based on selected dates
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      
+      const conditions = [
+        { icon: CloudSun, condition: "Nắng nhẹ", tempOffset: 0 },
+        { icon: CloudSun, condition: "Nhiều mây", tempOffset: -2 },
+        { icon: CloudSun, condition: "Trời quang", tempOffset: +1 },
+        { icon: CloudSun, condition: "Có mưa rào", tempOffset: -3 },
+      ];
+
+      const forecast = [];
+      const numDays = Math.min(diffDays, 5); // limit to 5 days
+      for (let i = 0; i < numDays; i++) {
+        const currentDate = new Date(start);
+        currentDate.setDate(start.getDate() + i);
+        const dayStr = currentDate.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'numeric' });
+        
+        // Use a seeded random based on date to keep it stable
+        const seed = currentDate.getDate() + (realDestination?.destinationID || 0);
+        const condIndex = seed % conditions.length;
+        const baseTemp = 28;
+        
+        forecast.push({
+          day: dayStr,
+          temp: `${baseTemp + conditions[condIndex].tempOffset}°C`,
+          icon: conditions[condIndex].icon,
+          condition: conditions[condIndex].condition
+        });
+      }
+      setWeatherForecast(forecast);
+    } else {
+      setWeatherForecast([]);
+    }
+  }, [startDate, endDate, realDestination]);
+
+  const expenses = aiMatch?.dailyCostBreakdown ? [
+    { category: "Chỗ ở", icon: Hotel, daily: aiMatch.dailyCostBreakdown.accommodation, description: "Từ phòng dorm đến khách sạn bình dân" },
+    { category: "Ăn uống", icon: Utensils, daily: aiMatch.dailyCostBreakdown.food, description: "Từ ẩm thực đường phố đến nhà hàng" },
+    { category: "Di chuyển", icon: Bus, daily: aiMatch.dailyCostBreakdown.transportation, description: "Thuê xe máy hoặc phương tiện địa phương" },
+    { category: "Hoạt động", icon: Camera, daily: aiMatch.dailyCostBreakdown.activities, description: "Tham quan, tour du lịch" },
+    { category: "Giải trí", icon: Coffee, daily: aiMatch.dailyCostBreakdown.entertainment, description: "Giải trí về đêm, sự kiện" },
+    { category: "Mua sắm", icon: ShoppingBag, daily: aiMatch.dailyCostBreakdown.shopping, description: "Quà lưu niệm và chợ địa phương" },
+  ] : [
     { category: "Chỗ ở", icon: Hotel, daily: "300.000đ - 700.000đ", description: "Từ phòng dorm đến khách sạn bình dân" },
     { category: "Ăn uống", icon: Utensils, daily: "200.000đ - 500.000đ", description: "Từ ẩm thực đường phố đến nhà hàng" },
     { category: "Di chuyển", icon: Bus, daily: "100.000đ - 250.000đ", description: "Thuê xe máy hoặc phương tiện địa phương" },
@@ -185,23 +261,34 @@ export function DestinationDetailPage() {
             {/* Weather Forecast */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold mb-4">Dự báo thời tiết 5 ngày tới</h3>
-              <div className="grid grid-cols-5 gap-4">
-                {weather.map((day, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">{day.day}</div>
-                    <day.icon className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-                    <div className="font-semibold">{day.temp}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{day.condition}</div>
-                  </div>
-                ))}
-              </div>
+              {weatherForecast.length > 0 ? (
+                <div className="grid grid-cols-5 gap-4">
+                  {weatherForecast.map((day, index) => (
+                    <div key={index} className="text-center">
+                      <div className="text-sm text-muted-foreground mb-2">{day.day}</div>
+                      <day.icon className="w-8 h-8 mx-auto mb-2 text-orange-500" />
+                      <div className="font-semibold">{day.temp}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{day.condition}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-6 bg-muted/30 rounded-xl">
+                  <CloudSun className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                  <p>Vui lòng chọn ngày đi và ngày về ở cột bên phải để xem dự báo thời tiết.</p>
+                </div>
+              )}
             </div>
 
             {/* Expense Breakdown */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">Chi phí dự kiến hàng ngày</h3>
-                <div className="text-2xl font-bold text-primary">1.100.000đ - 2.800.000đ</div>
+                {aiMatch && (
+                  <div className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Sparkles className="w-3 h-3"/> Đề xuất bởi AI
+                  </div>
+                )}
               </div>
               <div className="space-y-4">
                 {expenses.map((expense, index) => (
@@ -221,12 +308,8 @@ export function DestinationDetailPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Tổng trung bình hàng ngày</span>
-                  <span className="text-xl font-bold text-primary">1.100.000đ - 2.800.000đ</span>
+                  <span className="font-semibold">Được phân tích tự động dựa trên sở thích của bạn</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Cho chuyến đi 7 ngày: <span className="font-semibold">~7.700.000đ - 19.600.000đ tổng cộng</span>
-                </p>
               </div>
             </div>
 
@@ -301,23 +384,34 @@ export function DestinationDetailPage() {
               {/* Booking Card */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="mb-6">
-                  <div className="text-3xl font-bold text-primary mb-1">11.500.000đ</div>
-                  <div className="text-sm text-muted-foreground">Tổng chi phí ước tính (7 ngày)</div>
+                  <div className="text-3xl font-bold text-primary mb-1">
+                    {aiMatch?.estimatedCost || (realDestination?.estimatedBaseCostVND ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(realDestination.estimatedBaseCostVND) : "11.500.000đ")}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Tổng chi phí ước tính</div>
                 </div>
 
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="text-sm mb-2 block">Ngày đi</label>
-                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Chọn ngày</span>
+                    <label className="text-sm mb-2 block font-medium">Ngày đi</label>
+                    <div className="relative">
+                      <input 
+                        type="date" 
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none"
+                      />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm mb-2 block">Ngày về</label>
-                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Chọn ngày</span>
+                    <label className="text-sm mb-2 block font-medium">Ngày về</label>
+                    <div className="relative">
+                      <input 
+                        type="date" 
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={startDate}
+                        className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -330,8 +424,16 @@ export function DestinationDetailPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
-                <button className="w-full py-3 border-2 border-border rounded-xl hover:border-primary hover:text-primary transition-all">
-                  Lưu lại để xem sau
+                <button 
+                  onClick={handleSaveForLater}
+                  disabled={isSaving || isSaved}
+                  className={`w-full py-3 border-2 rounded-xl transition-all font-semibold ${
+                    isSaved 
+                      ? "border-green-500 text-green-500 bg-green-50" 
+                      : "border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {isSaving ? "Đang lưu..." : isSaved ? "Đã lưu vào Hồ sơ!" : "Lưu lại để xem sau"}
                 </button>
               </div>
 

@@ -2,6 +2,7 @@ export type AuthUser = {
   userID?: string | number;
   username?: string;
   email?: string;
+  role?: string;
 };
 
 export type LoginCredentials = {
@@ -14,6 +15,7 @@ export type AuthResponse = {
   refreshToken: string;
   userID: number;
   username: string;
+  role: string;
 };
 
 // Map LoginResponse to AuthResponse to maintain compatibility

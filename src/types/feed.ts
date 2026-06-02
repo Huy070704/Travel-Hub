@@ -2,11 +2,13 @@ export type PostDto = {
   postID: number;
   userID: number;
   username: string;
+  avatarURL?: string;
   itineraryID?: number;
   postType: string;
   title: string;
   content?: string;
   likesCount: number;
+  isLikedByCurrentUser?: boolean;
   creationDate: string; // ISO String
 };
 
@@ -22,6 +24,7 @@ export type CommentDto = {
   postID: number;
   userID: number;
   username: string;
+  avatarURL?: string;
   content?: string;
   commentDate: string; // ISO String
 };

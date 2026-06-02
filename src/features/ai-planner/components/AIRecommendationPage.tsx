@@ -228,6 +228,8 @@ export function AIRecommendationPage() {
         matchScore: 98 - index,
         reasons: [item.matchReason],
         highlights: ["Khám phá địa phương", "Ẩm thực đặc sắc", "Văn hóa phong phú"],
+        dailyCostBreakdown: item.dailyCostBreakdown,
+        estimatedCostValue: item.estimatedCostVND
       }));
       setRealRecommendations(mapped);
       setShowResults(true);

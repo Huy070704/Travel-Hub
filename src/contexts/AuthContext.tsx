@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userID: data.userID,
       username: data.username,
       email: data.username || credentials.email,
+      role: data.role,
     };
 
     localStorage.setItem("token", data.accessToken);
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userID: data.userID,
       username: data.username,
       email: data.username, // using username as email fallback if needed
+      role: data.role,
     };
 
     localStorage.setItem("token", data.accessToken);
