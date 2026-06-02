@@ -9,7 +9,7 @@ import type { PaginatedList } from "@/types/destinations"; // reusing PaginatedL
 
 export async function getPosts(page: number = 1, pageSize: number = 10) {
   const response = await axiosInstance.get<PaginatedList<PostDto>>("/Feed/posts", {
-    params: { page, pageSize }
+    params: { page, pageSize, _: Date.now() }
   });
   return response.data;
 }
