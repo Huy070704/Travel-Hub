@@ -18,7 +18,8 @@ import {
   Star,
   Loader2,
   Settings2,
-  ArrowLeft
+  ArrowLeft,
+  Search
 } from "lucide-react";
 import { generateAiItinerary } from "@/api/aiApi";
 import { getDestinationDetails } from "@/api/destinationsApi";
@@ -301,6 +302,12 @@ export function ItineraryPlannerPage() {
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}
                     </span>
                   </div>
+                  <Link 
+                    to="/tours" 
+                    className="block w-full text-center bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    Book Tour / Hoạt động
+                  </Link>
                 </div>
               </div>
             </div>
@@ -379,6 +386,15 @@ export function ItineraryPlannerPage() {
                                           : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(activity.estimatedCostVND)
                                         }
                                       </div>
+                                      {activity.estimatedCostVND > 0 && (
+                                        <Link 
+                                          to="/compare" 
+                                          className="mt-2 inline-flex items-center justify-center gap-1.5 w-full bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold py-1.5 px-3 rounded-md transition-colors"
+                                        >
+                                          <Search className="w-3.5 h-3.5" />
+                                          Compare Prices
+                                        </Link>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -392,8 +408,6 @@ export function ItineraryPlannerPage() {
                       <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 -mx-6 -mb-6 px-6 py-4">
                         <div className="text-sm font-medium text-primary">
                           Tổng trong ngày
-                        </div>
-                        <div className="text-xl font-bold text-primary">
                           {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
                             day.activities.reduce((sum, activity) => sum + activity.estimatedCostVND, 0)
                           )}
