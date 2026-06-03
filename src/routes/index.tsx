@@ -5,6 +5,7 @@ import { AuthPage } from "../features/auth/components/AuthPage";
 import { AIRecommendationPage } from "../features/ai-planner/components/AIRecommendationPage";
 import { DestinationDetailPage } from "../features/destinations/components/DestinationDetailPage";
 import { ItineraryPlannerPage } from "../features/ai-planner/components/ItineraryPlannerPage";
+import { TourActivityComparisonPage } from "../features/ai-planner/components/TourActivityComparisonPage";
 import { CommunityFeedPage } from "../features/feed/components/CommunityFeedPage";
 import { ChatPage } from "../features/chat/components/ChatPage";
 import { ProfilePage } from "../features/profile/components/ProfilePage";
@@ -52,6 +53,8 @@ export const router = createBrowserRouter([
       { path: "discover", Component: AIRecommendationPage },
       { path: "destination/:id", Component: DestinationDetailPage },
       { path: "itinerary/:id", Component: ItineraryPlannerPage },
+      { path: "compare", Component: TourActivityComparisonPage },
+      { path: "tours", Component: TourActivityComparisonPage },
       { path: "community", Component: CommunityFeedPage },
       { path: "chat/:userId?", Component: ChatPage },
       { path: "profile/:userId?", Component: ProfilePage },
