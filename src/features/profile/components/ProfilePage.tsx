@@ -16,11 +16,13 @@ import {
   Loader2
 } from "lucide-react";
 import { getMyProfile, updateMyProfile, getDashboardStats, getPublicProfile } from "@/api/usersApi";
-import { getMyItineraries } from "@/api/itinerariesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
+import { getUserTourBookings } from "@/api/toursApi";
+import { getMyItineraries } from "@/api/itinerariesApi";
 import type { UserProfileDto, DashboardDto, UpdateProfileRequest } from "@/types/users";
 import type { ItineraryDto } from "@/types/itineraries";
 import type { DestinationDto } from "@/types/destinations";
+import type { TourBooking } from "@/types/tours";
 
 
 
@@ -60,6 +62,7 @@ export function ProfilePage() {
   const [dashboardData, setDashboardData] = useState<DashboardDto | null>(null);
   const [itineraries, setItineraries] = useState<ItineraryDto[]>([]);
   const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
+  const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
   const [editForm, setEditForm] = useState<UpdateProfileRequest>({});
 
   const { userId } = useParams();
@@ -68,17 +71,19 @@ export function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profile, dashboard, myItineraries, topDests] = await Promise.all([
+        const [profile, dashboard, myItineraries, topDests, myBookings] = await Promise.all([
           isMyProfile ? getMyProfile() : getPublicProfile(Number(userId)) as any,
           isMyProfile ? getDashboardStats() : Promise.resolve(null),
           isMyProfile ? getMyItineraries().catch(() => []) : Promise.resolve([]),
-          getTrendingDestinations(4).catch(() => [])
+          getTrendingDestinations(4).catch(() => []),
+          isMyProfile ? getUserTourBookings().catch(() => []) : Promise.resolve([])
         ]);
         
         setProfileData(profile);
         setDashboardData(dashboard);
         setItineraries(myItineraries);
         setTrendingDestinations(topDests);
+        setTourBookings(myBookings);
         
         setEditForm({
           fullName: profile.fullName || "",
@@ -469,6 +474,63 @@ export function ProfilePage() {
                 )}
               </div>
             </div>
+
+            {/* Tour Bookings */}
+            {isMyProfile && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  Chuyến đi đã đặt (Tours)
+                </h3>
+                <div className="space-y-4">
+                  {tourBookings.length > 0 ? tourBookings.map((booking) => (
+                    <div
+                      key={booking.bookingID}
+                      className="flex gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all"
+                    >
+                      <img
+                        src={booking.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+                        alt={booking.tourTitle}
+                        className="w-20 h-20 rounded-lg object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold line-clamp-1 text-sm md:text-base">{booking.tourTitle}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(booking.departureDate).toLocaleDateString('vi-VN')} • {booking.guests} khách
+                            </p>
+                            <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${
+                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                              booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {booking.status}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-primary">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(booking.totalPriceVND)}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Đặt ngày {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <MapPin className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p>Chưa có tour nào được đặt.</p>
+                      <Link to="/tours/search" className="text-primary hover:underline text-sm mt-2 block">
+                        Khám phá tour ngay
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

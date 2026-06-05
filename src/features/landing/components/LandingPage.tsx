@@ -26,6 +26,7 @@ import {
 import { GlowingButton } from "../../../components/shared/GlowingButton";
 import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 import { FloatingIllustrations } from "../../../components/shared/FloatingIllustrations";
+import { TourSearchBar } from "../../tours/components/TourSearchBar";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getWeatherForecast } from "@/api/weatherApi";
 import { getAiRecommendations } from "@/api/aiApi";
@@ -180,75 +181,14 @@ export function LandingPage() {
               Những chuyến đi vừa túi tiền cho sinh viên. Khám phá điểm đến, kết nối bạn đồng hành và đi xa hơn trong ngân sách của bạn.
             </motion.p>
 
-            {/* AI Search Box */}
+            {/* Tour Search Box */}
             <motion.div
-              className="max-w-3xl mx-auto mb-6"
+              className="max-w-5xl mx-auto mb-6 w-full relative z-50"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="glass rounded-2xl p-2 shadow-2xl neon-primary relative z-50">
-                <div className="flex flex-col md:flex-row gap-2">
-                  <div className="flex-1 flex items-center gap-3 px-6 py-4 bg-background/50 rounded-xl">
-                    <Search className="w-5 h-5 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
-                      placeholder="Ví dụ: ngân sách 5 triệu, thích biển và ăn uống..."
-                      className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-                  <GlowingButton onClick={handleAiSearch}>
-                    <div className="flex items-center gap-2">
-                      {isAiLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                      <span>{isAiLoading ? "Đang suy nghĩ..." : "Gợi ý AI"}</span>
-                    </div>
-                  </GlowingButton>
-                </div>
-              </div>
-
-              {/* Inline AI Results */}
-              <AnimatePresence>
-                {aiResults && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    className="overflow-hidden relative z-40"
-                  >
-                    <div className="glass rounded-2xl p-6 text-left shadow-2xl border border-primary/20">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold flex items-center gap-2">
-                          <Sparkles className="w-5 h-5 text-primary" />
-                          Gợi ý từ AI
-                        </h3>
-                        <button onClick={() => setAiResults(null)} className="p-1 hover:bg-muted rounded-full">
-                          <X className="w-5 h-5 text-muted-foreground" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {aiResults.map((res, i) => (
-                          <div key={i} className="bg-background/80 p-4 rounded-xl border border-border">
-                            <h4 className="font-bold text-lg">{res.name}</h4>
-                            <p className="text-sm text-muted-foreground mb-2">{res.cityProvince}</p>
-                            <p className="text-sm italic mb-2">"{res.matchReason}"</p>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
-                              <span className="font-semibold text-primary">
-                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(res.estimatedCostVND)}
-                              </span>
-                              <Link to={`/destination/${res.destinationID}`} className="text-sm text-primary hover:underline font-semibold">
-                                Xem chi tiết &rarr;
-                              </Link>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <TourSearchBar />
             </motion.div>
 
             {/* Stats */}

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
+import type { TourBooking } from "@/types/tours";
 import {
   Users,
   MapPin,
@@ -15,12 +17,43 @@ import {
   ChevronDown,
   BarChart3,
   PieChart,
-  Calendar
+  Calendar,
+  X
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings">("overview");
+  const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<TourBooking | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const fetchBookings = () => {
+    getAllTourBookings().then(setTourBookings).catch(console.error);
+  };
+
+  useEffect(() => {
+    if (activeTab === "bookings") {
+      fetchBookings();
+    }
+  }, [activeTab]);
+
+  const handleUpdateStatus = async () => {
+    if (!selectedBooking || !newStatus) return;
+    setIsUpdatingStatus(true);
+    try {
+      await updateTourBookingStatus(selectedBooking.bookingID, newStatus);
+      setIsBookingModalOpen(false);
+      fetchBookings();
+    } catch (error) {
+      console.error("Failed to update status", error);
+      alert("Cập nhật trạng thái thất bại");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   const stats = [
     {
@@ -147,6 +180,7 @@ export function AdminDashboardPage() {
                 { id: "overview", label: "Tổng quan", icon: BarChart3 },
                 { id: "users", label: "Người dùng", icon: Users },
                 { id: "destinations", label: "Điểm đến", icon: MapPin },
+                { id: "bookings", label: "Đặt Tour", icon: Calendar },
                 { id: "posts", label: "Bài viết", icon: MessageSquare },
                 { id: "reports", label: "Báo cáo", icon: Activity },
               ].map((item) => (
@@ -176,6 +210,7 @@ export function AdminDashboardPage() {
                 {activeTab === "overview" && "Tổng quan hệ thống"}
                 {activeTab === "users" && "Quản lý người dùng"}
                 {activeTab === "destinations" && "Quản lý điểm đến"}
+                {activeTab === "bookings" && "Quản lý Đặt Tour"}
                 {activeTab === "posts" && "Quản lý bài viết"}
                 {activeTab === "reports" && "Báo cáo & Kiểm duyệt"}
               </h1>
@@ -183,6 +218,7 @@ export function AdminDashboardPage() {
                 {activeTab === "overview" && "Theo dõi hiệu suất và sự tăng trưởng của nền tảng"}
                 {activeTab === "users" && "Quản lý và xem tất cả người dùng đã đăng ký"}
                 {activeTab === "destinations" && "Quản lý các điểm đến du lịch và danh sách"}
+                {activeTab === "bookings" && "Theo dõi và quản lý các đơn đặt tour từ khách hàng"}
                 {activeTab === "posts" && "Quản lý bài viết cộng đồng và nội dung"}
                 {activeTab === "reports" && "Xem xét và xử lý các báo cáo từ người dùng"}
               </p>
@@ -525,9 +561,139 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Bookings Tab */}
+            {activeTab === "bookings" && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold">Danh sách Đặt Tour</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Khách hàng</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Tour</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Số người</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Tổng tiền</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày đặt</th>
+                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tourBookings.map((booking) => (
+                          <tr key={booking.bookingID} className="border-b border-border hover:bg-muted/50 transition-all">
+                            <td className="py-3 px-4">
+                              <div className="font-semibold">{booking.fullName}</div>
+                              <div className="text-xs text-muted-foreground">{booking.phone}</div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="font-medium line-clamp-1">{booking.tourTitle}</div>
+                              <div className="text-xs text-muted-foreground">{new Date(booking.departureDate).toLocaleDateString('vi-VN')}</div>
+                            </td>
+                            <td className="py-3 px-4 text-sm">{booking.guests} khách</td>
+                            <td className="py-3 px-4 font-semibold text-primary">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(booking.totalPriceVND)}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {booking.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-sm text-muted-foreground">
+                              {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td className="py-3 px-4">
+                              <button 
+                                onClick={() => {
+                                  setSelectedBooking(booking);
+                                  setNewStatus(booking.status);
+                                  setIsBookingModalOpen(true);
+                                }}
+                                className="p-2 hover:bg-muted rounded transition-all text-primary"
+                                title="Xem chi tiết & Cập nhật"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {tourBookings.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                              Chưa có đơn đặt tour nào.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Booking Details Modal */}
+      {isBookingModalOpen && selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-border">
+              <h3 className="text-xl font-bold">Chi tiết Đặt Tour #{selectedBooking.bookingID}</h3>
+              <button onClick={() => setIsBookingModalOpen(false)} className="p-2 hover:bg-muted rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <h4 className="font-semibold text-muted-foreground text-sm mb-2">Thông tin Khách hàng</h4>
+                  <p><strong>Họ tên:</strong> {selectedBooking.fullName}</p>
+                  <p><strong>Điện thoại:</strong> {selectedBooking.phone}</p>
+                  <p><strong>Email:</strong> {selectedBooking.email || "Không có"}</p>
+                  <p><strong>Ghi chú:</strong> {selectedBooking.notes || "Không có"}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-muted-foreground text-sm mb-2">Thông tin Tour</h4>
+                  <p><strong>Tour:</strong> {selectedBooking.tourTitle}</p>
+                  <p><strong>Ngày đi:</strong> {new Date(selectedBooking.departureDate).toLocaleDateString('vi-VN')}</p>
+                  <p><strong>Số khách:</strong> {selectedBooking.guests}</p>
+                  <p><strong>Tổng tiền:</strong> <span className="font-bold text-primary">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedBooking.totalPriceVND)}</span></p>
+                </div>
+              </div>
+              
+              <div className="border-t border-border pt-6">
+                <h4 className="font-semibold mb-3">Cập nhật Trạng thái</h4>
+                <div className="flex gap-4 items-center">
+                  <select 
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="flex-1 p-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="Pending">Pending (Chờ xử lý)</option>
+                    <option value="Confirmed">Confirmed (Đã xác nhận)</option>
+                    <option value="Cancelled">Cancelled (Đã hủy)</option>
+                  </select>
+                  <button 
+                    onClick={handleUpdateStatus}
+                    disabled={isUpdatingStatus || newStatus === selectedBooking.status}
+                    className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-semibold disabled:opacity-50"
+                  >
+                    {isUpdatingStatus ? "Đang lưu..." : "Lưu thay đổi"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

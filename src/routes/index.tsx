@@ -10,6 +10,8 @@ import { CommunityFeedPage } from "../features/feed/components/CommunityFeedPage
 import { ChatPage } from "../features/chat/components/ChatPage";
 import { ProfilePage } from "../features/profile/components/ProfilePage";
 import { AdminDashboardPage } from "../features/dashboard/components/AdminDashboardPage";
+import { TourSearchPage } from "../features/tours/components/TourSearchPage";
+import { TourDetailPage } from "../features/tours/components/TourDetailPage";
 import { useAuth } from "../contexts/AuthContext";
 
 function ProtectedRoute() {
@@ -55,6 +57,8 @@ export const router = createBrowserRouter([
       { path: "itinerary/:id", Component: ItineraryPlannerPage },
       { path: "compare", Component: TourActivityComparisonPage },
       { path: "tours", Component: TourActivityComparisonPage },
+      { path: "tours/search", Component: TourSearchPage },
+      { path: "tours/:id", Component: TourDetailPage },
       { path: "community", Component: CommunityFeedPage },
       { path: "chat/:userId?", Component: ChatPage },
       { path: "profile/:userId?", Component: ProfilePage },

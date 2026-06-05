@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
+import Autocomplete from "react-google-autocomplete";
 import {
   Sparkles,
   MapPin,
@@ -37,6 +38,7 @@ import type { AiRecommendRequest } from "@/types/ai";
 
 type PlannerFormData = {
   departure: string;
+  destination: string;
   budget: string;
   days: string;
   interests: string[];
@@ -122,6 +124,7 @@ export function AIRecommendationPage() {
     const saved = localStorage.getItem("ai_formData");
     return saved ? JSON.parse(saved) : {
       departure: "",
+      destination: "",
       budget: "",
       days: "",
       interests: [] as string[],
@@ -203,6 +206,7 @@ export function AIRecommendationPage() {
       days: Number(formData.days),
       interests: formData.interests.join(", "),
       departure: formData.departure,
+      destination: formData.destination,
       transportationPreference: formData.transportationPreference,
       travelGroup: formData.travelGroup,
       destinationType: formData.destinationType,
@@ -219,6 +223,7 @@ export function AIRecommendationPage() {
       const mapped = response.map((item, index) => ({
         id: item.destinationID,
         destination: `${item.name}, ${item.cityProvince}`,
+        distance: item.distance,
         country: "Việt Nam",
         image: `https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=800&q=80&auto=format&fit=crop&sig=${item.destinationID}`,
         estimatedCost: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.estimatedCostVND),
@@ -251,7 +256,7 @@ export function AIRecommendationPage() {
     }));
   };
 
-  const updateChoice = (field: keyof Omit<PlannerFormData, "departure" | "budget" | "days" | "interests">, value: string) => {
+  const updateChoice = (field: keyof Omit<PlannerFormData, "departure" | "destination" | "budget" | "days" | "interests">, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -309,14 +314,27 @@ export function AIRecommendationPage() {
                 <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm space-y-4">
                   <div>
                     <FieldLabel icon={MapPin}>Xuất phát từ</FieldLabel>
-                  <input
-                    type="text"
-                    value={formData.departure}
-                    onChange={(e) => setFormData({ ...formData, departure: e.target.value })}
-                    placeholder="Ví dụ: TP. Hồ Chí Minh"
-                    className={inputClassName}
-                    required
-                  />
+                    <Autocomplete
+                      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                      onPlaceSelected={(place) => setFormData({ ...formData, departure: place?.formatted_address || place?.name || "" })}
+                      defaultValue={formData.departure}
+                      options={{ types: ["(regions)"] }}
+                      placeholder="Ví dụ: TP. Hồ Chí Minh"
+                      className={inputClassName}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <FieldLabel icon={MapPin}>Vị trí/Thành phố muốn đến</FieldLabel>
+                    <Autocomplete
+                      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                      onPlaceSelected={(place) => setFormData({ ...formData, destination: place?.formatted_address || place?.name || "" })}
+                      defaultValue={formData.destination}
+                      options={{ types: ["(regions)"] }}
+                      placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
+                      className={inputClassName}
+                    />
                   </div>
 
                   <div>
@@ -551,7 +569,14 @@ export function AIRecommendationPage() {
                         </div>
 
                         {/* Quick Info */}
-                        <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                          <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
+                            <MapPin className="w-4 h-4 text-rose-500" />
+                            <div>
+                              <div className="font-semibold">{rec.distance || "N/A"}</div>
+                              <div className="text-xs text-muted-foreground">Khoảng cách</div>
+                            </div>
+                          </div>
                           <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
                             <ThermometerSun className="w-4 h-4 text-orange-500" />
                             <div>

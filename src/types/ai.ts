@@ -3,6 +3,7 @@ export type AiRecommendRequest = {
   days: number;
   interests?: string;
   departure?: string;
+  destination?: string;
   transportationPreference?: string;
   travelGroup?: string;
   destinationType?: string;
@@ -17,6 +18,7 @@ export type AiRecommendResponse = {
   name: string;
   cityProvince: string;
   matchReason: string;
+  distance: string;
   estimatedCostVND: number;
   dailyCostBreakdown: {
     accommodation: string;
