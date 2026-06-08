@@ -21,10 +21,8 @@ import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 import { GlowingButton } from "../../../components/shared/GlowingButton";
 import { DarkModeToggle } from "../../../components/shared/DarkModeToggle";
 import {
-  requestForgotPasswordOtp,
-  requestRegisterOtp,
-  verifyForgotPasswordOtp,
-  verifyRegisterOtp
+  forgotPasswordRequest,
+  registerRequest
 } from "@/api/authApi";
 
 type AuthMode = "login" | "register" | "registerOtp" | "forgot" | "forgotOtp";
@@ -91,63 +89,23 @@ export function AuthPage() {
     }
   };
 
-  const sendRegisterOtp = async () => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     resetMessages();
 
     try {
-      await requestRegisterOtp({
+      await registerRequest({
         username: formData.username,
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
       });
-      setSuccessMsg("Mã OTP 6 chữ số đã được gửi đến email của bạn.");
-      setMode("registerOtp");
-    } catch (error: any) {
-      console.error("Register OTP failed:", error);
-      setErrorMsg(getErrorMessage(error, "Không thể gửi OTP đăng ký."));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await sendRegisterOtp();
-  };
-
-  const handleVerifyRegisterOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    resetMessages();
-
-    try {
-      await verifyRegisterOtp({
-        email: formData.email,
-        otp: otpData.otp,
-      });
       setSuccessMsg("Tạo tài khoản thành công. Vui lòng đăng nhập.");
       setMode("login");
     } catch (error: any) {
-      console.error("Register OTP verification failed:", error);
-      setErrorMsg(getErrorMessage(error, "Mã OTP không hợp lệ hoặc đã hết hạn."));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const sendForgotPasswordOtp = async () => {
-    setIsLoading(true);
-    resetMessages();
-
-    try {
-      await requestForgotPasswordOtp({ email: formData.email });
-      setSuccessMsg("Mã OTP 6 chữ số đã được gửi đến email của bạn.");
-      setMode("forgotOtp");
-    } catch (error: any) {
-      console.error("Forgot password OTP failed:", error);
-      setErrorMsg(getErrorMessage(error, "Không thể gửi OTP đặt lại mật khẩu."));
+      console.error("Register failed:", error);
+      setErrorMsg(getErrorMessage(error, "Không thể đăng ký tài khoản."));
     } finally {
       setIsLoading(false);
     }
@@ -155,25 +113,16 @@ export function AuthPage() {
 
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await sendForgotPasswordOtp();
-  };
-
-  const handleVerifyForgotOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
     setIsLoading(true);
     resetMessages();
 
     try {
-      await verifyForgotPasswordOtp({
-        email: formData.email,
-        otp: otpData.otp,
-        newPassword: otpData.newPassword,
-      });
-      setSuccessMsg("Đặt lại mật khẩu thành công. Vui lòng đăng nhập.");
+      await forgotPasswordRequest({ email: formData.email });
+      setSuccessMsg("Mật khẩu mới đã được gửi đến email của bạn.");
       setMode("login");
     } catch (error: any) {
-      console.error("Forgot password OTP verification failed:", error);
-      setErrorMsg(getErrorMessage(error, "Mã OTP không hợp lệ hoặc đã hết hạn."));
+      console.error("Forgot password failed:", error);
+      setErrorMsg(getErrorMessage(error, "Không thể đặt lại mật khẩu."));
     } finally {
       setIsLoading(false);
     }
@@ -520,27 +469,13 @@ export function AuthPage() {
                     />
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Đang gửi OTP..." : "Gửi OTP đăng ký"}
+                      {isLoading ? "Đang đăng ký..." : "Đăng ký"}
                     </GlowingButton>
                     <AuthBackButton onClick={() => switchMode("login")} text="Quay lại đăng nhập" />
                   </motion.form>
                 )}
 
-                {mode === "registerOtp" && (
-                  <OtpForm
-                    key="registerOtp"
-                    otp={otpData.otp}
-                    isLoading={isLoading}
-                    errorMsg={errorMsg}
-                    successMsg={successMsg}
-                    submitLabel="Xác minh & tạo tài khoản"
-                    loadingLabel="Đang xác minh..."
-                    onOtpChange={(otp) => setOtpData({ ...otpData, otp })}
-                    onSubmit={handleVerifyRegisterOtp}
-                    onBack={() => switchMode("register")}
-                    onResend={sendRegisterOtp}
-                  />
-                )}
+
 
                 {mode === "forgot" && (
                   <motion.form
@@ -554,51 +489,13 @@ export function AuthPage() {
                     <EmailField value={formData.email} onChange={(email) => setFormData({ ...formData, email })} />
                     <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
                     <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Đang gửi OTP..." : "Gửi OTP đặt lại"}
+                      {isLoading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
                     </GlowingButton>
                     <AuthBackButton onClick={() => switchMode("login")} text="Quay lại đăng nhập" />
                   </motion.form>
                 )}
 
-                {mode === "forgotOtp" && (
-                  <motion.form
-                    key="forgotOtp"
-                    onSubmit={handleVerifyForgotOtp}
-                    className="space-y-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                  >
-                    <OtpInput value={otpData.otp} onChange={(otp) => setOtpData({ ...otpData, otp })} />
-                    <PasswordField
-                      label="Mật khẩu mới"
-                      value={otpData.newPassword}
-                      show={showNewPassword}
-                      onToggle={() => setShowNewPassword(!showNewPassword)}
-                      onChange={(newPassword) => setOtpData({ ...otpData, newPassword })}
-                    />
-                    <StatusMessage errorMsg={errorMsg} successMsg={successMsg} />
-                    <GlowingButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Đang đặt lại..." : "Xác minh & đặt lại mật khẩu"}
-                    </GlowingButton>
-                    <div className="flex items-center justify-between gap-3">
-                      <button
-                        type="button"
-                        onClick={sendForgotPasswordOtp}
-                        className="text-sm text-primary hover:underline font-semibold"
-                      >
-                        Gửi lại OTP
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => switchMode("forgot")}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        Đổi email
-                      </button>
-                    </div>
-                  </motion.form>
-                )}
+
               </AnimatePresence>
             </div>
 
