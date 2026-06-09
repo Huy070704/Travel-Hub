@@ -1,10 +1,73 @@
+/* Optimized transitions - only for interactive elements */
+a, button, input, select, textarea, .hover-lift {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translate3d(0, -10px, 0);
   }
+}
+
+/* CSS-only blob animations — optimized with translate3d */
+@keyframes blob-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%       { transform: translate3d(30px, 15px, 0) scale(1.05); }
+  66%       { transform: translate3d(-15px, 10px, 0) scale(0.98); }
+}
+
+@keyframes blob-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%       { transform: translate3d(-30px, -20px, 0) scale(1.02); }
+  66%       { transform: translate3d(15px, -10px, 0) scale(1.05); }
+}
+
+@keyframes blob-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  25%       { transform: translate3d(15px, -15px, 0) scale(1.05); }
+  50%       { transform: translate3d(-15px, 10px, 0) scale(0.95); }
+  75%       { transform: translate3d(10px, 15px, 0) scale(1.02); }
+}
+
+/* Particle animation optimized */
+@keyframes particle-float {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.15; }
+  50%       { transform: translate3d(0, -15px, 0); opacity: 0.35; }
+}
+
+@keyframes illustration-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0); opacity: 0.1; }
+  50%       { transform: translate3d(0, -15px, 0) rotate(5deg); opacity: 0.2; }
+}
+
+.animate-illustration {
+  animation: illustration-float 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animated-blob-1 {
+  animation: blob-1 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animated-blob-2 {
+  animation: blob-2 25s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animated-blob-float {
+  animation: blob-float 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-particle {
+  animation: particle-float 4s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes glow {
@@ -71,37 +134,34 @@
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
-/* Glassmorphism */
+/* Glassmorphism - optimized blur */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .glass-dark {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Neon Glow Effects */
+/* Neon Glow Effects - simplified shadows */
 .neon-primary {
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5),
-              0 0 20px rgba(59, 130, 246, 0.3),
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4),
               0 0 30px rgba(59, 130, 246, 0.1);
 }
 
 .neon-cyan {
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5),
-              0 0 20px rgba(6, 182, 212, 0.3),
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4),
               0 0 30px rgba(6, 182, 212, 0.1);
 }
 
 .neon-purple {
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.5),
-              0 0 20px rgba(139, 92, 246, 0.3),
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4),
               0 0 30px rgba(139, 92, 246, 0.1);
 }
 
@@ -117,17 +177,10 @@
 
 /* Hover Lift */
 .hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transform: translate3d(0, -6px, 0);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }

@@ -67,7 +67,7 @@ type ChoiceGroupProps = {
 };
 
 const inputClassName =
-  "w-full px-4 py-3 bg-white/80 rounded-xl border border-border/70 shadow-sm focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/70";
+  "w-full px-4 py-3 bg-white/80 dark:bg-black/20 rounded-xl border border-border/70 dark:border-white/10 shadow-sm focus:bg-white dark:focus:bg-black/40 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/70 text-foreground";
 
 function FieldLabel({
   icon: Icon,
@@ -88,7 +88,7 @@ function FieldLabel({
 
 function ChoiceGroup({ label, icon: LabelIcon, options, value, onSelect, compact = true }: ChoiceGroupProps) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm">
+    <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm">
       <FieldLabel icon={LabelIcon}>{label}</FieldLabel>
       <div className={compact ? "flex flex-wrap gap-2" : "grid grid-cols-2 gap-2"}>
         {options.map(({ id, label: optionLabel, icon: OptionIcon }) => (
@@ -99,7 +99,7 @@ function ChoiceGroup({ label, icon: LabelIcon, options, value, onSelect, compact
             className={`flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm transition-all ${
               value === id
                 ? "border-primary bg-gradient-to-r from-primary/10 to-secondary/10 text-primary shadow-primary/10"
-                : "border-border/70 bg-white/80 hover:border-primary/50 hover:bg-primary/5"
+                : "border-border/70 dark:border-white/10 bg-white/80 dark:bg-black/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/20 text-foreground"
             }`}
           >
             {OptionIcon && <OptionIcon className="w-4 h-4" />}
@@ -300,7 +300,7 @@ export function AIRecommendationPage() {
           {/* Search Form - Sticky Sidebar */}
           <div>
             <div className="sticky top-20">
-              <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 p-5 md:p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-5 md:p-6 space-y-4">
                 <div className="flex items-start justify-between gap-3 pb-2">
                   <div>
                     <h2 className="font-bold text-xl">Lên kế hoạch chuyến đi</h2>
@@ -311,7 +311,7 @@ export function AIRecommendationPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm space-y-4">
+                <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm space-y-4">
                   <div>
                     <FieldLabel icon={MapPin}>Xuất phát từ</FieldLabel>
                     <Autocomplete
@@ -362,7 +362,7 @@ export function AIRecommendationPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-white/70 p-4 shadow-sm">
+                <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm">
                   <FieldLabel icon={Heart}>Sở thích du lịch</FieldLabel>
                   <div className="grid grid-cols-2 gap-2">
                     {interests.map(({ id, label, icon: Icon }) => (
@@ -373,7 +373,7 @@ export function AIRecommendationPage() {
                         className={`flex min-h-[86px] flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium shadow-sm transition-all ${
                           formData.interests.includes(id)
                             ? "border-primary bg-gradient-to-br from-primary/10 to-secondary/10 text-primary shadow-primary/10"
-                            : "border-border/70 bg-white/80 hover:border-primary/50 hover:bg-primary/5"
+                            : "border-border/70 dark:border-white/10 bg-white/80 dark:bg-black/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/20 text-foreground"
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -462,7 +462,7 @@ export function AIRecommendationPage() {
 
               {/* AI Assistant Panel */}
               <motion.div
-                className="mt-6 bg-white/75 backdrop-blur-xl rounded-2xl p-5 border border-white/80 shadow-lg shadow-primary/5"
+                className="mt-6 bg-white/75 dark:bg-black/40 backdrop-blur-xl rounded-2xl p-5 border border-white/80 dark:border-white/10 shadow-lg shadow-primary/5"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -485,7 +485,7 @@ export function AIRecommendationPage() {
           {/* Results */}
           <div>
             {!showResults && !isLoading && (
-              <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 p-10 md:p-12 text-center overflow-hidden relative">
+              <div className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-10 md:p-12 text-center overflow-hidden relative">
                 <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center shadow-xl shadow-primary/20">
                   <Compass className="w-10 h-10 text-white" />
@@ -498,7 +498,7 @@ export function AIRecommendationPage() {
             )}
 
             {isLoading && (
-              <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 p-10 md:p-12 text-center">
+              <div className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-10 md:p-12 text-center">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center animate-pulse shadow-xl shadow-primary/20">
                   <Sparkles className="w-10 h-10 text-white" />
                 </div>
@@ -532,7 +532,7 @@ export function AIRecommendationPage() {
                 {realRecommendations.map((rec, index) => (
                   <motion.div
                     key={rec.id}
-                    className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-primary/5 border border-white/80 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all hover-lift"
+                    className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-lg shadow-primary/5 border border-white/80 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all hover-lift"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -546,7 +546,7 @@ export function AIRecommendationPage() {
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-                        <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm">
+                        <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm text-foreground">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span>#{index + 1} phù hợp</span>
                         </div>
