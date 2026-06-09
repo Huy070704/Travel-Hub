@@ -29,10 +29,10 @@ import { FloatingIllustrations } from "../../../components/shared/FloatingIllust
 import { TourSearchBar } from "../../tours/components/TourSearchBar";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getWeatherForecast } from "@/api/weatherApi";
-import { getAiRecommendations } from "@/api/aiApi";
+import { getAiRecommendations } from "../../../api/aiApi";
 import type { DestinationDto } from "@/types/destinations";
 import type { WeatherForecastDto } from "@/types/weather";
-import type { AiRecommendResponse } from "@/types/ai";
+import type { AiRecommendResponse } from "../../../types/ai";
 
 const getPlaceholderImage = (id: number) => {
   const destImages = [

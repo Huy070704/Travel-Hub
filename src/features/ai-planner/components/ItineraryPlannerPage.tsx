@@ -21,9 +21,9 @@ import {
   ArrowLeft,
   Search
 } from "lucide-react";
-import { generateAiItinerary } from "@/api/aiApi";
+import { generateAiItinerary } from "../../../api/aiApi";
 import { getDestinationDetails } from "@/api/destinationsApi";
-import type { AiGenerateItineraryResponse, AiActivity } from "@/types/ai";
+import type { AiGenerateItineraryResponse, AiActivity } from "../../../types/ai";
 import type { DestinationDto } from "@/types/destinations";
 
 export function ItineraryPlannerPage() {
