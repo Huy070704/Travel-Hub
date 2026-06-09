@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 export function RootLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const displayEmail = user?.email || user?.username || "Người dùng";
 
   const isActive = (path: string) => {
@@ -82,21 +82,30 @@ export function RootLayout() {
             {/* CTA Button */}
             <div className="hidden md:flex items-center gap-2">
               <DarkModeToggle />
-              <div className="flex items-center gap-2">
-                <div className="max-w-[140px] truncate px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground">
-                  {displayEmail}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <div className="max-w-[140px] truncate px-3 py-1.5 rounded-full bg-muted text-xs font-semibold text-foreground">
+                    {displayEmail}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all active:scale-95 hover:scale-105 neon-primary whitespace-nowrap text-sm"
+                  >
+                    <LogOut className="w-4 h-4 flex-shrink-0" />
+                    <span>Đăng xuất</span>
+                  </button>
                 </div>
-                <motion.button
+              ) : (
+                <button
                   type="button"
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-accent to-orange-500 text-white rounded-full hover:shadow-lg transition-all neon-primary whitespace-nowrap text-sm"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate("/auth")}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all active:scale-95 hover:scale-105 neon-primary font-semibold text-sm"
                 >
-                  <LogOut className="w-4 h-4 flex-shrink-0" />
-                  <span>Đăng xuất</span>
-                </motion.button>
-              </div>
+                  <User className="w-4 h-4 flex-shrink-0" />
+                  <span>Đăng nhập</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -118,14 +127,25 @@ export function RootLayout() {
                 <span className="text-xs">{label}</span>
               </Link>
             ))}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-muted-foreground transition-all"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="text-xs">Đăng xuất</span>
-            </button>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-muted-foreground transition-all"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="text-xs">Đăng xuất</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate("/auth")}
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-muted-foreground transition-all"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-xs">Đăng nhập</span>
+              </button>
+            )}
           </div>
         </div>
       </nav>

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import { RootLayout } from "../layouts/RootLayout";
 import { LandingPage } from "../features/landing/components/LandingPage";
 import { AuthPage } from "../features/auth/components/AuthPage";
@@ -14,14 +14,14 @@ import { TourSearchPage } from "../features/tours/components/TourSearchPage";
 import { TourDetailPage } from "../features/tours/components/TourDetailPage";
 import { useAuth } from "../contexts/AuthContext";
 
-function ProtectedRoute() {
+function ProtectedRoute({ children }: { children?: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 
-  return <RootLayout />;
+  return children ? <>{children}</> : <Outlet />;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    Component: ProtectedRoute,
+    Component: RootLayout,
     children: [
       { index: true, Component: LandingPage },
       { path: "discover", Component: AIRecommendationPage },
@@ -60,9 +60,17 @@ export const router = createBrowserRouter([
       { path: "tours/search", Component: TourSearchPage },
       { path: "tours/:id", Component: TourDetailPage },
       { path: "community", Component: CommunityFeedPage },
-      { path: "chat/:userId?", Component: ChatPage },
-      { path: "profile/:userId?", Component: ProfilePage },
-      { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
+      {
+        path: "",
+        Component: ProtectedRoute,
+        children: [
+          { path: "chat", Component: ChatPage },
+          { path: "chat/:userId", Component: ChatPage },
+          { path: "profile", Component: ProfilePage },
+          { path: "profile/:userId", Component: ProfilePage },
+          { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
+        ],
+      },
     ],
   },
 ]);

@@ -124,18 +124,14 @@ export function LandingPage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background Blobs */}
+        {/* Animated Background Blobs — giữ 2 thay vì 3 để nhẹ hơn */}
         <FloatingBlob
           delay={0}
-          className="w-[500px] h-[500px] bg-gradient-to-br from-purple-500/30 to-blue-500/30 top-0 left-0"
+          className="w-[450px] h-[450px] bg-gradient-to-br from-purple-500/25 to-blue-500/25 top-0 left-0"
         />
         <FloatingBlob
-          delay={2}
-          className="w-[600px] h-[600px] bg-gradient-to-br from-cyan-500/30 to-teal-500/30 bottom-0 right-0"
-        />
-        <FloatingBlob
-          delay={4}
-          className="w-[400px] h-[400px] bg-gradient-to-br from-orange-500/20 to-pink-500/20 top-1/2 left-1/2"
+          delay={3}
+          className="w-[450px] h-[450px] bg-gradient-to-br from-cyan-500/25 to-teal-500/25 bottom-0 right-0"
         />
 
         {/* Floating Travel Illustrations */}
@@ -379,11 +375,8 @@ export function LandingPage() {
       <section className="relative py-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="glass rounded-3xl p-12 md:p-16 relative overflow-hidden">
-            {/* Background Gradient */}
-            <FloatingBlob
-              delay={0}
-              className="w-[400px] h-[400px] bg-gradient-to-br from-purple-500/20 to-blue-500/20"
-            />
+            {/* Static gradient thay FloatingBlob để tránh thêm animation */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-3xl pointer-events-none" />
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <motion.div
