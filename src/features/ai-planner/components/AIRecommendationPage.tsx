@@ -33,22 +33,15 @@ import {
   WalletCards
 } from "lucide-react";
 import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
-import { getAiRecommendations } from "@/api/aiApi";
-import type { AiRecommendRequest } from "@/types/ai";
+import { getAiRecommendations } from "../../../api/aiApi";
+import type { AiRecommendRequest } from "../../../types/ai";
 
 type PlannerFormData = {
   departure: string;
-  destination: string;
   budget: string;
   days: string;
   interests: string[];
-  transportationPreference: string;
   travelGroup: string;
-  destinationType: string;
-  mainTravelGoal: string;
-  preferredWeather: string;
-  accommodationType: string;
-  budgetStyle: string;
 };
 
 type ChoiceOption = {
@@ -124,79 +117,25 @@ export function AIRecommendationPage() {
     const saved = localStorage.getItem("ai_formData");
     return saved ? JSON.parse(saved) : {
       departure: "",
-      destination: "",
       budget: "",
       days: "",
       interests: [] as string[],
-      transportationPreference: "",
       travelGroup: "",
-      destinationType: "",
-      mainTravelGoal: "",
-      preferredWeather: "",
-      accommodationType: "",
-      budgetStyle: "",
     };
   });
 
   const interests = [
-    { id: "beach", label: "Biển & nghỉ dưỡng", icon: Waves },
-    { id: "adventure", label: "Phiêu lưu & leo núi", icon: Mountain },
-    { id: "culture", label: "Văn hóa & lịch sử", icon: Building2 },
+    { id: "beach", label: "Bãi biển", icon: Waves },
+    { id: "mountain", label: "Núi", icon: Mountain },
+    { id: "culture", label: "Văn hóa", icon: Building2 },
     { id: "nature", label: "Thiên nhiên", icon: Palmtree },
-  ];
-
-  const transportationPreferences = [
-    { id: "motorbike", label: "Xe máy", icon: Bike },
-    { id: "bus", label: "Xe khách", icon: Bus },
-    { id: "train", label: "Tàu hỏa", icon: Train },
-    { id: "airplane", label: "Máy bay", icon: Plane },
-    { id: "no_preference", label: "Không ưu tiên" },
   ];
 
   const travelGroups = [
     { id: "solo", label: "Đi một mình", icon: User },
-    { id: "friends", label: "Bạn bè", icon: Users },
-    { id: "couple", label: "Cặp đôi", icon: Heart },
-    { id: "family", label: "Gia đình", icon: Home },
-    { id: "group", label: "Nhóm", icon: Users },
-  ];
-
-  const destinationTypes = [
-    { id: "beach", label: "Biển", icon: Waves },
-    { id: "mountain", label: "Núi", icon: Mountain },
-    { id: "city", label: "Thành phố", icon: Building2 },
-    { id: "island", label: "Đảo", icon: Palmtree },
-    { id: "camping", label: "Cắm trại", icon: Tent },
-    { id: "food_tour", label: "Ẩm thực" },
-  ];
-
-  const mainTravelGoals = [
-    { id: "relaxation", label: "Nghỉ dưỡng", icon: Waves },
-    { id: "adventure", label: "Phiêu lưu", icon: Mountain },
-    { id: "photography", label: "Chụp ảnh", icon: Camera },
-    { id: "budget_travel", label: "Tiết kiệm", icon: DollarSign },
-    { id: "local_experience", label: "Trải nghiệm địa phương", icon: Compass },
-  ];
-
-  const preferredWeatherOptions = [
-    { id: "cool", label: "Mát mẻ", icon: Cloud },
-    { id: "sunny", label: "Nắng đẹp", icon: ThermometerSun },
-    { id: "cold", label: "Se lạnh", icon: Snowflake },
-    { id: "no_preference", label: "Không ưu tiên" },
-  ];
-
-  const accommodationTypes = [
-    { id: "hostel", label: "Nhà nghỉ", icon: Building2 },
-    { id: "homestay", label: "Homestay", icon: Home },
-    { id: "hotel", label: "Khách sạn", icon: Hotel },
-    { id: "resort", label: "Resort", icon: Gem },
-    { id: "no_preference", label: "Không ưu tiên" },
-  ];
-
-  const budgetStyles = [
-    { id: "budget", label: "Tiết kiệm", icon: DollarSign },
-    { id: "balanced", label: "Cân bằng", icon: WalletCards },
-    { id: "premium", label: "Cao cấp", icon: Gem },
+    { id: "couple", label: "Đi cùng cặp đôi", icon: Heart },
+    { id: "friends", label: "Đi cùng bạn bè", icon: Users },
+    { id: "family", label: "Đi cùng gia đình", icon: Home },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,14 +145,14 @@ export function AIRecommendationPage() {
       days: Number(formData.days),
       interests: formData.interests.join(", "),
       departure: formData.departure,
-      destination: formData.destination,
-      transportationPreference: formData.transportationPreference,
+      destination: "",
+      transportationPreference: "no_preference",
       travelGroup: formData.travelGroup,
-      destinationType: formData.destinationType,
-      mainTravelGoal: formData.mainTravelGoal,
-      preferredWeather: formData.preferredWeather,
-      accommodationType: formData.accommodationType,
-      budgetStyle: formData.budgetStyle,
+      destinationType: "",
+      mainTravelGoal: "",
+      preferredWeather: "no_preference",
+      accommodationType: "no_preference",
+      budgetStyle: "balanced",
     };
 
     localStorage.setItem("ai_formData", JSON.stringify(formData));
@@ -256,7 +195,7 @@ export function AIRecommendationPage() {
     }));
   };
 
-  const updateChoice = (field: keyof Omit<PlannerFormData, "departure" | "destination" | "budget" | "days" | "interests">, value: string) => {
+  const updateChoice = (field: keyof Omit<PlannerFormData, "departure" | "budget" | "days" | "interests">, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -325,17 +264,7 @@ export function AIRecommendationPage() {
                     />
                   </div>
 
-                  <div>
-                    <FieldLabel icon={MapPin}>Vị trí/Thành phố muốn đến</FieldLabel>
-                    <Autocomplete
-                      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                      onPlaceSelected={(place) => setFormData({ ...formData, destination: place?.formatted_address || place?.name || "" })}
-                      defaultValue={formData.destination}
-                      options={{ types: ["(regions)"] }}
-                      placeholder="Ví dụ: Đà Lạt, Lâm Đồng"
-                      className={inputClassName}
-                    />
-                  </div>
+                  {/* Destination removed per UX requirement - hidden default destination = "" */}
 
                   <div>
                     <FieldLabel icon={DollarSign}>Tổng ngân sách (VND)</FieldLabel>
@@ -384,60 +313,14 @@ export function AIRecommendationPage() {
                 </div>
 
                 <ChoiceGroup
-                  label="Phương tiện ưu tiên"
-                  icon={Plane}
-                  options={transportationPreferences}
-                  value={formData.transportationPreference}
-                  onSelect={(value) => updateChoice("transportationPreference", value)}
-                />
-
-                <ChoiceGroup
-                  label="Bạn đi cùng ai"
+                  label="Bạn đi cùng ai?"
                   icon={Users}
                   options={travelGroups}
                   value={formData.travelGroup}
                   onSelect={(value) => updateChoice("travelGroup", value)}
                 />
 
-                <ChoiceGroup
-                  label="Loại điểm đến"
-                  icon={Compass}
-                  options={destinationTypes}
-                  value={formData.destinationType}
-                  onSelect={(value) => updateChoice("destinationType", value)}
-                />
 
-                <ChoiceGroup
-                  label="Mục tiêu chính"
-                  icon={Sparkles}
-                  options={mainTravelGoals}
-                  value={formData.mainTravelGoal}
-                  onSelect={(value) => updateChoice("mainTravelGoal", value)}
-                />
-
-                <ChoiceGroup
-                  label="Thời tiết mong muốn"
-                  icon={CloudSun}
-                  options={preferredWeatherOptions}
-                  value={formData.preferredWeather}
-                  onSelect={(value) => updateChoice("preferredWeather", value)}
-                />
-
-                <ChoiceGroup
-                  label="Loại chỗ ở"
-                  icon={Hotel}
-                  options={accommodationTypes}
-                  value={formData.accommodationType}
-                  onSelect={(value) => updateChoice("accommodationType", value)}
-                />
-
-                <ChoiceGroup
-                  label="Phong cách chi tiêu"
-                  icon={WalletCards}
-                  options={budgetStyles}
-                  value={formData.budgetStyle}
-                  onSelect={(value) => updateChoice("budgetStyle", value)}
-                />
 
                 <motion.button
                   type="submit"
@@ -548,7 +431,7 @@ export function AIRecommendationPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
                         <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm text-foreground">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>#{index + 1} phù hợp</span>
+                          <span>#{index + 1} phù hợp nhất</span>
                         </div>
                         <div className="absolute top-4 right-4 px-3 py-1 bg-primary/90 backdrop-blur-sm text-white rounded-full text-sm font-semibold shadow-sm">
                           {rec.matchScore}% phù hợp
@@ -573,7 +456,7 @@ export function AIRecommendationPage() {
                           <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
                             <MapPin className="w-4 h-4 text-rose-500" />
                             <div>
-                              <div className="font-semibold">{rec.distance || "N/A"}</div>
+                              <div className="font-semibold">{rec.distance || "Chưa rõ"}</div>
                               <div className="text-xs text-muted-foreground">Khoảng cách</div>
                             </div>
                           </div>
@@ -581,14 +464,14 @@ export function AIRecommendationPage() {
                             <ThermometerSun className="w-4 h-4 text-orange-500" />
                             <div>
                               <div className="font-semibold">{rec.weather.temp}</div>
-                              <div className="text-xs text-muted-foreground">{rec.weather.condition}</div>
+                              <div className="text-xs text-muted-foreground">Thời tiết</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
                             <Plane className="w-4 h-4 text-primary" />
                             <div>
                               <div className="font-semibold">{rec.flightDuration}</div>
-                              <div className="text-xs text-muted-foreground">Thời gian di chuyển</div>
+                              <div className="text-xs text-muted-foreground">Di chuyển</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">

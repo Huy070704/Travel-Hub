@@ -4,7 +4,7 @@ import type {
   AiRecommendResponse, 
   AiGenerateItineraryRequest, 
   AiGenerateItineraryResponse 
-} from "@/types/ai";
+} from "../types/ai";
 
 export async function getAiRecommendations(data: AiRecommendRequest) {
   const response = await axiosInstance.post<AiRecommendResponse[]>("/Ai/recommend", data);
