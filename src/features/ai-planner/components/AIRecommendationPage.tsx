@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import Autocomplete from "react-google-autocomplete";
 import {
   Sparkles,
@@ -13,26 +13,16 @@ import {
   Mountain,
   Building2,
   Waves,
-  CloudSun,
   ThermometerSun,
   Plane,
   TrendingUp,
   Star,
-  Bike,
-  Bus,
-  Train,
   Users,
   User,
-  Gem,
-  Tent,
-  Camera,
-  Cloud,
-  Snowflake,
   Home,
-  Hotel,
-  WalletCards
+  Search,
+  ChevronDown
 } from "lucide-react";
-import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 import { getAiRecommendations } from "../../../api/aiApi";
 import type { AiRecommendRequest } from "../../../types/ai";
 
@@ -44,65 +34,20 @@ type PlannerFormData = {
   travelGroup: string;
 };
 
-type ChoiceOption = {
-  id: string;
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-};
+// --- DATA ---
+const interests = [
+  { id: "beach", label: "Bãi biển", icon: Waves },
+  { id: "mountain", label: "Núi", icon: Mountain },
+  { id: "culture", label: "Văn hóa", icon: Building2 },
+  { id: "nature", label: "Thiên nhiên", icon: Palmtree },
+];
 
-type ChoiceGroupProps = {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  options: ChoiceOption[];
-  value: string;
-  onSelect: (id: string) => void;
-  compact?: boolean;
-};
-
-const inputClassName =
-  "w-full px-4 py-3 bg-white/80 dark:bg-black/20 rounded-xl border border-border/70 dark:border-white/10 shadow-sm focus:bg-white dark:focus:bg-black/40 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-muted-foreground/70 text-foreground";
-
-function FieldLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex items-center gap-2 text-sm font-semibold mb-2.5 text-foreground">
-      <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-        <Icon className="w-4 h-4 text-primary" />
-      </span>
-      <span>{children}</span>
-    </label>
-  );
-}
-
-function ChoiceGroup({ label, icon: LabelIcon, options, value, onSelect, compact = true }: ChoiceGroupProps) {
-  return (
-    <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm">
-      <FieldLabel icon={LabelIcon}>{label}</FieldLabel>
-      <div className={compact ? "flex flex-wrap gap-2" : "grid grid-cols-2 gap-2"}>
-        {options.map(({ id, label: optionLabel, icon: OptionIcon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onSelect(id)}
-            className={`flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm transition-all ${
-              value === id
-                ? "border-primary bg-gradient-to-r from-primary/10 to-secondary/10 text-primary shadow-primary/10"
-                : "border-border/70 dark:border-white/10 bg-white/80 dark:bg-black/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/20 text-foreground"
-            }`}
-          >
-            {OptionIcon && <OptionIcon className="w-4 h-4" />}
-            <span>{optionLabel}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+const travelGroups = [
+  { id: "solo", label: "Đi một mình", icon: User },
+  { id: "couple", label: "Cặp đôi", icon: Heart },
+  { id: "friends", label: "Bạn bè", icon: Users },
+  { id: "family", label: "Gia đình", icon: Home },
+];
 
 export function AIRecommendationPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -123,20 +68,11 @@ export function AIRecommendationPage() {
       travelGroup: "",
     };
   });
+  
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const interests = [
-    { id: "beach", label: "Bãi biển", icon: Waves },
-    { id: "mountain", label: "Núi", icon: Mountain },
-    { id: "culture", label: "Văn hóa", icon: Building2 },
-    { id: "nature", label: "Thiên nhiên", icon: Palmtree },
-  ];
-
-  const travelGroups = [
-    { id: "solo", label: "Đi một mình", icon: User },
-    { id: "couple", label: "Đi cùng cặp đôi", icon: Heart },
-    { id: "friends", label: "Đi cùng bạn bè", icon: Users },
-    { id: "family", label: "Đi cùng gia đình", icon: Home },
-  ];
+  // Scroll ref for results
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +115,12 @@ export function AIRecommendationPage() {
       setShowResults(true);
       localStorage.setItem("ai_recommendations", JSON.stringify(mapped));
       localStorage.setItem("ai_showResults", "true");
+      
+      // Scroll to results
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+      
     } catch (error) {
       console.error("Failed to get AI recommendations", error);
     } finally {
@@ -195,342 +137,377 @@ export function AIRecommendationPage() {
     }));
   };
 
-  const updateChoice = (field: keyof Omit<PlannerFormData, "departure" | "budget" | "days" | "interests">, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-cyan-50/30 to-background relative overflow-hidden">
-      {/* Animated Background */}
-      <FloatingBlob
-        delay={0}
-        className="w-[500px] h-[500px] bg-gradient-to-br from-blue-500/20 to-cyan-500/20 top-0 right-0"
-      />
-      <FloatingBlob
-        delay={2}
-        className="w-[420px] h-[420px] bg-gradient-to-br from-teal-500/20 to-emerald-500/20 bottom-0 left-0"
-      />
+    <div className="min-h-screen bg-background relative selection:bg-primary/20 pb-10">
+      
+      {/* 1. HERO SECTION (MotionSites Style) */}
+      <div className="relative h-[80vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+        {/* Parallax Background */}
+        <motion.div 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-black/40 to-background z-10" />
+          <img 
+            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop" 
+            alt="Travel Background" 
+            className="w-full h-full object-cover object-center"
+          />
+        </motion.div>
 
-      {/* Header */}
-      <div className="relative bg-gradient-to-br from-primary via-secondary to-cyan-500 text-white py-14 animate-gradient overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_35%,rgba(255,255,255,0.18),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.12),transparent_32%)]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm text-sm font-semibold mb-5">
-            <Sparkles className="w-4 h-4" />
-            <span>Gợi ý chuyến đi thông minh</span>
-          </div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-normal">Gợi ý du lịch bằng AI</h1>
-          </div>
-          <p className="text-white/90 max-w-2xl">
-            Cho TravelHub biết chuyến đi bạn mong muốn, AI sẽ tìm các điểm đến phù hợp với ngân sách và sở thích của bạn.
-          </p>
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center mt-[-10vh]">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-white text-sm font-medium mb-6 shadow-2xl"
+          >
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span>AI-Powered Travel Planner</span>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 drop-shadow-lg"
+          >
+            Hành Trình Mơ Ước <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent">Bắt Đầu Từ Đây</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md mb-12"
+          >
+            Để AI phân tích hàng nghìn điểm đến và thiết kế chuyến đi hoàn hảo phù hợp với phong cách, ngân sách và sở thích của riêng bạn.
+          </motion.p>
         </div>
-      </div>
-
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,40%)_minmax(0,50%)] justify-center gap-8 xl:gap-10">
-          {/* Search Form - Sticky Sidebar */}
-          <div>
-            <div className="sticky top-20">
-              <form onSubmit={handleSubmit} className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-5 md:p-6 space-y-4">
-                <div className="flex items-start justify-between gap-3 pb-2">
-                  <div>
-                    <h2 className="font-bold text-xl">Lên kế hoạch chuyến đi</h2>
-                    <p className="text-sm text-muted-foreground">Chọn nhanh sở thích để gợi ý chính xác hơn</p>
+        
+        {/* 2. SEARCH BAR (Google Travel Style) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="absolute bottom-10 left-0 right-0 z-30 px-4 sm:px-6 lg:px-8"
+        >
+          <div className="max-w-5xl mx-auto">
+            <form onSubmit={handleSubmit} className="bg-card dark:bg-card/90 backdrop-blur-xl p-3 md:p-4 rounded-3xl shadow-2xl shadow-primary/10 border border-border/50">
+              <div className="flex flex-col md:flex-row items-center gap-2">
+                
+                {/* Departure */}
+                <div className="flex-1 w-full relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+                    <MapPin className="w-5 h-5" />
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
-                    <Compass className="w-5 h-5 text-white" />
-                  </div>
+                  <Autocomplete
+                    apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                    onPlaceSelected={(place) => setFormData({ ...formData, departure: place?.formatted_address || place?.name || "" })}
+                    defaultValue={formData.departure}
+                    options={{ types: ["(regions)"] }}
+                    placeholder="Bạn xuất phát từ đâu?"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
+                    required
+                  />
                 </div>
+                
+                <div className="hidden md:block w-px h-10 bg-border" />
 
-                <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm space-y-4">
-                  <div>
-                    <FieldLabel icon={MapPin}>Xuất phát từ</FieldLabel>
-                    <Autocomplete
-                      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                      onPlaceSelected={(place) => setFormData({ ...formData, departure: place?.formatted_address || place?.name || "" })}
-                      defaultValue={formData.departure}
-                      options={{ types: ["(regions)"] }}
-                      placeholder="Ví dụ: TP. Hồ Chí Minh"
-                      className={inputClassName}
-                      required
-                    />
+                {/* Budget */}
+                <div className="flex-[0.8] w-full relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                    <DollarSign className="w-5 h-5" />
                   </div>
-
-                  {/* Destination removed per UX requirement - hidden default destination = "" */}
-
-                  <div>
-                    <FieldLabel icon={DollarSign}>Tổng ngân sách (VND)</FieldLabel>
                   <input
                     type="number"
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                    placeholder="Ví dụ: 5000000"
-                    className={inputClassName}
+                    placeholder="Ngân sách (VND)"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
                     required
                   />
-                  </div>
+                </div>
 
-                  <div>
-                    <FieldLabel icon={Calendar}>Số ngày</FieldLabel>
+                <div className="hidden md:block w-px h-10 bg-border" />
+
+                {/* Days */}
+                <div className="flex-[0.6] w-full relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                    <Calendar className="w-5 h-5" />
+                  </div>
                   <input
                     type="number"
                     value={formData.days}
                     onChange={(e) => setFormData({ ...formData, days: e.target.value })}
-                    placeholder="Ví dụ: 3"
-                    className={inputClassName}
+                    placeholder="Số ngày"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
                     required
                   />
-                  </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 dark:border-white/10 bg-white/70 dark:bg-black/20 p-4 shadow-sm">
-                  <FieldLabel icon={Heart}>Sở thích du lịch</FieldLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {interests.map(({ id, label, icon: Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => toggleInterest(id)}
-                        className={`flex min-h-[86px] flex-col items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium shadow-sm transition-all ${
-                          formData.interests.includes(id)
-                            ? "border-primary bg-gradient-to-br from-primary/10 to-secondary/10 text-primary shadow-primary/10"
-                            : "border-border/70 dark:border-white/10 bg-white/80 dark:bg-black/40 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/20 text-foreground"
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span className="text-center leading-snug">{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <ChoiceGroup
-                  label="Bạn đi cùng ai?"
-                  icon={Users}
-                  options={travelGroups}
-                  value={formData.travelGroup}
-                  onSelect={(value) => updateChoice("travelGroup", value)}
-                />
-
-
-
-                <motion.button
+                {/* Search Button */}
+                <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2 neon-primary font-semibold"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="w-full md:w-auto mt-2 md:mt-0 h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
                 >
                   {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>AI đang suy nghĩ...</span>
-                    </>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5" />
-                      <span>Nhận gợi ý</span>
+                      <Search className="w-5 h-5" />
+                      <span className="md:hidden lg:inline">Khám Phá</span>
                     </>
                   )}
-                </motion.button>
-              </form>
-
-              {/* AI Assistant Panel */}
-              <motion.div
-                className="mt-6 bg-white/75 dark:bg-black/40 backdrop-blur-xl rounded-2xl p-5 border border-white/80 dark:border-white/10 shadow-lg shadow-primary/5"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-1">Trợ lý du lịch AI</h4>
-                    <p className="text-sm text-muted-foreground">
-                      AI phân tích hơn 1000 điểm đến, đánh giá thực tế, thời tiết và dữ liệu ngân sách để tìm lựa chọn hợp với bạn.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Results */}
-          <div>
-            {!showResults && !isLoading && (
-              <div className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-10 md:p-12 text-center overflow-hidden relative">
-                <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center shadow-xl shadow-primary/20">
-                  <Compass className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Sẵn sàng khám phá?</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Điền sở thích của bạn ở bên trái để AI tìm điểm đến phù hợp nhất với ngân sách và gu du lịch của bạn.
-                </p>
+                </button>
               </div>
-            )}
 
-            {isLoading && (
-              <div className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl shadow-primary/5 border border-white/80 dark:border-white/10 p-10 md:p-12 text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto mb-6 flex items-center justify-center animate-pulse shadow-xl shadow-primary/20">
-                  <Sparkles className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">AI đang phân tích...</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                  Đang rà soát hàng nghìn điểm đến và đối chiếu với sở thích của bạn.
-                </p>
-                <div className="flex flex-col gap-2 max-w-md mx-auto">
-                  {["Phân tích lựa chọn ngân sách", "Kiểm tra điều kiện thời tiết", "Tìm điểm đến phù hợp nhất"].map((text, i) => (
-                    <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <div
-                        className="w-2 h-2 rounded-full bg-primary animate-pulse"
-                        style={{ animationDelay: `${i * 200}ms` }}
-                      />
-                      <span>{text}</span>
-                    </div>
-                  ))}
-                </div>
+              {/* Advanced Toggle */}
+              <div className="mt-3 flex justify-center">
+                <button 
+                  type="button" 
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <span>Tuỳ chỉnh sở thích & nhóm</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                </button>
               </div>
-            )}
 
-            {showResults && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold">Gợi ý hàng đầu cho bạn</h3>
-                    <p className="text-muted-foreground">Dựa trên sở thích và ngân sách của bạn</p>
-                  </div>
-                </div>
-
-                {realRecommendations.map((rec, index) => (
-                  <motion.div
-                    key={rec.id}
-                    className="bg-white/90 dark:bg-black/40 backdrop-blur-xl rounded-2xl shadow-lg shadow-primary/5 border border-white/80 dark:border-white/10 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all hover-lift"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+              {/* Advanced Options Panel */}
+              <AnimatePresence>
+                {showAdvanced && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
                   >
-                    <div className="grid md:grid-cols-5 gap-0">
-                      {/* Image */}
-                      <div className="md:col-span-2 relative h-64 md:h-auto">
-                        <img
-                          src={rec.image}
-                          alt={rec.destination}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-                        <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm text-foreground">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>#{index + 1} phù hợp nhất</span>
-                        </div>
-                        <div className="absolute top-4 right-4 px-3 py-1 bg-primary/90 backdrop-blur-sm text-white rounded-full text-sm font-semibold shadow-sm">
-                          {rec.matchScore}% phù hợp
+                    <div className="pt-4 mt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6 pb-2 px-2">
+                      {/* Interests */}
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-3">Sở thích du lịch</label>
+                        <div className="flex flex-wrap gap-2">
+                          {interests.map(({ id, label, icon: Icon }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => toggleInterest(id)}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                                formData.interests.includes(id)
+                                  ? "bg-primary/10 text-primary ring-1 ring-primary/50"
+                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              <Icon className="w-4 h-4" />
+                              {label}
+                            </button>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Content */}
-                      <div className="md:col-span-3 p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h4 className="text-2xl font-bold mb-1">{rec.destination}</h4>
-                            <p className="text-muted-foreground">{rec.country}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-primary">{rec.estimatedCost}</div>
-                            <div className="text-xs text-muted-foreground">Tổng chi phí ước tính</div>
-                          </div>
-                        </div>
-
-                        {/* Quick Info */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                          <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
-                            <MapPin className="w-4 h-4 text-rose-500" />
-                            <div>
-                              <div className="font-semibold">{rec.distance || "Chưa rõ"}</div>
-                              <div className="text-xs text-muted-foreground">Khoảng cách</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
-                            <ThermometerSun className="w-4 h-4 text-orange-500" />
-                            <div>
-                              <div className="font-semibold">{rec.weather.temp}</div>
-                              <div className="text-xs text-muted-foreground">Thời tiết</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
-                            <Plane className="w-4 h-4 text-primary" />
-                            <div>
-                              <div className="font-semibold">{rec.flightDuration}</div>
-                              <div className="text-xs text-muted-foreground">Di chuyển</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm rounded-xl bg-muted/60 p-3">
-                            <TrendingUp className="w-4 h-4 text-green-500" />
-                            <div>
-                              <div className="font-semibold">{rec.confidence}%</div>
-                              <div className="text-xs text-muted-foreground">Độ tin cậy</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Why AI Recommends */}
-                        <div className="mb-4">
-                          <h5 className="font-semibold mb-2 flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                            Vì sao AI gợi ý điểm này
-                          </h5>
-                          <ul className="space-y-1.5">
-                            {rec.reasons.map((reason, i) => (
-                              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                                <span>{reason}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Highlights */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {rec.highlights.map((highlight, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                      {/* Travel Group */}
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-3">Bạn đi cùng ai?</label>
+                        <div className="flex flex-wrap gap-2">
+                          {travelGroups.map(({ id, label, icon: Icon }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, travelGroup: id })}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                                formData.travelGroup === id
+                                  ? "bg-secondary/10 text-secondary ring-1 ring-secondary/50"
+                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
                             >
-                              {highlight}
-                            </span>
+                              <Icon className="w-4 h-4" />
+                              {label}
+                            </button>
                           ))}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-3">
-                          <Link
-                            to={`/destination/${rec.id}`}
-                            className="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all text-center font-semibold"
-                          >
-                            Xem chi tiết
-                          </Link>
-                          <button className="px-6 py-3 border border-border rounded-xl hover:border-primary hover:text-primary hover:bg-primary/5 transition-all">
-                            <Heart className="w-5 h-5" />
-                          </button>
                         </div>
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
-            )}
+                )}
+              </AnimatePresence>
+            </form>
           </div>
-        </div>
+        </motion.div>
+      </div>
+
+      {/* 3. MAIN CONTENT / RESULTS (Airbnb / TripAdvisor Style) */}
+      <div ref={resultsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[50vh]">
+        
+        {!showResults && !isLoading && (
+          <div className="flex flex-col items-center justify-center text-center py-20 opacity-60">
+            <Compass className="w-16 h-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-medium text-foreground">Chưa có kết quả nào</h3>
+            <p className="text-muted-foreground mt-2 max-w-md">
+              Hãy nhập thông tin chuyến đi của bạn ở trên để AI có thể gợi ý những điểm đến tuyệt vời nhất.
+            </p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-32">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+              <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-2xl relative z-10 animate-bounce">
+                <Sparkles className="w-10 h-10" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold mt-8 text-foreground">AI Đang Phân Tích...</h3>
+            <p className="text-muted-foreground mt-2 max-w-sm text-center">
+              Đang rà soát hàng nghìn điểm đến, kiểm tra thời tiết và tối ưu hoá ngân sách của bạn.
+            </p>
+          </div>
+        )}
+
+        {showResults && !isLoading && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground">Gợi ý hàng đầu cho bạn</h2>
+                <p className="text-muted-foreground mt-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-accent" /> 
+                  Được tuyển chọn kỹ lưỡng bởi TravelHub AI
+                </p>
+              </div>
+            </div>
+
+            {/* 4. DESTINATION CARDS LIST (Traveloka Style) */}
+            <div className="flex flex-col gap-6">
+              {realRecommendations.map((rec, index) => (
+                <motion.div
+                  key={rec.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all flex flex-col md:flex-row"
+                >
+                  {/* Left: Image Container */}
+                  <div className="relative w-full md:w-72 lg:w-80 h-56 md:h-auto shrink-0 overflow-hidden">
+                    <img
+                      src={rec.image}
+                      alt={rec.destination}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    
+                    {/* Gradient Overlay for mobile readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
+                    
+                    {/* Top Badges */}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      {index === 0 && (
+                        <div className="px-3 py-1 bg-accent text-accent-foreground text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current" /> Top 1 Phù hợp
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Heart Button */}
+                    <button className="absolute top-3 right-3 w-9 h-9 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors">
+                      <Heart className="w-5 h-5" />
+                    </button>
+                    
+                    {/* Mobile Title overlay */}
+                    <div className="absolute bottom-3 left-3 right-3 text-white md:hidden">
+                      <h3 className="text-lg font-bold line-clamp-1 drop-shadow-md">{rec.destination}</h3>
+                    </div>
+                  </div>
+
+                  {/* Right: Content Container */}
+                  <div className="flex flex-col md:flex-row flex-1 p-5 gap-6">
+                    
+                    {/* Middle: Info */}
+                    <div className="flex-1 flex flex-col">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="text-xl font-bold text-foreground hidden md:block">{rec.destination}</h3>
+                        
+                        {/* Rating block (Traveloka style: 8.7/10 Very Good) */}
+                        <div className="hidden md:flex flex-col items-end">
+                           <div className="flex items-center gap-1.5">
+                             <span className="text-sm font-medium text-primary">Rất phù hợp</span>
+                             <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-md">
+                               {rec.matchScore}
+                             </div>
+                           </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
+                        <MapPin className="w-4 h-4 text-secondary" />
+                        <span>{rec.country}</span>
+                        <span className="w-1 h-1 rounded-full bg-border mx-1" />
+                        <span>Khoảng cách: {rec.distance || "Tùy vị trí"}</span>
+                      </div>
+                      
+                      {/* Features/Highlights */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                           <ThermometerSun className="w-3.5 h-3.5 text-accent"/> {rec.weather.temp}
+                         </span>
+                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                           <Plane className="w-3.5 h-3.5 text-secondary"/> {rec.flightDuration}
+                         </span>
+                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                           <TrendingUp className="w-3.5 h-3.5 text-green-500"/> {rec.confidence}% tự tin
+                         </span>
+                      </div>
+                      
+                      {/* AI Reason */}
+                      <div className="mt-auto md:mt-4">
+                        <div className="flex items-start gap-2 text-sm text-foreground/80 bg-primary/5 p-3 rounded-xl border border-primary/10">
+                          <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <span className="line-clamp-2 leading-relaxed">{rec.reasons[0]}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Rightmost: Pricing & CTA */}
+                    <div className="w-full md:w-56 lg:w-64 border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6 flex flex-col justify-end md:items-end text-right shrink-0">
+                       
+                       {/* Mobile Rating */}
+                       <div className="flex md:hidden items-center justify-between w-full mb-4 pb-4 border-b border-border/50">
+                           <span className="text-sm font-medium text-foreground">Đánh giá AI:</span>
+                           <div className="flex items-center gap-1.5">
+                             <span className="text-sm font-medium text-primary">Rất phù hợp</span>
+                             <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
+                               {rec.matchScore}
+                             </div>
+                           </div>
+                       </div>
+
+                       <div className="mb-1.5 text-sm text-green-600 dark:text-green-400 font-medium flex items-center justify-end gap-1">
+                         <Star className="w-4 h-4 fill-current" /> Đề xuất hàng đầu
+                       </div>
+                       
+                       <div className="text-xs text-muted-foreground line-through mb-0.5">
+                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rec.estimatedCostValue * 1.15)}
+                       </div>
+                       
+                       <div className="text-2xl font-bold text-accent mb-1">{rec.estimatedCost}</div>
+                       <div className="text-xs text-muted-foreground mb-4">Tổng ước tính (bao gồm thuế)</div>
+                       
+                       <Link
+                          to={`/destination/${rec.id}`}
+                          className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-xl font-semibold transition-colors shadow-lg shadow-primary/20 mt-auto md:mt-0"
+                        >
+                          Chọn Điểm Đến
+                       </Link>
+                    </div>
+
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

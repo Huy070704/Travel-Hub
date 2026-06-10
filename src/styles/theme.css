@@ -3,18 +3,18 @@
 :root {
   --font-size: 16px;
   --background: #F8FAFC;
-  --foreground: oklch(0.145 0 0);
+  --foreground: #0F172A;
   --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #3B82F6;
+  --card-foreground: #0F172A;
+  --popover: #ffffff;
+  --popover-foreground: #0F172A;
+  --primary: #0F4C81;
   --primary-foreground: #ffffff;
-  --secondary: #06B6D4;
+  --secondary: #38BDF8;
   --secondary-foreground: #ffffff;
   --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #FB923C;
+  --muted-foreground: #64748b;
+  --accent: #F59E0B;
   --accent-foreground: #ffffff;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
@@ -42,19 +42,19 @@
 }
 
 .dark {
-  --background: #09090b; /* zinc-950 */
-  --foreground: #fafafa; /* zinc-50 */
-  --card: #18181b; /* zinc-900 */
-  --card-foreground: #fafafa;
-  --popover: #18181b;
-  --popover-foreground: #fafafa;
-  --primary: #6366f1; /* indigo-500 */
-  --primary-foreground: #ffffff;
-  --secondary: #0ea5e9; /* sky-500 */
+  --background: #0F172A; /* slate-900 */
+  --foreground: #F8FAFC; /* slate-50 */
+  --card: #1E293B; /* slate-800 */
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  --primary: #38BDF8; /* Sky Blue - inverted for dark mode */
+  --primary-foreground: #0F172A;
+  --secondary: #0F4C81; /* Ocean Blue */
   --secondary-foreground: #ffffff;
-  --muted: #27272a; /* zinc-800 */
-  --muted-foreground: #a1a1aa; /* zinc-400 */
-  --accent: #f59e0b; /* amber-500 */
+  --muted: #334155; /* slate-700 */
+  --muted-foreground: #94A3B8; /* slate-400 */
+  --accent: #F59E0B; /* Sunset Orange */
   --accent-foreground: #ffffff;
   --destructive: #ef4444; /* red-500 */
   --destructive-foreground: #ffffff;
