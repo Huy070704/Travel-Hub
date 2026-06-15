@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
+import { getAllUsers } from "@/api/adminApi";
 import type { TourBooking } from "@/types/tours";
+import type { AdminUser } from "@/types/admin";
 import {
   Users,
   MapPin,
@@ -24,21 +26,48 @@ import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAx
 
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings">("overview");
+  
+  // Tour bookings state
   const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<TourBooking | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  // Users state
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [userCurrentPage, setUserCurrentPage] = useState(1);
+  const [userTotalPages, setUserTotalPages] = useState(1);
+  const [userOfflineFilter, setUserOfflineFilter] = useState("all");
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   const fetchBookings = () => {
     getAllTourBookings().then(setTourBookings).catch(console.error);
+  };
+
+  const fetchAdminUsersData = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await getAllUsers(userCurrentPage, 30, userOfflineFilter);
+      setAdminUsers(response.users);
+      setTotalUsers(response.totalUsers);
+      setUserTotalPages(response.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
 
   useEffect(() => {
     if (activeTab === "bookings") {
       fetchBookings();
     }
-  }, [activeTab]);
+    if (activeTab === "users") {
+      fetchAdminUsersData();
+    }
+  }, [activeTab, userCurrentPage, userOfflineFilter]);
 
   const handleUpdateStatus = async () => {
     if (!selectedBooking || !newStatus) return;
@@ -346,10 +375,14 @@ export function AdminDashboardPage() {
             {/* Users Tab */}
             {activeTab === "users" && (
               <div className="space-y-6">
-                {/* Search & Filter */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
+                {/* Header Information */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold">Danh sách người dùng</h2>
+                    <p className="text-muted-foreground mt-1">Tổng số người dùng: <span className="font-bold text-primary">{totalUsers}</span></p>
+                  </div>
+                  <div className="flex gap-4 w-full md:w-auto">
+                    <div className="relative flex-1 md:w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
@@ -357,66 +390,113 @@ export function AdminDashboardPage() {
                         className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
-                    <button className="px-6 py-3 bg-muted rounded-xl flex items-center gap-2 hover:bg-muted/80 transition-all">
-                      <Filter className="w-5 h-5" />
-                      <span>Bộ lọc</span>
-                    </button>
+                    <div className="relative border border-border rounded-xl bg-muted overflow-hidden focus-within:ring-2 focus-within:ring-primary">
+                      <select 
+                        value={userOfflineFilter} 
+                        onChange={(e) => {
+                          setUserOfflineFilter(e.target.value);
+                          setUserCurrentPage(1);
+                        }}
+                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="all">Tất cả</option>
+                        <option value="1_24_hours">1-24 giờ chưa online</option>
+                        <option value="1_30_days">1-30 ngày chưa online</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
                   </div>
                 </div>
 
                 {/* Users Table */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trường đại học</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentUsers.map((user) => (
-                          <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-all">
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-3">
-                                <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
-                                <span className="font-semibold">{user.name}</span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>
-                            <td className="py-3 px-4 text-sm">{user.university}</td>
-                            <td className="py-3 px-4 text-sm text-muted-foreground">{user.joined}</td>
-                            <td className="py-3 px-4">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.status === "đang hoạt động"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }`}>
-                                {user.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-muted rounded transition-all">
-                                  <Eye className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                                <button className="p-2 hover:bg-muted rounded transition-all">
-                                  <Edit className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                                <button className="p-2 hover:bg-red-50 rounded transition-all">
-                                  <Trash2 className="w-4 h-4 text-red-500" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {isLoadingUsers ? (
+                    <div className="py-12 text-center text-muted-foreground">Đang tải dữ liệu...</div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-border">
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Thời gian chưa online</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {adminUsers.map((user) => (
+                              <tr key={user.userID} className="border-b border-border hover:bg-muted/50 transition-all">
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-3">
+                                    <img src={user.avatarURL || "https://ui-avatars.com/api/?name=" + (user.fullName || user.username)} alt={user.username} className="w-10 h-10 rounded-full object-cover" />
+                                    <span className="font-semibold">{user.fullName || user.username}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground">{new Date(user.registrationDate).toLocaleDateString("vi-VN")}</td>
+                                <td className="py-3 px-4">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    user.offlineDurationText === "Vừa mới online" || user.offlineDurationText.includes("phút")
+                                      ? "bg-green-100 text-green-700" 
+                                      : user.offlineDurationText === "Chưa từng online"
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-yellow-100 text-yellow-700"
+                                  }`}>
+                                    {user.offlineDurationText}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <button className="p-2 hover:bg-muted rounded transition-all">
+                                      <Eye className="w-4 h-4 text-muted-foreground" />
+                                    </button>
+                                    <button className="p-2 hover:bg-muted rounded transition-all">
+                                      <Edit className="w-4 h-4 text-muted-foreground" />
+                                    </button>
+                                    <button className="p-2 hover:bg-red-50 rounded transition-all">
+                                      <Trash2 className="w-4 h-4 text-red-500" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                            {adminUsers.length === 0 && (
+                              <tr>
+                                <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  Không tìm thấy người dùng nào.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* Pagination */}
+                      {userTotalPages > 1 && (
+                        <div className="mt-6 flex items-center justify-center gap-2">
+                          <button 
+                            disabled={userCurrentPage === 1}
+                            onClick={() => setUserCurrentPage(prev => Math.max(1, prev - 1))}
+                            className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Trước
+                          </button>
+                          <span className="text-sm font-medium mx-4">
+                            Trang {userCurrentPage} / {userTotalPages}
+                          </span>
+                          <button 
+                            disabled={userCurrentPage === userTotalPages}
+                            onClick={() => setUserCurrentPage(prev => Math.min(userTotalPages, prev + 1))}
+                            className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Sau
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
