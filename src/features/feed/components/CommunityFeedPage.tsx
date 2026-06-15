@@ -16,7 +16,7 @@ import {
   X
 } from "lucide-react";
 import { getPosts, createPost, toggleLike, getComments, addComment } from "@/api/feedApi";
-import { getBuddyRecommendations } from "@/api/buddiesApi";
+import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getMyProfile } from "@/api/usersApi";
 import { sendDirectMessage } from "@/api/chatApi";
@@ -61,6 +61,19 @@ export function CommunityFeedPage() {
   const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [isSubmittingComment, setIsSubmittingComment] = useState<Record<number, boolean>>({});
 
+  // Buddy Post state
+  const [isBuddyPostMode, setIsBuddyPostMode] = useState(false);
+  const [buddyPostData, setBuddyPostData] = useState({
+    destination: "",
+    startDate: "",
+    endDate: "",
+    peopleNeeded: 1,
+    budgetVND: "",
+    style: "Khám phá",
+    note: ""
+  });
+  const [isJoining, setIsJoining] = useState<Record<number, boolean>>({});
+
   // Share state
   const [shareModalPostId, setShareModalPostId] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -104,22 +117,59 @@ export function CommunityFeedPage() {
   }, []);
 
   const handleCreatePost = async () => {
-    if (!newPostContent.trim()) return;
-    setIsPosting(true);
+    if (isBuddyPostMode) {
+      if (!buddyPostData.destination.trim()) return;
+      setIsPosting(true);
+      try {
+        await createPost({
+          postType: "BuddyRequest",
+          title: `Tìm bạn đồng hành đi ${buddyPostData.destination}`,
+          content: JSON.stringify(buddyPostData)
+        });
+        setBuddyPostData({ destination: "", startDate: "", endDate: "", peopleNeeded: 1, budgetVND: "", style: "Khám phá", note: "" });
+        setIsBuddyPostMode(false);
+      } catch (error) {
+        console.error("Failed to create buddy post", error);
+      } finally {
+        setIsPosting(false);
+      }
+    } else {
+      if (!newPostContent.trim()) return;
+      setIsPosting(true);
+      try {
+        await createPost({
+          postType: "Text",
+          title: "Cập nhật cộng đồng",
+          content: newPostContent
+        });
+        setNewPostContent("");
+      } catch (error) {
+        console.error("Failed to create post", error);
+      } finally {
+        setIsPosting(false);
+      }
+    }
+    
+    // Refresh posts
+    const postsData = await getPosts(1, 20);
+    setPosts(postsData.items);
+  };
+
+  const handleJoinBuddyRequest = async (postId: number, receiverId: number) => {
+    if (isJoining[postId]) return;
+    setIsJoining(prev => ({ ...prev, [postId]: true }));
     try {
-      await createPost({
-        postType: "Text",
-        title: "Cập nhật cộng đồng",
-        content: newPostContent
+      await sendBuddyRequest({
+        receiverID: receiverId,
+        postID: postId,
+        message: "Mình muốn tham gia chuyến đi này cùng bạn!"
       });
-      setNewPostContent("");
-      // Refresh posts
-      const postsData = await getPosts(1, 20);
-      setPosts(postsData.items);
+      alert("Đã gửi yêu cầu tham gia! Chờ người đăng xác nhận nhé.");
     } catch (error) {
-      console.error("Failed to create post", error);
+      console.error("Failed to send buddy request", error);
+      alert("Bạn đã gửi yêu cầu rồi hoặc có lỗi xảy ra.");
     } finally {
-      setIsPosting(false);
+      setIsJoining(prev => ({ ...prev, [postId]: false }));
     }
   };
 
@@ -232,39 +282,92 @@ export function CommunityFeedPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Create Post */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-start gap-4 mb-4">
                 <img
                   src={userProfile?.avatarURL || getAvatar(userProfile?.userID || 0)}
                   alt="You"
                   className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
                 />
-                <input
-                  type="text"
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
-                  placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
-                  className="flex-1 px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
-                  disabled={isPosting}
-                />
-                <button 
-                  onClick={handleCreatePost}
-                  disabled={isPosting || !newPostContent.trim()}
-                  className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all"
-                >
-                  {isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                </button>
+                <div className="flex-1">
+                  {isBuddyPostMode ? (
+                    <div className="bg-muted p-4 rounded-xl border border-border space-y-4">
+                      <div className="font-bold text-lg mb-2">Tìm bạn đồng hành</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Điểm đến</label>
+                          <input type="text" value={buddyPostData.destination} onChange={e => setBuddyPostData({...buddyPostData, destination: e.target.value})} placeholder="Vd: Đà Lạt" className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Phong cách</label>
+                          <select value={buddyPostData.style} onChange={e => setBuddyPostData({...buddyPostData, style: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none">
+                            <option>Khám phá</option>
+                            <option>Tiết kiệm (Budget)</option>
+                            <option>Nghỉ dưỡng (Resort)</option>
+                            <option>Phượt (Backpacking)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày đi</label>
+                          <input type="date" value={buddyPostData.startDate} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày về</label>
+                          <input type="date" value={buddyPostData.endDate} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Số người cần tìm</label>
+                          <input type="number" min="1" value={buddyPostData.peopleNeeded} onChange={e => setBuddyPostData({...buddyPostData, peopleNeeded: parseInt(e.target.value) || 1})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngân sách dự kiến (VND)</label>
+                          <input type="text" value={buddyPostData.budgetVND} onChange={e => setBuddyPostData({...buddyPostData, budgetVND: e.target.value})} placeholder="Vd: 3.000.000" className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Ghi chú thêm</label>
+                        <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({...buddyPostData, note: e.target.value})} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+                      </div>
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button onClick={() => setIsBuddyPostMode(false)} className="px-4 py-2 bg-white border border-border rounded-lg text-sm font-semibold hover:bg-muted transition-all">Hủy</button>
+                        <button onClick={handleCreatePost} disabled={isPosting || !buddyPostData.destination.trim()} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all flex items-center gap-2">
+                          {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Đăng bài
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
+                        placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
+                        className="flex-1 px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
+                        disabled={isPosting}
+                      />
+                      <button 
+                        onClick={handleCreatePost}
+                        disabled={isPosting || !newPostContent.trim()}
+                        className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all"
+                      >
+                        {isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm font-medium">Thêm điểm đến</span>
-                </button>
-                <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm font-medium">Tìm bạn đồng hành</span>
-                </button>
-              </div>
+              {!isBuddyPostMode && (
+                <div className="flex items-center gap-2 sm:ml-16">
+                  <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm font-medium">Thêm điểm đến</span>
+                  </button>
+                  <button onClick={() => setIsBuddyPostMode(true)} className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm font-medium">Tìm bạn đồng hành</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Filter Buttons */}
@@ -305,8 +408,68 @@ export function CommunityFeedPage() {
                   </div>
 
                   {/* Caption */}
-                  <h3 className="font-bold mb-1">{post.title}</h3>
-                  <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                  {post.postType === "BuddyRequest" ? (
+                    <div className="mb-4">
+                      <h3 className="font-bold mb-3 text-lg text-primary">{post.title}</h3>
+                      {(() => {
+                        try {
+                          const buddyData = JSON.parse(post.content || "{}");
+                          return (
+                            <div className="bg-primary/5 rounded-xl border border-primary/20 overflow-hidden">
+                              <div className="grid grid-cols-2 gap-px bg-primary/10">
+                                <div className="bg-white/80 p-3 flex flex-col gap-1">
+                                  <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> Điểm đến</span>
+                                  <span className="font-semibold text-sm">{buddyData.destination || "Đang cập nhật"}</span>
+                                </div>
+                                <div className="bg-white/80 p-3 flex flex-col gap-1">
+                                  <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Thời gian</span>
+                                  <span className="font-semibold text-sm">{buddyData.startDate ? new Date(buddyData.startDate).toLocaleDateString('vi-VN') : "?"} - {buddyData.endDate ? new Date(buddyData.endDate).toLocaleDateString('vi-VN') : "?"}</span>
+                                </div>
+                                <div className="bg-white/80 p-3 flex flex-col gap-1">
+                                  <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1"><Users className="w-3 h-3" /> Cần tìm</span>
+                                  <span className="font-semibold text-sm">{buddyData.peopleNeeded} người</span>
+                                </div>
+                                <div className="bg-white/80 p-3 flex flex-col gap-1">
+                                  <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1"><DollarSign className="w-3 h-3" /> Ngân sách / Phong cách</span>
+                                  <span className="font-semibold text-sm">{buddyData.budgetVND} VND • {buddyData.style}</span>
+                                </div>
+                              </div>
+                              {buddyData.note && (
+                                <div className="p-3 text-sm text-foreground bg-white/50 border-t border-primary/10">
+                                  <span className="font-semibold text-xs text-muted-foreground block mb-1">Ghi chú:</span>
+                                  {buddyData.note}
+                                </div>
+                              )}
+                              {post.userID !== userProfile?.userID && (
+                                <div className="p-3 bg-white border-t border-primary/10 flex gap-2">
+                                  <button 
+                                    onClick={() => handleJoinBuddyRequest(post.postID, post.userID)}
+                                    disabled={isJoining[post.postID]}
+                                    className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                  >
+                                    {isJoining[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Xin tham gia
+                                  </button>
+                                  <Link
+                                    to={`/chat/${post.userID}`}
+                                    className="flex-1 py-2 bg-secondary text-white rounded-lg text-sm font-semibold hover:bg-secondary/90 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <Send className="w-4 h-4" /> Nhắn tin
+                                  </Link>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        } catch {
+                          return <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>;
+                        }
+                      })()}
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-bold mb-1">{post.title}</h3>
+                      <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                    </>
+                  )}
                 </div>
 
                 {/* Optional Post Image (simulated for realism) */}
@@ -346,14 +509,16 @@ export function CommunityFeedPage() {
                         <span className="text-sm font-semibold hidden sm:inline">Chia sẻ</span>
                       </button>
                     </div>
-                    {/* Add connect button if we had lookingForBuddies flag */}
-                    <Link
-                      to={`/chat/${post.userID}`}
-                      className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span className="hidden sm:inline">Nhắn tin</span>
-                    </Link>
+                    {/* Add connect button if not BuddyRequest (which already has it inside the card) */}
+                    {post.postType !== "BuddyRequest" && (
+                      <Link
+                        to={`/chat/${post.userID}`}
+                        className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span className="hidden sm:inline">Nhắn tin</span>
+                      </Link>
+                    )}
                   </div>
 
                   {/* Comments Section */}

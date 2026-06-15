@@ -25,3 +25,8 @@ export async function getAcceptedBuddies() {
   const response = await axiosInstance.get<BuddyDto[]>("/Buddies");
   return response.data;
 }
+
+export async function getPendingRequests() {
+  const response = await axiosInstance.get<BuddyDto[]>("/Buddies/requests/pending");
+  return response.data;
+}

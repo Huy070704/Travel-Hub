@@ -20,6 +20,16 @@ export type MessageDto = {
 };
 
 export type SendMessageDto = {
-  receiverID: number;
+  chatID?: number;
+  receiverID?: number;
   content: string;
+};
+
+export type CreateGroupChatDto = {
+  chatName: string;
+  participantUserIDs: number[];
+};
+
+export type AddParticipantDto = {
+  userID: number;
 };

@@ -23,6 +23,8 @@ import type { UserProfileDto, DashboardDto, UpdateProfileRequest } from "@/types
 import type { ItineraryDto } from "@/types/itineraries";
 import type { DestinationDto } from "@/types/destinations";
 import type { TourBooking } from "@/types/tours";
+import { getPendingRequests, respondToBuddyRequest } from "@/api/buddiesApi";
+import type { BuddyDto } from "@/types/buddies";
 
 
 
@@ -64,6 +66,10 @@ export function ProfilePage() {
   const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
   const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
   const [editForm, setEditForm] = useState<UpdateProfileRequest>({});
+
+  const [pendingRequestsList, setPendingRequestsList] = useState<BuddyDto[]>([]);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [isProcessingRequest, setIsProcessingRequest] = useState(false);
 
   const { userId } = useParams();
   const isMyProfile = !userId;
@@ -111,6 +117,39 @@ export function ProfilePage() {
       console.error("Failed to update profile", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOpenPendingRequests = async () => {
+    if (!isMyProfile || pendingRequests === 0) return;
+    try {
+      const requests = await getPendingRequests();
+      setPendingRequestsList(requests);
+      setShowPendingModal(true);
+    } catch (error) {
+      console.error("Failed to load pending requests", error);
+    }
+  };
+
+  const handleRespondRequest = async (companionId: number, status: 'Accepted' | 'Declined') => {
+    setIsProcessingRequest(true);
+    try {
+      await respondToBuddyRequest(companionId, { status });
+      // Remove from local list
+      setPendingRequestsList(prev => prev.filter(r => r.companionID !== companionId));
+      // Update counter
+      setDashboardData(prev => prev ? {
+        ...prev,
+        pendingBuddyRequestsCount: Math.max(0, prev.pendingBuddyRequestsCount - 1)
+      } : null);
+      if (pendingRequestsList.length <= 1) {
+        setShowPendingModal(false);
+      }
+    } catch (error) {
+      console.error("Failed to respond to request", error);
+      alert("Lỗi khi xử lý yêu cầu.");
+    } finally {
+      setIsProcessingRequest(false);
     }
   };
 
@@ -312,8 +351,16 @@ export function ProfilePage() {
                     <div className="text-2xl font-bold text-primary">{trips}</div>
                     <div className="text-sm text-muted-foreground">Trips</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{pendingRequests}</div>
+                  <div 
+                    className={`text-center ${isMyProfile && pendingRequests > 0 ? "cursor-pointer hover:bg-muted/50 rounded-xl p-2 -m-2 transition-all" : ""}`}
+                    onClick={handleOpenPendingRequests}
+                  >
+                    <div className="text-2xl font-bold text-primary relative inline-block">
+                      {pendingRequests}
+                      {pendingRequests > 0 && isMyProfile && (
+                        <span className="absolute -top-1 -right-3 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white" />
+                      )}
+                    </div>
                     <div className="text-sm text-muted-foreground">Buddy Requests</div>
                   </div>
                   <div className="text-center">
@@ -434,39 +481,43 @@ export function ProfilePage() {
                 Trip History
               </h3>
               <div className="space-y-4">
-                {itineraries.length > 0 ? itineraries.map((trip) => (
-                  <div
-                    key={trip.itineraryID}
-                    className="flex gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all"
-                  >
-                    <img
-                      src={getPlaceholderImage(trip.itineraryID, 'trip')}
-                      alt={trip.tripName}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-semibold">{trip.tripName}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
-                          </p>
-                          <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${trip.status === 'Planned' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                            {trip.status}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-primary">
-                            {trip.totalBudgetEstimatedVND 
-                              ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(trip.totalBudgetEstimatedVND)
-                              : "N/A"
-                            }
+                {itineraries.length > 0 ? itineraries.map((trip) => {
+                  const destId = trip.details?.[0]?.destinationID;
+                  return (
+                    <Link
+                      to={destId ? `/destination/${destId}` : "#"}
+                      key={trip.itineraryID}
+                      className="flex gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all cursor-pointer group"
+                    >
+                      <img
+                        src={getPlaceholderImage(trip.itineraryID, 'trip')}
+                        alt={trip.tripName}
+                        className="w-20 h-20 rounded-lg object-cover group-hover:opacity-90 transition-opacity"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold group-hover:text-primary transition-colors">{trip.tripName}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                            </p>
+                            <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${trip.status === 'Planned' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                              {trip.status}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-primary">
+                              {trip.totalBudgetEstimatedVND 
+                                ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(trip.totalBudgetEstimatedVND)
+                                : "N/A"
+                              }
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )) : (
+                    </Link>
+                  );
+                }) : (
                   <div className="text-center text-muted-foreground py-8">
                     <Plane className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p>No trips found. Start planning your next adventure!</p>
@@ -534,6 +585,61 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Pending Requests Modal */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Yêu cầu chờ duyệt
+              </h3>
+              <button 
+                onClick={() => setShowPendingModal(false)}
+                className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-all"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto custom-scrollbar space-y-4">
+              {pendingRequestsList.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Không có yêu cầu nào.</p>
+              ) : (
+                pendingRequestsList.map(req => (
+                  <div key={req.companionID} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <img src={req.avatarURL || getAvatar(req.buddyUserID)} alt={req.buddyUsername} className="w-10 h-10 rounded-full object-cover" />
+                      <div>
+                        <div className="font-semibold">{req.buddyUsername}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(req.connectedDate).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleRespondRequest(req.companionID, 'Accepted')}
+                        disabled={isProcessingRequest}
+                        className="px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+                      >
+                        Chấp nhận
+                      </button>
+                      <button 
+                        onClick={() => handleRespondRequest(req.companionID, 'Declined')}
+                        disabled={isProcessingRequest}
+                        className="px-3 py-1.5 bg-muted text-foreground border border-border text-sm rounded-lg hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all disabled:opacity-50"
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -12,9 +12,15 @@ import {
   Calendar,
   DollarSign,
   Plane,
-  Loader2
+  Loader2,
+  Users,
+  Plus,
+  Trash2,
+  UserPlus
 } from "lucide-react";
-import { getConversations, getMessages } from "@/api/chatApi";
+import { getConversations, getMessages, createGroupChat, deleteGroupChat, deleteMessage, addParticipantToGroup } from "@/api/chatApi";
+import { getAcceptedBuddies } from "@/api/buddiesApi";
+import type { BuddyDto } from "@/types/buddies";
 import { signalrService } from "@/api/signalrService";
 import { getMyProfile, getPublicProfile } from "@/api/usersApi";
 import type { ConversationDto, MessageDto } from "@/types/chat";
@@ -65,6 +71,13 @@ export function ChatPage() {
   const [myProfile, setMyProfile] = useState<UserProfileDto | null>(null);
   const [receiverProfile, setReceiverProfile] = useState<PublicUserProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [buddies, setBuddies] = useState<BuddyDto[]>([]);
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentChatIdRef = useRef<number | null>(null);
@@ -184,33 +197,116 @@ export function ChatPage() {
     e.preventDefault();
     if (!messageInput.trim() || !myProfile) return;
 
+    const currentConversationInfo = conversations.find(c => c.chatID === currentChatId);
+    const isGroupChat = currentConversationInfo?.isGroupChat;
+    
     let targetReceiverId = receiverIdFromUrl;
     
-    // If we are in an existing chat and don't know the receiverId from URL
-    if (!targetReceiverId && currentChatId) {
-       // Look into the loaded messages to find the other person's ID
-       const otherMsg = messages.find(m => m.senderID !== myProfile.userID);
-       if (otherMsg) {
-         targetReceiverId = otherMsg.senderID;
-       }
-    }
+    if (!isGroupChat) {
+      if (!targetReceiverId && currentChatId) {
+         const otherMsg = messages.find(m => m.senderID !== myProfile.userID);
+         if (otherMsg) {
+           targetReceiverId = otherMsg.senderID;
+         } else if (currentConversationInfo?.otherUserID) {
+           targetReceiverId = currentConversationInfo.otherUserID;
+         }
+      }
 
-    if (!targetReceiverId) {
-      alert("Error: Cannot determine the recipient of this chat. Please start a chat from their profile.");
-      return;
+      if (!targetReceiverId && !currentChatId) {
+        alert("Lỗi: Không xác định được người nhận tin nhắn.");
+        return;
+      }
     }
 
     const currentMsg = messageInput;
     setMessageInput(""); // Optimistic clear
 
     try {
-      await signalrService.sendMessage(targetReceiverId, currentMsg);
-      // The message will come back via SignalR ReceiveMessage, 
-      // so we don't necessarily need to manually append it, 
-      // but SignalR Caller.SendAsync ensures we get it.
+      if (isGroupChat && currentChatId) {
+        await signalrService.sendMessage(undefined, currentMsg, currentChatId);
+      } else {
+        await signalrService.sendMessage(targetReceiverId || undefined, currentMsg, currentChatId || undefined);
+      }
     } catch (error) {
       console.error("Failed to send", error);
       setMessageInput(currentMsg); // Revert on failure
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) return;
+    setIsCreatingGroup(true);
+    try {
+      const res = await createGroupChat(newGroupName);
+      alert("Tạo nhóm thành công!");
+      setShowCreateGroupModal(false);
+      setNewGroupName("");
+      const convos = await getConversations();
+      setConversations(convos);
+      setCurrentChatId(res.chatID);
+    } catch (error) {
+      console.error("Failed to create group", error);
+      alert("Có lỗi xảy ra khi tạo nhóm.");
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!currentChatId || !currentConversationInfo?.isGroupChat) return;
+    if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này không? Mọi tin nhắn sẽ bị xóa vĩnh viễn.")) return;
+
+    try {
+      await deleteGroupChat(currentChatId);
+      alert("Đã giải tán nhóm thành công.");
+      setCurrentChatId(null);
+      const convos = await getConversations();
+      setConversations(convos);
+    } catch (error) {
+      console.error("Failed to delete group", error);
+      alert("Có lỗi xảy ra khi giải tán nhóm.");
+    }
+  };
+
+  const handleOpenAddMember = async () => {
+    try {
+      const buddyList = await getAcceptedBuddies();
+      setBuddies(buddyList);
+      setShowAddMemberModal(true);
+    } catch (error) {
+      console.error("Failed to load buddies", error);
+      alert("Không thể tải danh sách bạn bè.");
+    }
+  };
+
+  const handleAddMember = async (userId: number) => {
+    if (!currentChatId) return;
+    setIsAddingMember(true);
+    try {
+      await addParticipantToGroup(currentChatId, userId);
+      alert("Đã thêm thành viên vào nhóm!");
+      setShowAddMemberModal(false);
+      // Giả sử backend trả về event hoặc ta fetch lại chat để cập nhật số thành viên
+      const convos = await getConversations();
+      setConversations(convos);
+    } catch (error: any) {
+      console.error("Failed to add member", error);
+      alert(error.response?.data || "Có lỗi xảy ra khi thêm thành viên.");
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: number) => {
+    if (!confirm("Bạn có chắc muốn xóa tin nhắn này?")) return;
+
+    try {
+      await deleteMessage(messageId);
+      // Xóa tin nhắn khỏi state
+      setMessages(prev => prev.filter(m => m.messageID !== messageId));
+    } catch (error) {
+      console.error("Failed to delete message", error);
+      alert("Có lỗi xảy ra khi xóa tin nhắn.");
     }
   };
 
@@ -226,6 +322,9 @@ export function ChatPage() {
   const chatName = currentConversationInfo?.chatName || receiverProfile?.username || "Cuộc trò chuyện mới";
   const chatAvatar = currentConversationInfo?.avatarURL || receiverProfile?.avatarURL || getAvatar(currentConversationInfo?.otherUserID || receiverProfile?.userID || 0);
 
+  // Use a group icon for group chats if no specific avatar
+  const displayAvatar = currentConversationInfo?.isGroupChat ? undefined : chatAvatar;
+
   return (
     <div className="h-[calc(100vh-4rem)] bg-background flex flex-col pt-0 md:pt-4">
       <div className="w-full max-w-7xl mx-auto flex-1 shadow-2xl overflow-hidden rounded-none md:rounded-t-2xl border border-border bg-card">
@@ -234,10 +333,19 @@ export function ChatPage() {
           <div className="md:col-span-4 bg-card border-r border-border h-full flex flex-col min-h-0 z-10 shadow-lg">
             {/* Search Header */}
             <div className="p-4 border-b border-border bg-gradient-to-br from-primary/5 to-secondary/5">
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-foreground">
-                <span className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></span>
-                Tin nhắn
-              </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+                    <span className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse"></span>
+                    Tin nhắn
+                  </h2>
+                  <button 
+                    onClick={() => setShowCreateGroupModal(true)}
+                    className="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary hover:text-white transition-all shadow-sm"
+                    title="Tạo Nhóm Mới"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -265,11 +373,17 @@ export function ChatPage() {
                   }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <img
-                      src={conversation.avatarURL || getAvatar(conversation.otherUserID || 0)}
-                      alt={conversation.chatName || "Chat"}
-                      className="w-14 h-14 rounded-full object-cover shadow-sm border border-border"
-                    />
+                    {conversation.isGroupChat ? (
+                      <div className="w-14 h-14 rounded-full shadow-sm border border-border bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
+                        <Users className="w-7 h-7" />
+                      </div>
+                    ) : (
+                      <img
+                        src={conversation.avatarURL || getAvatar(conversation.otherUserID || 0)}
+                        alt={conversation.chatName || "Chat"}
+                        className="w-14 h-14 rounded-full object-cover shadow-sm border border-border"
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 text-left pt-1">
                     <div className="flex items-center justify-between mb-1">
@@ -297,11 +411,17 @@ export function ChatPage() {
                 <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <img
-                        src={chatAvatar}
-                        alt={chatName}
-                        className="w-12 h-12 rounded-full object-cover border border-border"
-                      />
+                      {currentConversationInfo?.isGroupChat ? (
+                        <div className="w-12 h-12 rounded-full border border-border bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
+                          <Users className="w-6 h-6" />
+                        </div>
+                      ) : (
+                        <img
+                          src={chatAvatar}
+                          alt={chatName}
+                          className="w-12 h-12 rounded-full object-cover border border-border"
+                        />
+                      )}
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full shadow-sm" />
                     </div>
                     <div>
@@ -320,6 +440,24 @@ export function ChatPage() {
                     <button className="p-2.5 bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-all text-muted-foreground">
                       <Video className="w-5 h-5" />
                     </button>
+                    {currentConversationInfo?.isGroupChat && (
+                      <>
+                        <button 
+                          onClick={handleOpenAddMember}
+                          className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-full transition-all text-muted-foreground"
+                          title="Thêm thành viên"
+                        >
+                          <UserPlus className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={handleDeleteGroup}
+                          className="p-2.5 hover:bg-destructive/10 hover:text-destructive rounded-full transition-all text-muted-foreground"
+                          title="Giải tán nhóm"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
                     <button className="p-2.5 hover:bg-muted rounded-full transition-all text-muted-foreground">
                       <MoreVertical className="w-5 h-5" />
                     </button>
@@ -358,8 +496,17 @@ export function ChatPage() {
                             isMe
                               ? "bg-gradient-to-r from-primary to-secondary text-white rounded-2xl rounded-br-sm shadow-md"
                               : "bg-card border border-border text-foreground rounded-2xl rounded-bl-sm shadow-sm"
-                          } px-5 py-3`}
+                          } px-5 py-3 relative group/msg`}
                         >
+                          {isMe && (
+                            <button
+                              onClick={() => handleDeleteMessage(message.messageID)}
+                              className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 bg-destructive/10 text-destructive rounded-full opacity-0 group-hover/msg:opacity-100 transition-all hover:bg-destructive hover:text-white"
+                              title="Xóa tin nhắn"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           {!isMe && <div className="text-xs font-bold mb-1 text-primary">{message.senderUsername}</div>}
                           <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
                             {renderMessageWithLinks(message.content || "")}
@@ -437,6 +584,85 @@ export function ChatPage() {
           </div>
         </div>
       </div>
+      {/* Create Group Modal */}
+      {showCreateGroupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+              <Users className="w-6 h-6 text-primary" />
+              Tạo nhóm chat mới
+            </h3>
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Tên nhóm</label>
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Ví dụ: Team đi Đà Lạt..."
+                className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-foreground"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowCreateGroupModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium transition-all"
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={handleCreateGroup}
+                disabled={!newGroupName.trim() || isCreatingGroup}
+                className="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {isCreatingGroup ? <Loader2 className="w-5 h-5 animate-spin" /> : "Tạo nhóm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[80vh] flex flex-col">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+              <UserPlus className="w-6 h-6 text-primary" />
+              Thêm bạn bè vào nhóm
+            </h3>
+            
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+              {buddies.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Bạn chưa có Buddy nào để mời.</p>
+              ) : (
+                buddies.map(buddy => (
+                  <div key={buddy.buddyUserID} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <img src={buddy.avatarURL || getAvatar(buddy.buddyUserID)} alt={buddy.buddyUsername} className="w-10 h-10 rounded-full object-cover" />
+                      <div className="font-semibold">{buddy.buddyUsername}</div>
+                    </div>
+                    <button 
+                      onClick={() => handleAddMember(buddy.buddyUserID)}
+                      disabled={isAddingMember}
+                      className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all disabled:opacity-50 text-sm font-medium"
+                    >
+                      Mời
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => setShowAddMemberModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium transition-all"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

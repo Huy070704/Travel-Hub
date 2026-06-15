@@ -19,12 +19,17 @@ import {
   Loader2,
   Settings2,
   ArrowLeft,
-  Search
+  Search,
+  Save,
+  Share2,
+  Users
 } from "lucide-react";
 import { generateAiItinerary } from "../../../api/aiApi";
 import { getDestinationDetails } from "@/api/destinationsApi";
 import type { AiGenerateItineraryResponse, AiActivity } from "../../../types/ai";
 import type { DestinationDto } from "@/types/destinations";
+import { createItinerary } from "@/api/itinerariesApi";
+import { useNavigate } from "react-router";
 
 export function ItineraryPlannerPage() {
   const { id } = useParams();
@@ -35,6 +40,9 @@ export function ItineraryPlannerPage() {
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedItineraryId, setSavedItineraryId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   // Form State
   const [days, setDays] = useState<number>(3);
@@ -66,10 +74,50 @@ export function ItineraryPlannerPage() {
       });
       setItineraryData(data);
       setExpandedDay(1);
+      setSavedItineraryId(null);
     } catch (error) {
       console.error("Failed to generate", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveItinerary = async () => {
+    if (!itineraryData || !destination) return;
+    setIsSaving(true);
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() + 1); // Start tomorrow by default
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + itineraryData.totalDays - 1);
+
+      const details = itineraryData.days.flatMap(d => 
+        d.activities.map(a => ({
+          destinationID: destination.destinationID,
+          dayNumber: d.dayNumber,
+          timeSlot: a.time,
+          activityDescription: a.description,
+          estimatedCostVND: a.estimatedCostVND
+        }))
+      );
+
+      const totalCost = details.reduce((sum, item) => sum + item.estimatedCostVND, 0);
+
+      const response = await createItinerary({
+        tripName: `Chuyến đi ${destination.name} ${itineraryData.totalDays} ngày`,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalBudgetEstimatedVND: totalCost,
+        details: details
+      });
+
+      setSavedItineraryId(response.itineraryID);
+      alert("Đã lưu lịch trình thành công!");
+    } catch (error) {
+      console.error("Failed to save itinerary", error);
+      alert("Có lỗi xảy ra khi lưu lịch trình.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -302,12 +350,41 @@ export function ItineraryPlannerPage() {
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}
                     </span>
                   </div>
-                  <Link 
-                    to="/tours" 
-                    className="block w-full text-center bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
-                  >
-                    Book Tour / Hoạt động
-                  </Link>
+                  
+                  <div className="pt-4 flex flex-col gap-3">
+                    <button 
+                      onClick={handleSaveItinerary}
+                      disabled={isSaving || savedItineraryId !== null}
+                      className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {savedItineraryId ? "Đã lưu lịch trình" : "Lưu lịch trình"}
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/community')}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2.5 rounded-xl font-semibold hover:bg-blue-100 transition-all border border-blue-100"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Chia sẻ lên cộng đồng
+                    </button>
+                    
+                    <Link 
+                      to={`/tours/search?destinationId=${destinationId}`} 
+                      className="w-full flex items-center justify-center gap-2 bg-muted text-foreground py-2.5 rounded-xl font-semibold hover:bg-muted/80 transition-all border border-border"
+                    >
+                      <Search className="w-4 h-4" />
+                      Tìm tour phù hợp
+                    </Link>
+
+                    <Link 
+                      to="/community" 
+                      className="w-full flex items-center justify-center gap-2 bg-green-50 text-green-600 py-2.5 rounded-xl font-semibold hover:bg-green-100 transition-all border border-green-100"
+                    >
+                      <Users className="w-4 h-4" />
+                      Tìm bạn đồng hành
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

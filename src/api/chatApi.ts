@@ -14,10 +14,36 @@ export async function getMessages(chatId: number, page: number = 1, pageSize: nu
   return response.data;
 }
 
-export async function sendDirectMessage(receiverId: number, content: string) {
+export async function sendDirectMessage(receiverId: number | undefined, content: string, chatId?: number) {
   const response = await axiosInstance.post<{ message: string, messageID: number }>("/Chat/messages/send", {
     receiverID: receiverId,
+    chatID: chatId,
     content: content
   });
+  return response.data;
+}
+
+export async function createGroupChat(chatName: string, participantUserIDs: number[] = []) {
+  const response = await axiosInstance.post<{ message: string, chatID: number }>("/Chat/groups", {
+    chatName,
+    participantUserIDs
+  });
+  return response.data;
+}
+
+export async function addParticipantToGroup(chatId: number, userId: number) {
+  const response = await axiosInstance.post<{ message: string }>(`/Chat/${chatId}/participants`, {
+    userID: userId
+  });
+  return response.data;
+}
+
+export async function deleteGroupChat(chatId: number) {
+  const response = await axiosInstance.delete<{ message: string }>(`/Chat/groups/${chatId}`);
+  return response.data;
+}
+
+export async function deleteMessage(messageId: number) {
+  const response = await axiosInstance.delete<{ message: string }>(`/Chat/messages/${messageId}`);
   return response.data;
 }

@@ -68,9 +68,9 @@ class SignalRService {
     }
   }
 
-  public async sendMessage(receiverId: number, content: string) {
+  public async sendMessage(receiverId: number | undefined, content: string, chatId?: number) {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      await this.connection.invoke("SendMessage", receiverId, content);
+      await this.connection.invoke("SendMessage", receiverId || null, chatId || null, content);
     } else {
       console.error("SignalR is not connected. Cannot send message.");
     }
