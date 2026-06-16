@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import Autocomplete from "react-google-autocomplete";
 import {
   Sparkles,
   MapPin,
@@ -204,11 +203,10 @@ export function AIRecommendationPage() {
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
                     <MapPin className="w-5 h-5" />
                   </div>
-                  <Autocomplete
-                    apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                    onPlaceSelected={(place) => setFormData({ ...formData, departure: place?.formatted_address || place?.name || "" })}
-                    defaultValue={formData.departure}
-                    options={{ types: ["(regions)"] }}
+                  <input
+                    type="text"
+                    value={formData.departure}
+                    onChange={(e) => setFormData({ ...formData, departure: e.target.value })}
                     placeholder="Bạn xuất phát từ đâu?"
                     className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
                     required
