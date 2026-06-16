@@ -304,7 +304,7 @@ export function TourDetailPage() {
                       <input 
                         type="text" 
                         placeholder="Họ và tên *" 
-                        className={`w-full px-4 py-2.5 bg-muted/30 rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm ${formErrors.fullName ? 'border-red-500' : 'border-border/60'}`}
+                        className={`w-full px-4 py-2.5 bg-muted/30 text-foreground rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm ${formErrors.fullName ? 'border-red-500' : 'border-border/60'}`}
                         value={fullName}
                         onChange={e => { setFullName(e.target.value); if(formErrors.fullName) setFormErrors({...formErrors, fullName: undefined}) }}
                       />
@@ -315,7 +315,7 @@ export function TourDetailPage() {
                       <input 
                         type="tel" 
                         placeholder="Số điện thoại *" 
-                        className={`w-full px-4 py-2.5 bg-muted/30 rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm ${formErrors.phone ? 'border-red-500' : 'border-border/60'}`}
+                        className={`w-full px-4 py-2.5 bg-muted/30 text-foreground rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm ${formErrors.phone ? 'border-red-500' : 'border-border/60'}`}
                         value={phone}
                         onChange={e => { setPhone(e.target.value); if(formErrors.phone) setFormErrors({...formErrors, phone: undefined}) }}
                       />
@@ -326,7 +326,7 @@ export function TourDetailPage() {
                       <input 
                         type="email" 
                         placeholder="Email (Tùy chọn)" 
-                        className="w-full px-4 py-2.5 bg-muted/30 rounded-xl border border-border/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                        className="w-full px-4 py-2.5 bg-muted/30 text-foreground rounded-xl border border-border/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                       />
@@ -336,7 +336,7 @@ export function TourDetailPage() {
                       <textarea 
                         placeholder="Ghi chú thêm (Tùy chọn)" 
                         rows={2}
-                        className="w-full px-4 py-2.5 bg-muted/30 rounded-xl border border-border/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
+                        className="w-full px-4 py-2.5 bg-muted/30 text-foreground rounded-xl border border-border/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
                         value={notes}
                         onChange={e => setNotes(e.target.value)}
                       />

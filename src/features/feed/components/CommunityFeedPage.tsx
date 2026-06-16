@@ -295,11 +295,11 @@ export function CommunityFeedPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Điểm đến</label>
-                          <input type="text" value={buddyPostData.destination} onChange={e => setBuddyPostData({...buddyPostData, destination: e.target.value})} placeholder="Vd: Đà Lạt" className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="text" value={buddyPostData.destination} onChange={e => setBuddyPostData({...buddyPostData, destination: e.target.value})} placeholder="Vd: Đà Lạt" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Phong cách</label>
-                          <select value={buddyPostData.style} onChange={e => setBuddyPostData({...buddyPostData, style: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none">
+                          <select value={buddyPostData.style} onChange={e => setBuddyPostData({...buddyPostData, style: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none">
                             <option>Khám phá</option>
                             <option>Tiết kiệm (Budget)</option>
                             <option>Nghỉ dưỡng (Resort)</option>
@@ -308,24 +308,24 @@ export function CommunityFeedPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày đi</label>
-                          <input type="date" value={buddyPostData.startDate} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.startDate} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày về</label>
-                          <input type="date" value={buddyPostData.endDate} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.endDate} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Số người cần tìm</label>
-                          <input type="number" min="1" value={buddyPostData.peopleNeeded} onChange={e => setBuddyPostData({...buddyPostData, peopleNeeded: parseInt(e.target.value) || 1})} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="number" min="1" value={buddyPostData.peopleNeeded} onChange={e => setBuddyPostData({...buddyPostData, peopleNeeded: parseInt(e.target.value) || 1})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngân sách dự kiến (VND)</label>
-                          <input type="text" value={buddyPostData.budgetVND} onChange={e => setBuddyPostData({...buddyPostData, budgetVND: e.target.value})} placeholder="Vd: 3.000.000" className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="text" value={buddyPostData.budgetVND} onChange={e => setBuddyPostData({...buddyPostData, budgetVND: e.target.value})} placeholder="Vd: 3.000.000" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Ghi chú thêm</label>
-                        <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({...buddyPostData, note: e.target.value})} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-white rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+                        <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({...buddyPostData, note: e.target.value})} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
                       </div>
                       <div className="flex justify-end gap-2 mt-2">
                         <button onClick={() => setIsBuddyPostMode(false)} className="px-4 py-2 bg-white border border-border rounded-lg text-sm font-semibold hover:bg-muted transition-all">Hủy</button>
@@ -342,7 +342,7 @@ export function CommunityFeedPage() {
                         onChange={(e) => setNewPostContent(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
                         placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
-                        className="flex-1 px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
+                        className="flex-1 px-4 py-3 bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                         disabled={isPosting}
                       />
                       <button 
@@ -435,7 +435,7 @@ export function CommunityFeedPage() {
                                 </div>
                               </div>
                               {buddyData.note && (
-                                <div className="p-3 text-sm text-foreground bg-white/50 border-t border-primary/10">
+                                <div className="p-3 text-sm bg-white/80 border-t border-primary/10">
                                   <span className="font-semibold text-xs text-muted-foreground block mb-1">Ghi chú:</span>
                                   {buddyData.note}
                                 </div>
@@ -567,7 +567,7 @@ export function CommunityFeedPage() {
                           onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.postID]: e.target.value }))}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddComment(post.postID)}
                           placeholder="Thêm bình luận..."
-                          className="flex-1 px-4 py-2 bg-muted rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
+                          className="flex-1 px-4 py-2 bg-background text-foreground rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
                           disabled={isSubmittingComment[post.postID]}
                         />
                         <button 
