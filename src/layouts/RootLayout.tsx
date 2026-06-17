@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router";
-import { Plane, Compass, Users, MessageCircle, User, Shield, LogOut } from "lucide-react";
+import { Plane, Compass, Users, MessageCircle, User, Shield, LogOut, Award } from "lucide-react";
 import { AnimatedBackground } from "../components/shared/AnimatedBackground";
 import { DarkModeToggle } from "../components/shared/DarkModeToggle";
 import { motion, AnimatePresence } from "motion/react";
@@ -28,6 +28,8 @@ export function RootLayout() {
     { path: "/community", label: "Cộng đồng", icon: Users },
     { path: "/chat", label: "Tin nhắn", icon: MessageCircle },
     { path: "/profile", label: "Hồ sơ", icon: User },
+    { path: "/become-guide", label: "HDV", icon: Award },
+
   ];
 
   return (

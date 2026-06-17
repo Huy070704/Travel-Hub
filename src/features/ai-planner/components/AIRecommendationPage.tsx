@@ -67,7 +67,7 @@ export function AIRecommendationPage() {
       travelGroup: "",
     };
   });
-  
+
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Scroll ref for results
@@ -114,12 +114,12 @@ export function AIRecommendationPage() {
       setShowResults(true);
       localStorage.setItem("ai_recommendations", JSON.stringify(mapped));
       localStorage.setItem("ai_showResults", "true");
-      
+
       // Scroll to results
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 500);
-      
+
     } catch (error) {
       console.error("Failed to get AI recommendations", error);
     } finally {
@@ -138,20 +138,20 @@ export function AIRecommendationPage() {
 
   return (
     <div className="min-h-screen bg-background relative selection:bg-primary/20 pb-10">
-      
+
       {/* 1. HERO SECTION (MotionSites Style) */}
       <div className="relative h-[80vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
         {/* Parallax Background */}
-        <motion.div 
+        <motion.div
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
           className="absolute inset-0 w-full h-full"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-black/40 to-background z-10" />
-          <img 
-            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop" 
-            alt="Travel Background" 
+          <img
+            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
+            alt="Travel Background"
             className="w-full h-full object-cover object-center"
           />
         </motion.div>
@@ -166,18 +166,18 @@ export function AIRecommendationPage() {
             <Sparkles className="w-4 h-4 text-accent" />
             <span>AI-Powered Travel Planner</span>
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6 drop-shadow-lg"
           >
-            Hành Trình Mơ Ước <br/>
+            Hành Trình Mơ Ước <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-accent">Bắt Đầu Từ Đây</span>
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -186,9 +186,9 @@ export function AIRecommendationPage() {
             Để AI phân tích hàng nghìn điểm đến và thiết kế chuyến đi hoàn hảo phù hợp với phong cách, ngân sách và sở thích của riêng bạn.
           </motion.p>
         </div>
-        
+
         {/* 2. SEARCH BAR (Google Travel Style) */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
@@ -197,7 +197,7 @@ export function AIRecommendationPage() {
           <div className="max-w-5xl mx-auto">
             <form onSubmit={handleSubmit} className="bg-card dark:bg-card/90 backdrop-blur-xl p-3 md:p-4 rounded-3xl shadow-2xl shadow-primary/10 border border-border/50">
               <div className="flex flex-col md:flex-row items-center gap-2">
-                
+
                 {/* Departure */}
                 <div className="flex-1 w-full relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
@@ -208,11 +208,11 @@ export function AIRecommendationPage() {
                     value={formData.departure}
                     onChange={(e) => setFormData({ ...formData, departure: e.target.value })}
                     placeholder="Bạn xuất phát từ đâu?"
-                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground selection:bg-blue-500 selection:text-white dark:selection:bg-blue-600 dark:selection:text-white"
                     required
                   />
                 </div>
-                
+
                 <div className="hidden md:block w-px h-10 bg-border" />
 
                 {/* Budget */}
@@ -225,7 +225,7 @@ export function AIRecommendationPage() {
                     value={formData.budget}
                     onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                     placeholder="Ngân sách (VND)"
-                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground selection:bg-blue-500 selection:text-white dark:selection:bg-blue-600 dark:selection:text-white"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export function AIRecommendationPage() {
                     value={formData.days}
                     onChange={(e) => setFormData({ ...formData, days: e.target.value })}
                     placeholder="Số ngày"
-                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground"
+                    className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground selection:bg-blue-500 selection:text-white dark:selection:bg-blue-600 dark:selection:text-white"
                     required
                   />
                 </div>
@@ -266,8 +266,8 @@ export function AIRecommendationPage() {
 
               {/* Advanced Toggle */}
               <div className="mt-3 flex justify-center">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
                   className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -279,7 +279,7 @@ export function AIRecommendationPage() {
               {/* Advanced Options Panel */}
               <AnimatePresence>
                 {showAdvanced && (
-                  <motion.div 
+                  <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -295,11 +295,10 @@ export function AIRecommendationPage() {
                               key={id}
                               type="button"
                               onClick={() => toggleInterest(id)}
-                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                                formData.interests.includes(id)
-                                  ? "bg-primary/10 text-primary ring-1 ring-primary/50"
-                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                              }`}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${formData.interests.includes(id)
+                                ? "bg-primary/10 text-primary ring-1 ring-primary/50"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
                             >
                               <Icon className="w-4 h-4" />
                               {label}
@@ -317,11 +316,10 @@ export function AIRecommendationPage() {
                               key={id}
                               type="button"
                               onClick={() => setFormData({ ...formData, travelGroup: id })}
-                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                                formData.travelGroup === id
-                                  ? "bg-secondary/10 text-secondary ring-1 ring-secondary/50"
-                                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                              }`}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${formData.travelGroup === id
+                                ? "bg-secondary/10 text-secondary ring-1 ring-secondary/50"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
                             >
                               <Icon className="w-4 h-4" />
                               {label}
@@ -340,7 +338,7 @@ export function AIRecommendationPage() {
 
       {/* 3. MAIN CONTENT / RESULTS (Airbnb / TripAdvisor Style) */}
       <div ref={resultsRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-[50vh]">
-        
+
         {!showResults && !isLoading && (
           <div className="flex flex-col items-center justify-center text-center py-20 opacity-60">
             <Compass className="w-16 h-16 text-muted-foreground mb-4" />
@@ -372,7 +370,7 @@ export function AIRecommendationPage() {
               <div>
                 <h2 className="text-3xl font-bold text-foreground">Gợi ý hàng đầu cho bạn</h2>
                 <p className="text-muted-foreground mt-2 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-accent" /> 
+                  <Sparkles className="w-4 h-4 text-accent" />
                   Được tuyển chọn kỹ lưỡng bởi TravelHub AI
                 </p>
               </div>
@@ -395,10 +393,10 @@ export function AIRecommendationPage() {
                       alt={rec.destination}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    
+
                     {/* Gradient Overlay for mobile readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
-                    
+
                     {/* Top Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       {index === 0 && (
@@ -407,12 +405,12 @@ export function AIRecommendationPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Heart Button */}
                     <button className="absolute top-3 right-3 w-9 h-9 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors">
                       <Heart className="w-5 h-5" />
                     </button>
-                    
+
                     {/* Mobile Title overlay */}
                     <div className="absolute bottom-3 left-3 right-3 text-white md:hidden">
                       <h3 className="text-lg font-bold line-clamp-1 drop-shadow-md">{rec.destination}</h3>
@@ -421,43 +419,43 @@ export function AIRecommendationPage() {
 
                   {/* Right: Content Container */}
                   <div className="flex flex-col md:flex-row flex-1 p-5 gap-6">
-                    
+
                     {/* Middle: Info */}
                     <div className="flex-1 flex flex-col">
                       <div className="flex justify-between items-start mb-1">
                         <h3 className="text-xl font-bold text-foreground hidden md:block">{rec.destination}</h3>
-                        
+
                         {/* Rating block (Traveloka style: 8.7/10 Very Good) */}
                         <div className="hidden md:flex flex-col items-end">
-                           <div className="flex items-center gap-1.5">
-                             <span className="text-sm font-medium text-primary">Rất phù hợp</span>
-                             <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-md">
-                               {rec.matchScore}
-                             </div>
-                           </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium text-primary">Rất phù hợp</span>
+                            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-md">
+                              {rec.matchScore}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
                         <MapPin className="w-4 h-4 text-secondary" />
                         <span>{rec.country}</span>
                         <span className="w-1 h-1 rounded-full bg-border mx-1" />
                         <span>Khoảng cách: {rec.distance || "Tùy vị trí"}</span>
                       </div>
-                      
+
                       {/* Features/Highlights */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
-                           <ThermometerSun className="w-3.5 h-3.5 text-accent"/> {rec.weather.temp}
-                         </span>
-                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
-                           <Plane className="w-3.5 h-3.5 text-secondary"/> {rec.flightDuration}
-                         </span>
-                         <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
-                           <TrendingUp className="w-3.5 h-3.5 text-green-500"/> {rec.confidence}% tự tin
-                         </span>
+                        <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                          <ThermometerSun className="w-3.5 h-3.5 text-accent" /> {rec.weather.temp}
+                        </span>
+                        <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                          <Plane className="w-3.5 h-3.5 text-secondary" /> {rec.flightDuration}
+                        </span>
+                        <span className="text-xs bg-muted/50 px-2.5 py-1.5 rounded-md text-foreground flex items-center gap-1.5 border border-border/40">
+                          <TrendingUp className="w-3.5 h-3.5 text-green-500" /> {rec.confidence}% tự tin
+                        </span>
                       </div>
-                      
+
                       {/* AI Reason */}
                       <div className="mt-auto md:mt-4">
                         <div className="flex items-start gap-2 text-sm text-foreground/80 bg-primary/5 p-3 rounded-xl border border-primary/10">
@@ -466,38 +464,38 @@ export function AIRecommendationPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Rightmost: Pricing & CTA */}
                     <div className="w-full md:w-56 lg:w-64 border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6 flex flex-col justify-end md:items-end text-right shrink-0">
-                       
-                       {/* Mobile Rating */}
-                       <div className="flex md:hidden items-center justify-between w-full mb-4 pb-4 border-b border-border/50">
-                           <span className="text-sm font-medium text-foreground">Đánh giá AI:</span>
-                           <div className="flex items-center gap-1.5">
-                             <span className="text-sm font-medium text-primary">Rất phù hợp</span>
-                             <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
-                               {rec.matchScore}
-                             </div>
-                           </div>
-                       </div>
 
-                       <div className="mb-1.5 text-sm text-green-600 dark:text-green-400 font-medium flex items-center justify-end gap-1">
-                         <Star className="w-4 h-4 fill-current" /> Đề xuất hàng đầu
-                       </div>
-                       
-                       <div className="text-xs text-muted-foreground line-through mb-0.5">
-                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rec.estimatedCostValue * 1.15)}
-                       </div>
-                       
-                       <div className="text-2xl font-bold text-accent mb-1">{rec.estimatedCost}</div>
-                       <div className="text-xs text-muted-foreground mb-4">Tổng ước tính (bao gồm thuế)</div>
-                       
-                       <Link
-                          to={`/destination/${rec.id}`}
-                          className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-xl font-semibold transition-colors shadow-lg shadow-primary/20 mt-auto md:mt-0"
-                        >
-                          Chọn Điểm Đến
-                       </Link>
+                      {/* Mobile Rating */}
+                      <div className="flex md:hidden items-center justify-between w-full mb-4 pb-4 border-b border-border/50">
+                        <span className="text-sm font-medium text-foreground">Đánh giá AI:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium text-primary">Rất phù hợp</span>
+                          <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm">
+                            {rec.matchScore}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-1.5 text-sm text-green-600 dark:text-green-400 font-medium flex items-center justify-end gap-1">
+                        <Star className="w-4 h-4 fill-current" /> Đề xuất hàng đầu
+                      </div>
+
+                      <div className="text-xs text-muted-foreground line-through mb-0.5">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(rec.estimatedCostValue * 1.15)}
+                      </div>
+
+                      <div className="text-2xl font-bold text-accent mb-1">{rec.estimatedCost}</div>
+                      <div className="text-xs text-muted-foreground mb-4">Tổng ước tính (bao gồm thuế)</div>
+
+                      <Link
+                        to={`/destination/${rec.id}`}
+                        className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-xl font-semibold transition-colors shadow-lg shadow-primary/20 mt-auto md:mt-0"
+                      >
+                        Chọn Điểm Đến
+                      </Link>
                     </div>
 
                   </div>

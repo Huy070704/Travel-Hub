@@ -58,9 +58,9 @@
   --accent-foreground: #ffffff;
   --destructive: #ef4444; /* red-500 */
   --destructive-foreground: #ffffff;
-  --border: #27272a;
-  --input: #27272a;
-  --input-background: #09090b;
+  --border: #334155;
+  --input: #334155;
+  --input-background: #0f172a;
   --switch-background: #3f3f46; /* zinc-700 */
   --ring: #6366f1;
   --font-weight-medium: 500;
