@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "next-themes";
 import {
   Mail,
   Lock,
@@ -40,6 +41,7 @@ const getErrorMessage = (error: any, fallback: string) => {
 export function AuthPage() {
   const navigate = useNavigate();
   const { login, googleLogin } = useAuth();
+  const { resolvedTheme } = useTheme();
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -359,7 +361,7 @@ export function AuthPage() {
 
               {mode === "login" && (
                 <>
-                  <div className="flex justify-center mb-6 w-full">
+                  <div className="flex justify-center mb-6 w-full transition-all duration-300 dark:[filter:invert(0.88)_hue-rotate(180deg)] rounded-md overflow-hidden">
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={handleGoogleError}

@@ -12,6 +12,7 @@ import { ProfilePage } from "../features/profile/components/ProfilePage";
 import { AdminDashboardPage } from "../features/dashboard/components/AdminDashboardPage";
 import { TourSearchPage } from "../features/tours/components/TourSearchPage";
 import { TourDetailPage } from "../features/tours/components/TourDetailPage";
+import { BecomeGuidePage } from "../features/tours/components/BecomeGuidePage";
 import { useAuth } from "../contexts/AuthContext";
 
 function ProtectedRoute({ children }: { children?: React.ReactNode }) {
@@ -68,6 +69,7 @@ export const router = createBrowserRouter([
           { path: "chat/:userId", Component: ChatPage },
           { path: "profile", Component: ProfilePage },
           { path: "profile/:userId", Component: ProfilePage },
+          { path: "become-guide", Component: BecomeGuidePage },
           { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
         ],
       },
