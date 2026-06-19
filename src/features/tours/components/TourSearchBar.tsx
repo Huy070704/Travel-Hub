@@ -6,7 +6,7 @@ import { getPopularDestinations } from "@/api/toursApi";
 export function TourSearchBar() {
   const [destination, setDestination] = useState("");
   const [departureDate, setDepartureDate] = useState("");
-  const [departureLocation, setDepartureLocation] = useState("Tất cả");
+  const [departureLocation, setDepartureLocation] = useState("Hà Nội");
   const [popularDestinations, setPopularDestinations] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showDepartureSuggestions, setShowDepartureSuggestions] = useState(false);
@@ -14,7 +14,7 @@ export function TourSearchBar() {
   const departureWrapperRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const predefinedDepartureLocations = ["Tất cả", "Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
+  const predefinedDepartureLocations = ["Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
 
   useEffect(() => {
     const fetchDestinations = async () => {

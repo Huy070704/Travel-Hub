@@ -15,9 +15,10 @@ import {
 import { 
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator 
 } from "../../../components/ui/breadcrumb";
-import { 
+import {
   CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera
 } from "lucide-react";
+import { todayISO } from "../../../utils/dateValidation";
 
 export function BecomeGuidePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -145,7 +146,7 @@ export function BecomeGuidePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dob">Ngày sinh</Label>
-                  <Input id="dob" type="date" required />
+                  <Input id="dob" type="date" max={todayISO()} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Giới tính</Label>
