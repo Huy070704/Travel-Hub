@@ -9,8 +9,12 @@ export function TourSearchBar() {
   const [departureLocation, setDepartureLocation] = useState("Tất cả");
   const [popularDestinations, setPopularDestinations] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showDepartureSuggestions, setShowDepartureSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const departureWrapperRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const predefinedDepartureLocations = ["Tất cả", "Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
 
   useEffect(() => {
     const fetchDestinations = async () => {
@@ -29,10 +33,13 @@ export function TourSearchBar() {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
+      if (departureWrapperRef.current && !departureWrapperRef.current.contains(event.target as Node)) {
+        setShowDepartureSuggestions(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [wrapperRef]);
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -98,6 +105,7 @@ export function TourSearchBar() {
           <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Ngày khởi hành</span>
           <input
             type="date"
+            min={new Date().toISOString().split("T")[0]}
             className="w-full bg-transparent border-none outline-none text-sm text-foreground font-bold cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
             value={departureDate}
             onChange={(e) => setDepartureDate(e.target.value)}
@@ -106,7 +114,10 @@ export function TourSearchBar() {
       </div>
 
       {/* Departure Location */}
-      <div className="flex-1 w-full flex items-center gap-3 px-4 py-3 bg-muted/40 hover:bg-muted/60 focus-within:bg-muted/60 rounded-xl border-2 border-transparent focus-within:border-primary/50 transition-all relative">
+      <div 
+        className="flex-1 w-full flex items-center gap-3 px-4 py-3 bg-muted/40 hover:bg-muted/60 focus-within:bg-muted/60 rounded-xl border-2 border-transparent focus-within:border-primary/50 transition-all relative"
+        ref={departureWrapperRef}
+      >
         <Navigation className="w-5 h-5 text-primary/70" />
         <div className="flex flex-col w-full">
           <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Khởi hành từ</span>
@@ -115,18 +126,39 @@ export function TourSearchBar() {
             className="w-full bg-transparent border-none outline-none text-sm text-foreground font-bold placeholder:text-muted-foreground/50"
             placeholder="Điểm khởi hành"
             value={departureLocation}
-            onChange={(e) => setDepartureLocation(e.target.value)}
-            list="departure-suggestions"
+            onChange={(e) => {
+              setDepartureLocation(e.target.value);
+              setShowDepartureSuggestions(true);
+            }}
+            onFocus={() => setShowDepartureSuggestions(true)}
           />
-          <datalist id="departure-suggestions">
-            <option value="Tất cả" />
-            <option value="Hồ Chí Minh" />
-            <option value="Hà Nội" />
-            <option value="Đà Nẵng" />
-            <option value="Cần Thơ" />
-            <option value="Hải Phòng" />
-          </datalist>
         </div>
+
+        {/* Departure Suggestions Dropdown */}
+        {showDepartureSuggestions && (
+          <div className="absolute top-[calc(100%+12px)] left-0 w-full min-w-[200px] bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border z-50 p-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2 uppercase tracking-widest opacity-80">
+              <Navigation className="w-4 h-4" />
+              Điểm khởi hành
+            </h4>
+            <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
+              {predefinedDepartureLocations
+                .filter(loc => departureLocation === "Tất cả" || loc.toLowerCase().includes(departureLocation.toLowerCase()))
+                .map((loc, i) => (
+                  <button
+                    key={i}
+                    className="text-left px-3 py-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all text-sm font-semibold flex items-center gap-3 group shrink-0"
+                    onClick={() => {
+                      setDepartureLocation(loc);
+                      setShowDepartureSuggestions(false);
+                    }}
+                  >
+                    <span className="truncate">{loc}</span>
+                  </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search Button */}
