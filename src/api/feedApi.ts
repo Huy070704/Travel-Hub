@@ -19,6 +19,11 @@ export async function createPost(data: CreatePostRequest) {
   return response.data;
 }
 
+export async function deletePost(postId: number) {
+  const response = await axiosInstance.delete<{ message: string, postID: number }>(`/Feed/posts/${postId}`);
+  return response.data;
+}
+
 export async function toggleLike(postId: number) {
   const response = await axiosInstance.post<{ message: string, likesCount: number }>(`/Feed/posts/${postId}/like`);
   return response.data;

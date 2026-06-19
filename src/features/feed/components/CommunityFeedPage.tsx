@@ -14,9 +14,12 @@ import {
   Plane,
   Loader2,
   X,
-  FileText
+  FileText,
+  Trash2
 } from "lucide-react";
-import { getPosts, createPost, toggleLike, getComments, addComment } from "@/api/feedApi";
+import { toast } from "sonner";
+import { getPosts, createPost, deletePost, toggleLike, getComments, addComment } from "@/api/feedApi";
+import { todayISO, isTodayOrFuture, isAfter } from "@/utils/dateValidation";
 import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getMyProfile } from "@/api/usersApi";
@@ -74,6 +77,7 @@ export function CommunityFeedPage() {
     note: ""
   });
   const [isJoining, setIsJoining] = useState<Record<number, boolean>>({});
+  const [isDeleting, setIsDeleting] = useState<Record<number, boolean>>({});
 
   // Share state
   const [shareModalPostId, setShareModalPostId] = useState<number | null>(null);
@@ -118,8 +122,23 @@ export function CommunityFeedPage() {
   }, []);
 
   const handleCreatePost = async () => {
+    let created = false;
+
     if (isBuddyPostMode) {
       if (!buddyPostData.destination.trim()) return;
+      // Only allow trips planned for the future.
+      if (buddyPostData.startDate && !isTodayOrFuture(buddyPostData.startDate)) {
+        toast.error("Ngày đi phải là ngày trong tương lai. Vui lòng chọn lại!");
+        return;
+      }
+      if (buddyPostData.endDate && buddyPostData.startDate && !isAfter(buddyPostData.endDate, buddyPostData.startDate)) {
+        toast.error("Ngày về phải sau ngày đi. Vui lòng chọn lại!");
+        return;
+      }
+      if (buddyPostData.endDate && !buddyPostData.startDate && !isTodayOrFuture(buddyPostData.endDate)) {
+        toast.error("Ngày về phải là ngày trong tương lai. Vui lòng chọn lại!");
+        return;
+      }
       setIsPosting(true);
       try {
         await createPost({
@@ -129,8 +148,11 @@ export function CommunityFeedPage() {
         });
         setBuddyPostData({ destination: "", startDate: "", endDate: "", peopleNeeded: 1, budgetVND: "", style: "Khám phá", note: "" });
         setIsBuddyPostMode(false);
+        created = true;
+        toast.success("Đăng bài tìm bạn đồng hành thành công!");
       } catch (error) {
         console.error("Failed to create buddy post", error);
+        toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
       } finally {
         setIsPosting(false);
       }
@@ -144,16 +166,94 @@ export function CommunityFeedPage() {
           content: newPostContent
         });
         setNewPostContent("");
+        created = true;
+        toast.success("Đăng bài viết thành công!");
       } catch (error) {
         console.error("Failed to create post", error);
+        toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
       } finally {
         setIsPosting(false);
       }
     }
-    
-    // Refresh posts
-    const postsData = await getPosts(1, 20);
-    setPosts(postsData.items);
+
+    // Refresh posts only when a post was actually created
+    if (created) {
+      try {
+        const postsData = await getPosts(1, 20);
+        setPosts(postsData.items);
+      } catch (error) {
+        console.error("Failed to refresh posts", error);
+      }
+    }
+  };
+
+  const performDeletePost = async (postId: number) => {
+    if (isDeleting[postId]) return;
+
+    setIsDeleting(prev => ({ ...prev, [postId]: true }));
+
+    // Optimistic removal so the post disappears immediately.
+    const originalPosts = [...posts];
+    setPosts(prev => prev.filter(p => p.postID !== postId));
+
+    try {
+      await deletePost(postId);
+      toast.success("Xóa bài viết thành công!");
+    } catch (error: any) {
+      console.error("Failed to delete post", error);
+      const status = error?.response?.status;
+      const serverMsg = error?.response?.data?.message || error?.response?.data;
+      let msg = "Không thể xóa bài viết. Vui lòng thử lại.";
+      if (status === 401) {
+        msg = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+      } else if (status === 403) {
+        msg = "Bạn chỉ có thể xóa bài viết của chính mình.";
+      } else if (status === 404 || status === 405) {
+        msg = "Máy chủ chưa hỗ trợ xóa bài viết. Vui lòng khởi động lại backend.";
+      } else if (typeof serverMsg === "string" && serverMsg.trim()) {
+        msg = `Không thể xóa bài viết: ${serverMsg}`;
+      }
+      toast.error(msg);
+      // Revert on failure
+      setPosts(originalPosts);
+    } finally {
+      setIsDeleting(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleDeletePost = (postId: number) => {
+    if (isDeleting[postId]) return;
+    toast.custom((t) => (
+      <div className="bg-white border border-border shadow-2xl rounded-2xl p-5 w-full flex flex-col gap-4 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <Trash2 className="w-5 h-5 text-red-500" />
+          </div>
+          <div className="flex-1 pt-0.5">
+            <h3 className="font-bold text-foreground text-base">Xóa bài viết này?</h3>
+            <p className="text-sm text-muted-foreground mt-1">Hành động này không thể hoàn tác. Bạn chắc chắn muốn xóa chứ?</p>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end mt-2">
+          <button 
+            onClick={() => toast.dismiss(t)}
+            className="px-4 py-2 bg-muted text-foreground rounded-xl text-sm font-semibold hover:bg-muted/80 transition-all"
+          >
+            Hủy
+          </button>
+          <button 
+            onClick={() => {
+              toast.dismiss(t);
+              performDeletePost(postId);
+            }}
+            className="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all shadow-md shadow-red-500/20"
+          >
+            Xác nhận xóa
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const handleJoinBuddyRequest = async (postId: number, receiverId: number) => {
@@ -165,10 +265,10 @@ export function CommunityFeedPage() {
         postID: postId,
         message: "Mình muốn tham gia chuyến đi này cùng bạn!"
       });
-      alert("Đã gửi yêu cầu tham gia! Chờ người đăng xác nhận nhé.");
+      toast.success("Đã gửi yêu cầu tham gia! Chờ người đăng xác nhận nhé.");
     } catch (error) {
       console.error("Failed to send buddy request", error);
-      alert("Bạn đã gửi yêu cầu rồi hoặc có lỗi xảy ra.");
+      toast.error("Bạn đã gửi yêu cầu rồi hoặc có lỗi xảy ra.");
     } finally {
       setIsJoining(prev => ({ ...prev, [postId]: false }));
     }
@@ -242,11 +342,11 @@ export function CommunityFeedPage() {
       const shareLink = `${window.location.origin}/community?postId=${post.postID}`;
       const shareContent = `Mời bạn xem bài viết của ${post.username}:\n\n"${post.title}"\n${post.content ? post.content : ''}\n\nXem bài viết: ${shareLink}`;
       await sendDirectMessage(buddyId, shareContent);
-      alert("Đã chia sẻ bài viết thành công!");
+      toast.success("Đã chia sẻ bài viết thành công!");
       setShareModalPostId(null);
     } catch (error) {
       console.error("Failed to share post", error);
-      alert("Có lỗi xảy ra khi chia sẻ bài viết.");
+      toast.error("Có lỗi xảy ra khi chia sẻ bài viết.");
     } finally {
       setIsSharing(false);
     }
@@ -309,11 +409,11 @@ export function CommunityFeedPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày đi</label>
-                          <input type="date" value={buddyPostData.startDate} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.startDate} min={todayISO()} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày về</label>
-                          <input type="date" value={buddyPostData.endDate} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.endDate} min={buddyPostData.startDate || todayISO()} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Số người cần tìm</label>
@@ -406,6 +506,18 @@ export function CommunityFeedPage() {
                         <div className="text-xs text-muted-foreground">{new Date(post.creationDate).toLocaleString('vi-VN')}</div>
                       </div>
                     </div>
+                    {/* Delete button - only visible to the post's author */}
+                    {post.userID === userProfile?.userID && (
+                      <button
+                        onClick={() => handleDeletePost(post.postID)}
+                        disabled={isDeleting[post.postID]}
+                        title="Xóa bài viết"
+                        aria-label="Xóa bài viết"
+                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-full transition-all disabled:opacity-50"
+                      >
+                        {isDeleting[post.postID] ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                      </button>
+                    )}
                   </div>
 
                   {/* Caption */}

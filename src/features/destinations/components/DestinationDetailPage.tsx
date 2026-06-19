@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router";
+import { toast } from "sonner";
 import { getDestinationDetails } from "@/api/destinationsApi";
 import { createItinerary } from "@/api/itinerariesApi";
+import { todayISO, isTodayOrFuture, isAfter } from "@/utils/dateValidation";
 import type { DestinationDto } from "@/types/destinations";
 import {
   Heart,
@@ -58,10 +60,18 @@ export function DestinationDetailPage() {
 
   const handleSaveForLater = async () => {
     if (!startDate || !endDate) {
-      alert("Vui lòng chọn ngày đi và ngày về trước khi lưu!");
+      toast.error("Vui lòng chọn ngày đi và ngày về trước khi lưu!");
       return;
     }
-    
+    if (!isTodayOrFuture(startDate)) {
+      toast.error("Ngày đi phải là ngày trong tương lai. Vui lòng chọn lại!");
+      return;
+    }
+    if (!isAfter(endDate, startDate)) {
+      toast.error("Ngày về phải sau ngày đi. Vui lòng chọn lại!");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await createItinerary({
@@ -80,7 +90,7 @@ export function DestinationDetailPage() {
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       console.error("Failed to save itinerary:", error);
-      alert("Có lỗi xảy ra khi lưu lịch trình. Vui lòng thử lại.");
+      toast.error("Có lỗi xảy ra khi lưu lịch trình. Vui lòng thử lại.");
     } finally {
       setIsSaving(false);
     }
@@ -394,9 +404,10 @@ export function DestinationDetailPage() {
                   <div>
                     <label className="text-sm mb-2 block font-medium">Ngày đi</label>
                     <div className="relative">
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         value={startDate}
+                        min={todayISO()}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none"
                       />
@@ -405,11 +416,11 @@ export function DestinationDetailPage() {
                   <div>
                     <label className="text-sm mb-2 block font-medium">Ngày về</label>
                     <div className="relative">
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        min={startDate}
+                        min={startDate || todayISO()}
                         className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm appearance-none"
                       />
                     </div>
