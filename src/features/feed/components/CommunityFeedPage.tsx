@@ -13,7 +13,8 @@ import {
   TrendingUp,
   Plane,
   Loader2,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import { getPosts, createPost, toggleLike, getComments, addComment } from "@/api/feedApi";
 import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
@@ -359,8 +360,8 @@ export function CommunityFeedPage() {
               {!isBuddyPostMode && (
                 <div className="flex items-center gap-2 sm:ml-16">
                   <button className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-sm font-medium">Thêm điểm đến</span>
+                    <FileText className="w-4 h-4" />
+                    <span className="text-sm font-medium">Bài đăng của Hướng dẫn viên</span>
                   </button>
                   <button onClick={() => setIsBuddyPostMode(true)} className="flex-1 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
                     <Users className="w-4 h-4" />

@@ -10,6 +10,7 @@ import { CommunityFeedPage } from "../features/feed/components/CommunityFeedPage
 import { ChatPage } from "../features/chat/components/ChatPage";
 import { ProfilePage } from "../features/profile/components/ProfilePage";
 import { AdminDashboardPage } from "../features/dashboard/components/AdminDashboardPage";
+import { GuidePortalPage } from "../features/guide-portal/components/GuidePortalPage";
 import { TourSearchPage } from "../features/tours/components/TourSearchPage";
 import { TourDetailPage } from "../features/tours/components/TourDetailPage";
 import { BecomeGuidePage } from "../features/tours/components/BecomeGuidePage";
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
           { path: "profile", Component: ProfilePage },
           { path: "profile/:userId", Component: ProfilePage },
           { path: "become-guide", Component: BecomeGuidePage },
+          { path: "guide-portal", Component: GuidePortalPage },
           { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
         ],
       },
