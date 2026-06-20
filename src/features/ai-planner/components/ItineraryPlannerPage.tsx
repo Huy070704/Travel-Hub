@@ -29,11 +29,13 @@ import { getDestinationDetails } from "@/api/destinationsApi";
 import type { AiGenerateItineraryResponse, AiActivity } from "../../../types/ai";
 import type { DestinationDto } from "@/types/destinations";
 import { createItinerary } from "@/api/itinerariesApi";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 
 export function ItineraryPlannerPage() {
   const { id } = useParams();
   const destinationId = Number(id);
+  const location = useLocation();
+  const stateDays = (location.state as any)?.days;
 
   const [destination, setDestination] = useState<DestinationDto | null>(null);
   const [itineraryData, setItineraryData] = useState<AiGenerateItineraryResponse | null>(null);
@@ -45,8 +47,32 @@ export function ItineraryPlannerPage() {
   const navigate = useNavigate();
 
   // Form State
-  const [days, setDays] = useState<number>(3);
-  const [travelStyle, setTravelStyle] = useState<string>("Budget");
+  const [days, setDays] = useState<number>(() => {
+    if (stateDays) return stateDays;
+    const aiFormStr = localStorage.getItem("ai_formData");
+    if (aiFormStr) {
+      try {
+        const aiForm = JSON.parse(aiFormStr);
+        if (aiForm.days) return Number(aiForm.days);
+      } catch (e) {}
+    }
+    return 3;
+  });
+
+  const [travelStyle, setTravelStyle] = useState<string>(() => {
+    const aiFormStr = localStorage.getItem("ai_formData");
+    if (aiFormStr) {
+      try {
+        const aiForm = JSON.parse(aiFormStr);
+        if (aiForm.travelStyle) return aiForm.travelStyle;
+        if (aiForm.interests) {
+          if (aiForm.interests.includes("beach")) return "Relaxation";
+          if (aiForm.interests.includes("mountain") || aiForm.interests.includes("nature")) return "Adventure";
+        }
+      } catch (e) {}
+    }
+    return "Budget";
+  });
 
   useEffect(() => {
     if (!destinationId) return;
@@ -230,8 +256,8 @@ export function ItineraryPlannerPage() {
                     onChange={(e) => setDays(Number(e.target.value))}
                     className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
                   >
-                    {[1, 2, 3, 4, 5, 7].map(num => (
-                      <option key={num} value={num} className="text-black">{num} ngày</option>
+                    {Array.from({length: 14}, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num} className="text-foreground bg-background">{num} ngày</option>
                     ))}
                   </select>
                 </div>
@@ -242,10 +268,10 @@ export function ItineraryPlannerPage() {
                     onChange={(e) => setTravelStyle(e.target.value)}
                     className="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-white/50"
                   >
-                    <option value="Budget" className="text-black">Tiết kiệm / backpacking</option>
-                    <option value="Luxury" className="text-black">Cao cấp / thoải mái</option>
-                    <option value="Adventure" className="text-black">Phiêu lưu / khám phá</option>
-                    <option value="Relaxation" className="text-black">Nghỉ dưỡng / biển</option>
+                    <option value="Budget" className="text-foreground bg-background">Tiết kiệm / backpacking</option>
+                    <option value="Luxury" className="text-foreground bg-background">Cao cấp / thoải mái</option>
+                    <option value="Adventure" className="text-foreground bg-background">Phiêu lưu / khám phá</option>
+                    <option value="Relaxation" className="text-foreground bg-background">Nghỉ dưỡng / biển</option>
                   </select>
                 </div>
               </div>
@@ -285,8 +311,8 @@ export function ItineraryPlannerPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {!itineraryData && !isLoading && (
-          <div className="text-center py-20">
-            <Sparkles className="w-16 h-16 text-primary/20 mx-auto mb-4" />
+          <div className="text-center py-20 bg-card rounded-2xl border border-border/50 shadow-sm mt-8">
+            <Sparkles className="w-16 h-16 text-primary/40 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-foreground mb-2">Sẵn sàng lên kế hoạch?</h2>
             <p className="text-muted-foreground max-w-md mx-auto">Chọn sở thích ở phía trên để AI tạo lịch trình cá nhân hóa riêng cho {destination.name}.</p>
           </div>
@@ -308,7 +334,7 @@ export function ItineraryPlannerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Timeline Navigation */}
             <div className="lg:col-span-1">
-              <div className="sticky top-20 bg-white rounded-2xl shadow-lg p-6 border border-border/50">
+              <div className="sticky top-20 bg-card rounded-2xl shadow-lg p-6 border border-border/50">
                 <h3 className="font-bold mb-4 text-lg">Tổng quan chuyến đi</h3>
                 <div className="space-y-2">
                   {itineraryData.days.map((day) => (
@@ -318,7 +344,7 @@ export function ItineraryPlannerPage() {
                       className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${
                         expandedDay === day.dayNumber
                           ? "bg-primary text-white shadow-md"
-                          : "bg-muted hover:bg-muted/80"
+                          : "bg-background border border-border/50 hover:bg-primary/5 dark:hover:bg-primary/10"
                       }`}
                     >
                       <div>
@@ -336,11 +362,11 @@ export function ItineraryPlannerPage() {
                 <div className="mt-6 pt-6 border-t border-border space-y-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Tổng số ngày</span>
-                    <span className="font-semibold bg-muted px-2 py-1 rounded-md">{itineraryData.totalDays}</span>
+                    <span className="font-semibold bg-primary/10 text-primary dark:bg-primary/20 px-2 py-1 rounded-md">{itineraryData.totalDays}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Hoạt động</span>
-                    <span className="font-semibold bg-muted px-2 py-1 rounded-md">
+                    <span className="font-semibold bg-primary/10 text-primary dark:bg-primary/20 px-2 py-1 rounded-md">
                       {itineraryData.days.reduce((sum, day) => sum + day.activities.length, 0)}
                     </span>
                   </div>
@@ -363,7 +389,7 @@ export function ItineraryPlannerPage() {
                     
                     <button 
                       onClick={() => navigate('/community')}
-                      className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2.5 rounded-xl font-semibold hover:bg-blue-100 transition-all border border-blue-100"
+                      className="w-full flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5 rounded-xl font-semibold hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all border border-blue-100 dark:border-blue-500/20"
                     >
                       <Share2 className="w-4 h-4" />
                       Chia sẻ lên cộng đồng
@@ -371,7 +397,7 @@ export function ItineraryPlannerPage() {
                     
                     <Link 
                       to={`/tours/search?destinationId=${destinationId}`} 
-                      className="w-full flex items-center justify-center gap-2 bg-muted text-foreground py-2.5 rounded-xl font-semibold hover:bg-muted/80 transition-all border border-border"
+                      className="w-full flex items-center justify-center gap-2 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 py-2.5 rounded-xl font-semibold hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-all border border-orange-100 dark:border-orange-500/20"
                     >
                       <Search className="w-4 h-4" />
                       Tìm tour phù hợp
@@ -379,7 +405,7 @@ export function ItineraryPlannerPage() {
 
                     <Link 
                       to="/community" 
-                      className="w-full flex items-center justify-center gap-2 bg-green-50 text-green-600 py-2.5 rounded-xl font-semibold hover:bg-green-100 transition-all border border-green-100"
+                      className="w-full flex items-center justify-center gap-2 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 py-2.5 rounded-xl font-semibold hover:bg-green-100 dark:hover:bg-green-500/20 transition-all border border-green-100 dark:border-green-500/20"
                     >
                       <Users className="w-4 h-4" />
                       Tìm bạn đồng hành
@@ -392,7 +418,7 @@ export function ItineraryPlannerPage() {
             {/* Itinerary Details */}
             <div className="lg:col-span-3 space-y-8">
               {itineraryData.days.map((day) => (
-                <div key={day.dayNumber} className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-border/50 transition-all duration-300 ${expandedDay === day.dayNumber ? 'ring-2 ring-primary/20' : ''}`}>
+                <div key={day.dayNumber} className={`bg-card rounded-2xl shadow-lg overflow-hidden border border-border/50 transition-all duration-300 ${expandedDay === day.dayNumber ? 'ring-2 ring-primary/20' : ''}`}>
                   {/* Day Header */}
                   <button
                     onClick={() => setExpandedDay(expandedDay === day.dayNumber ? null : day.dayNumber)}
@@ -416,7 +442,7 @@ export function ItineraryPlannerPage() {
 
                   {/* Day Activities */}
                   {expandedDay === day.dayNumber && (
-                    <div className="p-6 bg-slate-50/50">
+                    <div className="p-6 bg-background">
                       <div className="relative">
                         {/* Timeline Line */}
                         <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-primary/80 via-secondary/80 to-purple-500/80 rounded-full" />
@@ -433,13 +459,13 @@ export function ItineraryPlannerPage() {
                                 <div
                                   className={`absolute left-3 w-7 h-7 rounded-full bg-gradient-to-br ${getPeriodColor(
                                     period
-                                  )} flex items-center justify-center shadow-md ring-4 ring-white z-10 group-hover:scale-110 transition-transform`}
+                                  )} flex items-center justify-center shadow-md ring-4 ring-background z-10 group-hover:scale-110 transition-transform`}
                                 >
                                   <PeriodIcon className="w-3.5 h-3.5 text-white" />
                                 </div>
 
                                 {/* Activity Card */}
-                                <div className="bg-white rounded-xl p-5 shadow-sm border border-border/60 hover:shadow-md hover:border-primary/30 transition-all group-hover:-translate-y-1">
+                                <div className="bg-card rounded-xl p-5 shadow-sm border border-border/60 hover:shadow-md hover:border-primary/30 transition-all group-hover:-translate-y-1">
                                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
                                     <div className="flex items-start gap-4">
                                       <div className="w-12 h-12 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shadow-inner flex-shrink-0">
@@ -455,7 +481,7 @@ export function ItineraryPlannerPage() {
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="text-right flex-shrink-0 sm:ml-4 bg-muted/50 px-3 py-2 rounded-lg self-start sm:self-auto border border-border">
+                                    <div className="text-right flex-shrink-0 sm:ml-4 bg-primary/5 dark:bg-primary/10 px-3 py-2 rounded-lg self-start sm:self-auto border border-primary/10 dark:border-primary/20">
                                       <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Chi phí ước tính</div>
                                       <div className="font-bold text-foreground">
                                         {activity.estimatedCostVND === 0 
@@ -482,7 +508,7 @@ export function ItineraryPlannerPage() {
                       </div>
 
                       {/* Day Summary */}
-                      <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 -mx-6 -mb-6 px-6 py-4">
+                      <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 dark:bg-primary/10 -mx-6 -mb-6 px-6 py-4">
                         <div className="text-sm font-medium text-primary">
                           Tổng trong ngày
                           {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
@@ -496,14 +522,14 @@ export function ItineraryPlannerPage() {
               ))}
 
               {/* AI Recommendations Notice */}
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2 text-purple-900">Lưu ý từ trợ lý du lịch AI</h4>
-                    <p className="text-sm text-purple-800/80 leading-relaxed">
+                    <h4 className="font-semibold mb-2 text-purple-900 dark:text-purple-200">Lưu ý từ trợ lý du lịch AI</h4>
+                    <p className="text-sm text-purple-800/80 dark:text-purple-300/80 leading-relaxed">
                       Lịch trình này được tạo động dựa trên dữ liệu hiện có của <strong>{destination.name}</strong>, tối ưu theo phong cách <strong>{travelStyle}</strong>. Giá chỉ là ước tính và có thể thay đổi. Bạn nên đặt chỗ ở và hoạt động trước.
                     </p>
                   </div>
