@@ -174,7 +174,7 @@ export function AuthPage() {
             : "Nhập thông tin đăng nhập để tiếp tục";
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="h-screen w-screen relative overflow-hidden bg-background select-none">
       <FloatingBlob
         delay={0}
         className="w-[800px] h-[800px] bg-gradient-to-br from-purple-500/30 to-blue-500/30 -top-1/4 -left-1/4"
@@ -191,7 +191,7 @@ export function AuthPage() {
       {[...Array(30)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1 h-1 bg-primary/30 rounded-full"
+          className="absolute w-1 h-1 bg-primary/30 rounded-full z-0 pointer-events-none"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
@@ -212,12 +212,12 @@ export function AuthPage() {
 
       <Link to="/">
         <motion.button
-          className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 glass rounded-full hover:bg-white/20 transition-all"
-          whileHover={{ scale: 1.05, x: -5 }}
+          className="fixed top-5 left-5 z-50 flex items-center gap-1.5 px-3 py-1.5 glass rounded-full hover:bg-white/20 transition-all text-xs"
+          whileHover={{ scale: 1.05, x: -3 }} 
           whileTap={{ scale: 0.95 }}
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="font-semibold">Về trang chủ</span>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span className="font-medium">Về trang chủ</span>
         </motion.button>
       </Link>
 
@@ -232,7 +232,7 @@ export function AuthPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="relative z-10 max-w-lg">
+          <div className="relative z-10 max-w-lg isolation-auto">
             <motion.div
               className="flex items-center gap-3 mb-8"
               initial={{ opacity: 0, y: 20 }}
@@ -296,14 +296,14 @@ export function AuthPage() {
 
             <div className="absolute inset-0 pointer-events-none">
               {[
-                { Icon: Plane, x: "10%", y: "20%", delay: 0, rotate: 15 },
-                { Icon: Compass, x: "80%", y: "30%", delay: 2, rotate: -20 },
-                { Icon: MapPin, x: "15%", y: "75%", delay: 4, rotate: 10 },
-                { Icon: Globe, x: "85%", y: "70%", delay: 3, rotate: -15 },
+                { Icon: Plane, x: "40%", y: "6%", delay: 0, rotate: 15 },
+                { Icon: Compass, x: "90%", y: "30%", delay: 2, rotate: -20 },
+                { Icon: MapPin, x: "20%", y: "99%", delay: 4, rotate: 10 },
+                { Icon: Globe, x: "90%", y: "70%", delay: 3, rotate: -15 },
               ].map(({ Icon, x, y, delay, rotate }, index) => (
                 <motion.div
                   key={index}
-                  className="absolute opacity-10"
+                  className="absolute opacity-10 z-0 pointer-events-none"
                   style={{ left: x, top: y }}
                   animate={{
                     y: [0, -30, 0],
@@ -324,7 +324,7 @@ export function AuthPage() {
           </div>
         </motion.div>
 
-        <div className="flex items-center justify-center p-6 lg:p-12 relative">
+        <div className="flex items-center justify-center p-6 lg:p-12 relative z-10">
           <motion.div
             className="w-full max-w-md relative z-10"
             initial={{ opacity: 0, x: 50 }}
@@ -376,9 +376,7 @@ export function AuthPage() {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-border"></div>
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-card text-muted-foreground">Hoặc tiếp tục bằng email</span>
-                    </div>
+
                   </div>
                 </>
               )}
