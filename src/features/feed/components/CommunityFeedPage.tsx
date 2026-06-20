@@ -28,6 +28,7 @@ import type { PostDto, CommentDto } from "@/types/feed";
 import type { BuddyRecommendationDto } from "@/types/buddies";
 import type { DestinationDto } from "@/types/destinations";
 import type { UserProfileDto } from "@/types/users";
+import defaultAvatar from "@/assets/default-avatar.png";
 
 const getPostImage = (id: number) => {
   const images = [
@@ -40,14 +41,7 @@ const getPostImage = (id: number) => {
 };
 
 const getAvatar = (id: number) => {
-  const avatars = [
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"
-  ];
-  return avatars[id % avatars.length];
+  return defaultAvatar;
 };
 
 export function CommunityFeedPage() {
@@ -622,8 +616,8 @@ export function CommunityFeedPage() {
                         <span className="text-sm font-semibold hidden sm:inline">Chia sẻ</span>
                       </button>
                     </div>
-                    {/* Add connect button if not BuddyRequest (which already has it inside the card) */}
-                    {post.postType !== "BuddyRequest" && (
+                    {/* Add connect button if not BuddyRequest (which already has it inside the card) and not the current user's own post */}
+                    {post.postType !== "BuddyRequest" && post.userID !== userProfile?.userID && (
                       <Link
                         to={`/chat/${post.userID}`}
                         className="px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
