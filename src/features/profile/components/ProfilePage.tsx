@@ -25,18 +25,10 @@ import type { DestinationDto } from "@/types/destinations";
 import type { TourBooking } from "@/types/tours";
 import { getPendingRequests, respondToBuddyRequest } from "@/api/buddiesApi";
 import type { BuddyDto } from "@/types/buddies";
-
-
+import defaultAvatar from "@/assets/default-avatar.png";
 
 const getAvatar = (id: number) => {
-  const avatars = [
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"
-  ];
-  return avatars[id % avatars.length];
+  return defaultAvatar;
 };
 
 // Helper function for stable random placeholder images
