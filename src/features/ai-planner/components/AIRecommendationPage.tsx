@@ -31,6 +31,7 @@ type PlannerFormData = {
   days: string;
   interests: string[];
   travelGroup: string;
+  travelStyle: string;
 };
 
 // --- DATA ---
@@ -65,6 +66,7 @@ export function AIRecommendationPage() {
       days: "",
       interests: [] as string[],
       travelGroup: "",
+      travelStyle: "Budget",
     };
   });
   const [page, setPage] = useState(() => {
@@ -321,7 +323,7 @@ export function AIRecommendationPage() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="pt-4 mt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6 pb-2 px-2">
+                    <div className="pt-4 mt-4 border-t border-border grid grid-cols-1 md:grid-cols-3 gap-6 pb-2 px-2">
                       {/* Interests */}
                       <div>
                         <label className="block text-sm font-semibold text-foreground mb-3">Sở thích du lịch</label>
@@ -358,6 +360,31 @@ export function AIRecommendationPage() {
                                 }`}
                             >
                               <Icon className="w-4 h-4" />
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Travel Style */}
+                      <div>
+                        <label className="block text-sm font-semibold text-foreground mb-3">Phong cách du lịch</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: "Budget", label: "Tiết kiệm" },
+                            { id: "Luxury", label: "Cao cấp" },
+                            { id: "Adventure", label: "Phiêu lưu" },
+                            { id: "Relaxation", label: "Nghỉ dưỡng" }
+                          ].map(({ id, label }) => (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, travelStyle: id })}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${formData.travelStyle === id
+                                ? "bg-accent/10 text-accent ring-1 ring-accent/50"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
                               {label}
                             </button>
                           ))}
