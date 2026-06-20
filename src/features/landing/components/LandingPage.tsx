@@ -57,7 +57,7 @@ export function LandingPage() {
       try {
         const dests = await getTrendingDestinations(3);
         setTrendingDestinations(dests);
-        
+
         const weatherData: Record<number, WeatherForecastDto> = {};
         for (const dest of dests) {
           try {
@@ -134,11 +134,12 @@ export function LandingPage() {
           className="w-[450px] h-[450px] bg-gradient-to-br from-cyan-500/25 to-teal-500/25 bottom-0 right-0"
         />
 
-        {/* Floating Travel Illustrations */}
-        <FloatingIllustrations />
+        <div className="absolute inset-0 -translate-y-10 pointer-events-none">
+          <FloatingIllustrations />
+        </div>
 
         {/* Hero Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10 w-full mt-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 z-10 w-full mt-5">
           <motion.div
             className="text-center max-w-5xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
@@ -158,7 +159,7 @@ export function LandingPage() {
 
             {/* Main Headline */}
             <motion.h1
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
+              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 leading-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -179,7 +180,7 @@ export function LandingPage() {
 
             {/* Tour Search Box */}
             <motion.div
-              className="max-w-5xl mx-auto mb-6 w-full relative z-50"
+              className="max-w-5xl mx-auto w-full relative z-50 flex flex-col items-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -189,7 +190,7 @@ export function LandingPage() {
 
             {/* Stats */}
             <motion.div
-              className="flex flex-wrap items-center justify-center gap-8 text-sm mt-12"
+              className="flex flex-wrap items-center justify-center gap-4 text-xs xl:text-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -201,11 +202,11 @@ export function LandingPage() {
               ].map((stat, index) => (
                 <motion.div
                   key={index}
-                  className="flex items-center gap-2 glass px-4 py-2 rounded-full"
+                  className="flex items-center gap-2 glass px-3.5 py-1.5 rounded-full select-none"
                   whileHover={{ scale: 1.05 }}
                 >
                   <stat.icon className="w-4 h-4 text-primary" />
-                  <span className="font-semibold">{stat.label}</span>
+                  <span className="font-semibold text-muted-foreground hover:text-foreground transition-colors">{stat.label}</span>
                 </motion.div>
               ))}
             </motion.div>
@@ -347,8 +348,8 @@ export function LandingPage() {
                           <div className="flex items-center gap-2 text-sm text-white/80">
                             <DollarSign className="w-4 h-4" />
                             <span>
-                              {destination.estimatedBaseCostVND 
-                                ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(destination.estimatedBaseCostVND) 
+                              {destination.estimatedBaseCostVND
+                                ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(destination.estimatedBaseCostVND)
                                 : "N/A"
                               }
                             </span>
@@ -360,7 +361,7 @@ export function LandingPage() {
                 </motion.div>
               );
             })}
-            
+
             {trendingDestinations.length === 0 && (
               <div className="col-span-3 text-center py-20 text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />

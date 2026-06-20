@@ -326,11 +326,10 @@ export function ChatPage() {
   const displayAvatar = currentConversationInfo?.isGroupChat ? undefined : chatAvatar;
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col pt-0 md:pt-4">
-      <div className="w-full max-w-7xl mx-auto flex-1 shadow-2xl overflow-hidden rounded-none md:rounded-t-2xl border border-border bg-card">
-        <div className="grid grid-cols-1 md:grid-cols-12 h-full min-h-0">
-          {/* Conversations List */}
-          <div className="md:col-span-4 bg-card border-r border-border h-full flex flex-col min-h-0 z-10 shadow-lg">
+    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col">
+      <div className="w-full h-full flex-1 overflow-hidden bg-card border-t border-border flex">
+        {/* Conversations List */}
+        <div className="w-full md:w-[320px] lg:w-[360px] flex-shrink-0 bg-card border-r border-border h-full flex flex-col min-h-0 z-10 shadow-lg">
             {/* Search Header */}
             <div className="p-4 border-b border-border bg-gradient-to-br from-primary/5 to-secondary/5">
                 <div className="flex items-center justify-between mb-4">
@@ -404,65 +403,49 @@ export function ChatPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="md:col-span-8 bg-background h-full flex flex-col min-h-0 relative">
+          <div className="flex-1 bg-background h-full flex min-h-0 relative min-w-0">
             {currentChatId || receiverIdFromUrl ? (
               <>
-                {/* Chat Header */}
-                <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      {currentConversationInfo?.isGroupChat ? (
-                        <div className="w-12 h-12 rounded-full border border-border bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
-                          <Users className="w-6 h-6" />
+                {/* Middle Chat Column */}
+                <div className="flex-1 flex flex-col min-h-0 min-w-0 relative">
+                  {/* Chat Header */}
+                  <div className="bg-card/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        {currentConversationInfo?.isGroupChat ? (
+                          <div className="w-12 h-12 rounded-full border border-border bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
+                            <Users className="w-6 h-6" />
+                          </div>
+                        ) : (
+                          <img
+                            src={chatAvatar}
+                            alt={chatName}
+                            className="w-12 h-12 rounded-full object-cover border border-border"
+                          />
+                        )}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full shadow-sm" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg leading-tight text-foreground">
+                          {chatName}
+                        </h3>
+                        <div className="text-sm text-green-600 font-medium flex items-center gap-1">
+                          Đang hoạt động
                         </div>
-                      ) : (
-                        <img
-                          src={chatAvatar}
-                          alt={chatName}
-                          className="w-12 h-12 rounded-full object-cover border border-border"
-                        />
-                      )}
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full shadow-sm" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg leading-tight text-foreground">
-                        {chatName}
-                      </h3>
-                      <div className="text-sm text-green-600 font-medium flex items-center gap-1">
-                        Đang hoạt động
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <button className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-full transition-all text-primary">
+                        <Phone className="w-5 h-5" />
+                      </button>
+                      <button className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-full transition-all text-primary">
+                        <Video className="w-5 h-5" />
+                      </button>
+                      <button className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-full transition-all text-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button className="p-2.5 bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-all text-muted-foreground">
-                      <Phone className="w-5 h-5" />
-                    </button>
-                    <button className="p-2.5 bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-all text-muted-foreground">
-                      <Video className="w-5 h-5" />
-                    </button>
-                    {currentConversationInfo?.isGroupChat && (
-                      <>
-                        <button 
-                          onClick={handleOpenAddMember}
-                          className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-full transition-all text-muted-foreground"
-                          title="Thêm thành viên"
-                        >
-                          <UserPlus className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={handleDeleteGroup}
-                          className="p-2.5 hover:bg-destructive/10 hover:text-destructive rounded-full transition-all text-muted-foreground"
-                          title="Giải tán nhóm"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </>
-                    )}
-                    <button className="p-2.5 hover:bg-muted rounded-full transition-all text-muted-foreground">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-scroll custom-scrollbar p-6 space-y-6 bg-background relative">
@@ -571,9 +554,73 @@ export function ChatPage() {
                     </button>
                   </form>
                 </div>
+              </div>
+                
+                {/* Right Info Sidebar */}
+                <div className="w-[320px] hidden lg:flex flex-col border-l border-border bg-card flex-shrink-0 overflow-y-auto custom-scrollbar">
+                  {/* Avatar and Name */}
+                  <div className="flex flex-col items-center pt-8 pb-6 px-4">
+                    <div className="relative mb-4">
+                      {currentConversationInfo?.isGroupChat ? (
+                        <div className="w-20 h-20 rounded-full border border-border bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-md">
+                          <Users className="w-10 h-10" />
+                        </div>
+                      ) : (
+                        <img
+                          src={chatAvatar}
+                          alt={chatName}
+                          className="w-20 h-20 rounded-full object-cover border border-border shadow-md"
+                        />
+                      )}
+                    </div>
+                    <h3 className="font-bold text-lg text-foreground text-center">{chatName}</h3>
+                   
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-center gap-6 px-4 pb-6 border-b border-border">
+                    {currentConversationInfo?.isGroupChat && (
+                      <>
+                        <button onClick={handleOpenAddMember} className="flex flex-col items-center gap-2 group">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                            <UserPlus className="w-5 h-5 text-foreground group-hover:text-primary" />
+                          </div>
+                          <span className="text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">Thêm bạn</span>
+                        </button>
+                        <button onClick={handleDeleteGroup} className="flex flex-col items-center gap-2 group">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-destructive/10 group-hover:text-destructive transition-colors">
+                            <Trash2 className="w-5 h-5 text-foreground group-hover:text-destructive" />
+                          </div>
+                          <span className="text-xs font-medium text-muted-foreground group-hover:text-destructive transition-colors">Giải tán</span>
+                        </button>
+                      </>
+                    )}
+                    <button className="flex flex-col items-center gap-2 group">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        <Search className="w-5 h-5 text-foreground group-hover:text-primary" />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">Tìm kiếm</span>
+                    </button>
+                  </div>
+
+                  {/* Accordion Menu */}
+                  <div className="flex flex-col p-2 space-y-1">
+                    {[
+                      "Thông tin về đoạn chat",
+                      "Tùy chỉnh đoạn chat",
+                      "File phương tiện và file",
+                      "Quyền riêng tư và hỗ trợ"
+                    ].map((item, idx) => (
+                      <button key={idx} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <span className="font-semibold text-sm text-foreground">{item}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50 bg-background">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50 bg-background w-full">
                 <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
                   <MessageCircle className="w-12 h-12 text-muted-foreground" />
                 </div>
@@ -583,7 +630,6 @@ export function ChatPage() {
             )}
           </div>
         </div>
-      </div>
       {/* Create Group Modal */}
       {showCreateGroupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
