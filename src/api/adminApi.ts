@@ -15,3 +15,16 @@ export const getAllUsers = async (
   });
   return response.data;
 };
+
+export const getPendingGuides = async () => {
+  const response = await axiosInstance.get('/Admin/guides/pending');
+  return response.data;
+};
+
+export const approveGuide = async (profileId: number, approve: boolean) => {
+  const response = await axiosInstance.post('/Admin/guides/approve', {
+    profileID: profileId,
+    approve: approve
+  });
+  return response.data;
+};

@@ -34,6 +34,14 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function GuideRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== "TourGuide") {
+    return <Navigate to="/become-guide" replace />;
+  }
+  return <>{children}</>;
+}
+
 function PublicOnlyRoute() {
   const { isAuthenticated } = useAuth();
 
@@ -71,7 +79,7 @@ export const router = createBrowserRouter([
           { path: "profile", Component: ProfilePage },
           { path: "profile/:userId", Component: ProfilePage },
           { path: "become-guide", Component: BecomeGuidePage },
-          { path: "guide-portal", Component: GuidePortalPage },
+          { path: "guide-portal", Component: () => <GuideRoute><GuidePortalPage /></GuideRoute> },
           { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
         ],
       },

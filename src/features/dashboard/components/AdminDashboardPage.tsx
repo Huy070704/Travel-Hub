@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
-import { getAllUsers } from "@/api/adminApi";
+import { getAllUsers, getPendingGuides, approveGuide } from "@/api/adminApi";
 import type { TourBooking } from "@/types/tours";
 import type { AdminUser } from "@/types/admin";
 import {
@@ -20,12 +20,15 @@ import {
   BarChart3,
   PieChart,
   Calendar,
-  X
+  X,
+  BadgeCheck,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings" | "guides">("overview");
   
   // Tour bookings state
   const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
@@ -41,6 +44,12 @@ export function AdminDashboardPage() {
   const [userTotalPages, setUserTotalPages] = useState(1);
   const [userOfflineFilter, setUserOfflineFilter] = useState("all");
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  // Pending guides state
+  const [pendingGuides, setPendingGuides] = useState<any[]>([]);
+  const [isLoadingGuides, setIsLoadingGuides] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState<any | null>(null);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const fetchBookings = () => {
     getAllTourBookings().then(setTourBookings).catch(console.error);
@@ -64,10 +73,34 @@ export function AdminDashboardPage() {
     if (activeTab === "bookings") {
       fetchBookings();
     }
-    if (activeTab === "users") {
-      fetchAdminUsersData();
+    if (activeTab === "guides") {
+      fetchPendingGuides();
     }
   }, [activeTab, userCurrentPage, userOfflineFilter]);
+
+  const fetchPendingGuides = async () => {
+    setIsLoadingGuides(true);
+    try {
+      const data = await getPendingGuides();
+      setPendingGuides(data);
+    } catch (error) {
+      console.error("Failed to fetch pending guides", error);
+    } finally {
+      setIsLoadingGuides(false);
+    }
+  };
+
+  const handleApproveGuide = async (profileId: number, isApproved: boolean) => {
+    try {
+      await approveGuide(profileId, isApproved);
+      alert(`Đã ${isApproved ? 'phê duyệt' : 'từ chối'} hướng dẫn viên thành công.`);
+      setIsGuideModalOpen(false);
+      fetchPendingGuides(); // Reload list
+    } catch (error) {
+      console.error("Failed to approve guide", error);
+      alert("Có lỗi xảy ra khi duyệt hướng dẫn viên.");
+    }
+  };
 
   const handleUpdateStatus = async () => {
     if (!selectedBooking || !newStatus) return;
@@ -210,6 +243,7 @@ export function AdminDashboardPage() {
                 { id: "users", label: "Người dùng", icon: Users },
                 { id: "destinations", label: "Điểm đến", icon: MapPin },
                 { id: "bookings", label: "Đặt Tour", icon: Calendar },
+                { id: "guides", label: "Duyệt HDV", icon: BadgeCheck },
                 { id: "posts", label: "Bài viết", icon: MessageSquare },
                 { id: "reports", label: "Báo cáo", icon: Activity },
               ].map((item) => (
@@ -239,16 +273,18 @@ export function AdminDashboardPage() {
                 {activeTab === "overview" && "Tổng quan hệ thống"}
                 {activeTab === "users" && "Quản lý người dùng"}
                 {activeTab === "destinations" && "Quản lý điểm đến"}
-                {activeTab === "bookings" && "Quản lý Đặt Tour"}
-                {activeTab === "posts" && "Quản lý bài viết"}
+                { activeTab === "bookings" && "Quản lý Đặt Tour" }
+                { activeTab === "guides" && "Duyệt Hướng Dẫn Viên" }
+                { activeTab === "posts" && "Quản lý bài viết" }
                 {activeTab === "reports" && "Báo cáo & Kiểm duyệt"}
               </h1>
               <p className="text-muted-foreground">
                 {activeTab === "overview" && "Theo dõi hiệu suất và sự tăng trưởng của nền tảng"}
                 {activeTab === "users" && "Quản lý và xem tất cả người dùng đã đăng ký"}
                 {activeTab === "destinations" && "Quản lý các điểm đến du lịch và danh sách"}
-                {activeTab === "bookings" && "Theo dõi và quản lý các đơn đặt tour từ khách hàng"}
-                {activeTab === "posts" && "Quản lý bài viết cộng đồng và nội dung"}
+                { activeTab === "bookings" && "Theo dõi và quản lý các đơn đặt tour từ khách hàng" }
+                { activeTab === "guides" && "Xem xét và phê duyệt các đơn đăng ký trở thành Hướng Dẫn Viên" }
+                { activeTab === "posts" && "Quản lý bài viết cộng đồng và nội dung" }
                 {activeTab === "reports" && "Xem xét và xử lý các báo cáo từ người dùng"}
               </p>
             </div>
@@ -717,6 +753,84 @@ export function AdminDashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Guides Approval Tab */}
+            {activeTab === "guides" && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold">Danh sách Đơn Đăng Ký Chờ Duyệt</h3>
+                  </div>
+                  
+                  {isLoadingGuides ? (
+                    <div className="py-12 text-center text-muted-foreground">Đang tải dữ liệu...</div>
+                  ) : pendingGuides.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                      Không có đơn đăng ký nào đang chờ duyệt.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người Dùng</th>
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Kinh nghiệm</th>
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngôn ngữ</th>
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Địa điểm</th>
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày Nộp Đơn</th>
+                            <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingGuides.map((guide) => (
+                            <tr key={guide.profileID} className="border-b border-border hover:bg-muted/50 transition-all">
+                              <td className="py-3 px-4">
+                                <div className="font-semibold">{guide.fullName}</div>
+                                <div className="text-xs text-muted-foreground">{guide.email}</div>
+                              </td>
+                              <td className="py-3 px-4 text-sm">{guide.experience} năm</td>
+                              <td className="py-3 px-4 text-sm">{guide.languages}</td>
+                              <td className="py-3 px-4 text-sm">{guide.locations}</td>
+                              <td className="py-3 px-4 text-sm text-muted-foreground">
+                                {new Date(guide.createdAt).toLocaleDateString('vi-VN')}
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex gap-2">
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedGuide(guide);
+                                      setIsGuideModalOpen(true);
+                                    }}
+                                    className="p-2 hover:bg-muted text-primary rounded transition-all"
+                                    title="Xem chi tiết"
+                                  >
+                                    <Eye className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleApproveGuide(guide.profileID, true)}
+                                    className="p-2 hover:bg-green-50 text-green-600 rounded transition-all"
+                                    title="Phê duyệt"
+                                  >
+                                    <CheckCircle className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleApproveGuide(guide.profileID, false)}
+                                    className="p-2 hover:bg-red-50 text-red-600 rounded transition-all"
+                                    title="Từ chối"
+                                  >
+                                    <XCircle className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -770,6 +884,125 @@ export function AdminDashboardPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guide Details Modal */}
+      {isGuideModalOpen && selectedGuide && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-border bg-gray-50">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <BadgeCheck className="w-6 h-6 text-primary" />
+                Chi Tiết Hồ Sơ Hướng Dẫn Viên
+              </h3>
+              <button onClick={() => setIsGuideModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* User Identity Info */}
+              <div className="flex items-start gap-6 mb-8 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                <img 
+                  src={selectedGuide.guideAvatarUrl || "https://ui-avatars.com/api/?name=" + selectedGuide.fullName} 
+                  alt="Avatar" 
+                  className="w-24 h-24 rounded-xl object-cover border-4 border-white shadow-md"
+                />
+                <div>
+                  <h4 className="text-2xl font-bold text-gray-900 mb-1">{selectedGuide.fullName}</h4>
+                  <p className="text-muted-foreground mb-4">{selectedGuide.email}</p>
+                  <p className="text-sm text-gray-700 max-w-2xl bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <span className="font-semibold block mb-1">Giới thiệu bản thân (Bio):</span>
+                    {selectedGuide.bio || "Không có phần giới thiệu."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Professional Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">Thông tin chuyên môn</h4>
+                  <ul className="space-y-3">
+                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                      <span className="text-muted-foreground">Kinh nghiệm:</span>
+                      <span className="font-medium">{selectedGuide.experience} năm</span>
+                    </li>
+                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                      <span className="text-muted-foreground">Ngôn ngữ hỗ trợ:</span>
+                      <span className="font-medium text-right max-w-[200px]">{selectedGuide.languages}</span>
+                    </li>
+                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                      <span className="text-muted-foreground">Địa điểm hoạt động:</span>
+                      <span className="font-medium text-right max-w-[200px]">{selectedGuide.locations}</span>
+                    </li>
+                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                      <span className="text-muted-foreground">Danh mục Tour:</span>
+                      <span className="font-medium text-right max-w-[200px]">{selectedGuide.tourCategories}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Ngày tạo hồ sơ:</span>
+                      <span className="font-medium">{new Date(selectedGuide.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                {/* Documents / Images */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">Giấy tờ tùy thân & Chứng chỉ</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt trước)</span>
+                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        {selectedGuide.idFrontUrl && selectedGuide.idFrontUrl.startsWith('http') ? (
+                          <img src={selectedGuide.idFrontUrl} alt="Mặt trước CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt sau)</span>
+                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        {selectedGuide.idBackUrl && selectedGuide.idBackUrl.startsWith('http') ? (
+                          <img src={selectedGuide.idBackUrl} alt="Mặt sau CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <span className="text-sm text-muted-foreground font-medium">Chứng chỉ thẻ Hướng dẫn viên</span>
+                      <div className="h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                        {selectedGuide.certUrl && selectedGuide.certUrl.startsWith('http') ? (
+                          <img src={selectedGuide.certUrl} alt="Chứng chỉ" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Footer */}
+            <div className="p-6 border-t border-border bg-gray-50 flex justify-end gap-4">
+              <button 
+                onClick={() => handleApproveGuide(selectedGuide.profileID, false)}
+                className="px-6 py-2.5 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 font-semibold transition-colors flex items-center gap-2"
+              >
+                <XCircle className="w-5 h-5" />
+                Từ chối hồ sơ
+              </button>
+              <button 
+                onClick={() => handleApproveGuide(selectedGuide.profileID, true)}
+                className="px-6 py-2.5 bg-green-500 text-white rounded-xl hover:bg-green-600 font-semibold shadow-sm hover:shadow transition-all flex items-center gap-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                Phê duyệt Hướng dẫn viên
+              </button>
             </div>
           </div>
         </div>

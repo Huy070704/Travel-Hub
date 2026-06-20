@@ -1,13 +1,74 @@
 import { useState } from "react";
-import { X, UploadCloud, MapPin, Check, Image as ImageIcon, Save, Send } from "lucide-react";
+import { X, UploadCloud, MapPin, Check, Image as ImageIcon, Save, Send, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createTour } from "@/api/toursApi";
 
 interface CreateExperienceModalProps {
   onClose: () => void;
+  onCreated: () => void;
 }
 
-export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
+export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceModalProps) {
   const [activeSection, setActiveSection] = useState("basic");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [currentImageUrl, setCurrentImageUrl] = useState("");
+
+  // Form State
+  const [formData, setFormData] = useState({
+    title: "",
+    destination: "",
+    departureLocation: "",
+    departureDate: "",
+    durationDays: 1,
+    priceVND: 0,
+    description: "",
+    imageUrl: "",
+    highlights: "",
+    included: "",
+    excluded: "",
+    meetingPoint: ""
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "durationDays" || name === "priceVND" ? Number(value) : value
+    }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      // Validate Basic Requirements
+      if (!formData.title || !formData.destination || !formData.departureLocation || !formData.departureDate) {
+        alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      let fullDescription = formData.description;
+      if (formData.highlights) fullDescription += `\n\n**Điểm nổi bật:**\n${formData.highlights}`;
+      if (formData.included) fullDescription += `\n\n**Bao gồm:**\n${formData.included}`;
+      if (formData.excluded) fullDescription += `\n\n**Không bao gồm:**\n${formData.excluded}`;
+      if (formData.meetingPoint) fullDescription += `\n\n**Điểm hẹn:**\n${formData.meetingPoint}`;
+
+      await createTour({
+        ...formData,
+        description: fullDescription,
+        imageUrl: imageUrls.join(','),
+        departureDate: new Date(formData.departureDate).toISOString()
+      });
+      alert("Tạo Tour thành công!");
+      onCreated();
+    } catch (error: any) {
+      console.error(error);
+      alert("Lỗi: " + (error.response?.data?.message || error.message || "Có lỗi xảy ra khi tạo tour!"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const sections = [
     { id: "basic", label: "Thông tin cơ bản" },
@@ -72,42 +133,44 @@ export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1.5">Tên trải nghiệm</label>
-                      <input type="text" placeholder="VD: Tour ẩm thực Phố Cổ Hà Nội" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                      <label className="block text-sm font-medium mb-1.5">Tên trải nghiệm <span className="text-red-500">*</span></label>
+                      <input name="title" value={formData.title} onChange={handleChange} type="text" placeholder="VD: Tour ẩm thực Phố Cổ Hà Nội" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1.5">Tỉnh/Thành phố</label>
-                        <select className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all">
+                        <label className="block text-sm font-medium mb-1.5">Điểm đến <span className="text-red-500">*</span></label>
+                        <select name="destination" value={formData.destination} onChange={handleChange} className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all">
                           <option value="">Chọn Tỉnh/Thành phố</option>
-                          <option value="Hanoi">Hà Nội</option>
-                          <option value="HCM">TP. Hồ Chí Minh</option>
+                          <option value="Hà Nội">Hà Nội</option>
+                          <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                          <option value="Đà Nẵng">Đà Nẵng</option>
+                          <option value="Nha Trang">Nha Trang</option>
+                          <option value="Phú Quốc">Phú Quốc</option>
+                          <option value="Sapa">Sapa</option>
+                          <option value="Hội An">Hội An</option>
+                          <option value="Đà Lạt">Đà Lạt</option>
+                          <option value="Hạ Long">Hạ Long</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1.5">Danh mục</label>
-                        <select className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all">
-                          <option value="">Chọn Danh mục</option>
-                          <option value="Food">Ẩm thực & Đồ uống</option>
-                          <option value="Culture">Văn hóa & Lịch sử</option>
-                          <option value="Nature">Thiên nhiên & Ngoài trời</option>
-                        </select>
+                        <label className="block text-sm font-medium mb-1.5">Điểm khởi hành <span className="text-red-500">*</span></label>
+                        <input name="departureLocation" value={formData.departureLocation} onChange={handleChange} type="text" placeholder="VD: Hà Nội" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1.5">Giá (VND)</label>
-                        <input type="number" placeholder="450000" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                        <label className="block text-sm font-medium mb-1.5">Giá (VND) <span className="text-red-500">*</span></label>
+                        <input name="priceVND" value={formData.priceVND || ""} onChange={handleChange} type="number" placeholder="450000" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1.5">Số khách tối đa</label>
-                        <input type="number" placeholder="8" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                        <label className="block text-sm font-medium mb-1.5">Số ngày (Duration) <span className="text-red-500">*</span></label>
+                        <input name="durationDays" value={formData.durationDays || ""} onChange={handleChange} type="number" placeholder="3" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1.5">Thời lượng</label>
-                        <input type="text" placeholder="VD: 3 giờ" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                        <label className="block text-sm font-medium mb-1.5">Ngày khởi hành <span className="text-red-500">*</span></label>
+                        <input name="departureDate" value={formData.departureDate} onChange={handleChange} type="date" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                     </div>
                   </div>
@@ -125,22 +188,22 @@ export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
                   <div className="space-y-5">
                     <div>
                       <label className="block text-sm font-medium mb-1.5">Mô tả đầy đủ</label>
-                      <textarea rows={5} placeholder="Mô tả điều làm cho trải nghiệm của bạn trở nên độc đáo..." className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
+                      <textarea name="description" value={formData.description} onChange={handleChange} rows={5} placeholder="Mô tả điều làm cho trải nghiệm của bạn trở nên độc đáo..." className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium mb-1.5">Điểm nổi bật</label>
-                      <textarea rows={3} placeholder="Liệt kê 3-5 điểm nổi bật chính (mỗi điểm một dòng)" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
+                      <textarea name="highlights" value={formData.highlights} onChange={handleChange} rows={3} placeholder="Liệt kê 3-5 điểm nổi bật chính (mỗi điểm một dòng)" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Dịch vụ bao gồm</label>
-                        <textarea rows={3} placeholder="VD: Hướng dẫn viên địa phương, Nước lọc" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
+                        <textarea name="included" value={formData.included} onChange={handleChange} rows={3} placeholder="VD: Hướng dẫn viên địa phương, Nước lọc" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Dịch vụ không bao gồm</label>
-                        <textarea rows={3} placeholder="VD: Chi phí cá nhân, Tiền tip" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
+                        <textarea name="excluded" value={formData.excluded} onChange={handleChange} rows={3} placeholder="VD: Chi phí cá nhân, Tiền tip" className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none"></textarea>
                       </div>
                     </div>
                   </div>
@@ -156,27 +219,59 @@ export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                   <h3 className="text-xl font-bold mb-4">Tải lên thư viện ảnh</h3>
                   
-                  <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer text-center group">
-                    <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                      <UploadCloud className="w-8 h-8 text-primary" />
+                  <div className="mb-6 space-y-3">
+                    <label className="block text-sm font-medium mb-1.5">Link ảnh Tour (Image URL)</label>
+                    <div className="flex gap-2">
+                      <input 
+                        value={currentImageUrl} 
+                        onChange={(e) => setCurrentImageUrl(e.target.value)} 
+                        type="text" 
+                        placeholder="https://images.unsplash.com/..." 
+                        className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" 
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (currentImageUrl.trim()) {
+                              setImageUrls(prev => [...prev, currentImageUrl.trim()]);
+                              setCurrentImageUrl("");
+                            }
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={() => {
+                          if (currentImageUrl.trim()) {
+                            setImageUrls(prev => [...prev, currentImageUrl.trim()]);
+                            setCurrentImageUrl("");
+                          }
+                        }}
+                      >
+                        Thêm ảnh
+                      </Button>
                     </div>
-                    <p className="font-bold text-lg mb-1">Nhấp để tải lên hoặc kéo thả</p>
-                    <p className="text-sm text-muted-foreground">SVG, PNG, JPG hoặc GIF (tối đa 800x400px)</p>
+                  </div>
+                  
+                  <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <p className="font-bold text-lg mb-1">Thư viện ảnh của bạn</p>
+                    <p className="text-sm text-muted-foreground">Dán link vào ô phía trên và bấm "Thêm ảnh" để tạo bộ sưu tập.</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 mt-6">
-                    {/* Mock thumbnails */}
-                    <div className="relative aspect-video rounded-xl bg-muted border border-border flex items-center justify-center overflow-hidden">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  {imageUrls.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="relative aspect-video rounded-xl bg-muted border border-border group overflow-hidden">
+                          <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                          <button 
+                            onClick={() => setImageUrls(prev => prev.filter((_, i) => i !== index))}
+                            className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                    <div className="relative aspect-video rounded-xl bg-muted border border-border flex items-center justify-center overflow-hidden">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <div className="relative aspect-video rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground hover:bg-muted cursor-pointer transition-colors">
-                      <Plus className="w-6 h-6 mb-1" />
-                      <span className="text-xs font-medium">Thêm nữa</span>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="pt-6 flex justify-between">
                     <Button variant="outline" onClick={() => setActiveSection("description")}>Quay lại</Button>
@@ -194,7 +289,7 @@ export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
                       <label className="block text-sm font-medium mb-1.5">Địa chỉ Điểm hẹn</label>
                       <div className="relative">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input type="text" placeholder="VD: 1 Tràng Tiền, Hoàn Kiếm, Hà Nội" className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                        <input name="meetingPoint" value={formData.meetingPoint} onChange={handleChange} type="text" placeholder="VD: 1 Tràng Tiền, Hoàn Kiếm, Hà Nội" className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                     </div>
 
@@ -234,13 +329,13 @@ export function CreateExperienceModal({ onClose }: CreateExperienceModalProps) {
                   </div>
 
                   <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button variant="outline" size="lg" className="gap-2" onClick={onClose}>
-                      <Save className="w-5 h-5" />
-                      Lưu bản nháp
+                    <Button variant="outline" size="lg" className="gap-2" onClick={onClose} disabled={isSubmitting}>
+                      <X className="w-5 h-5" />
+                      Hủy bỏ
                     </Button>
-                    <Button size="lg" className="gap-2" onClick={onClose}>
+                    <Button size="lg" className="gap-2" onClick={handleSubmit} disabled={isSubmitting}>
                       <Send className="w-5 h-5" />
-                      Gửi để phê duyệt
+                      {isSubmitting ? "Đang tạo..." : "Tạo Tour và Xuất bản"}
                     </Button>
                   </div>
                 </div>

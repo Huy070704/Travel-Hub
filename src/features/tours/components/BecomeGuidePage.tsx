@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
@@ -16,17 +16,57 @@ import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator 
 } from "../../../components/ui/breadcrumb";
 import {
-  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera
+  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera, Loader2
 } from "lucide-react";
 import { todayISO } from "../../../utils/dateValidation";
+import { tourGuideApi, TourGuideRegistrationRequest } from "../../../api/tourGuideApi";
+import { toast } from "sonner";
 
 export function BecomeGuidePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<TourGuideRegistrationRequest>({
+    experience: "0-1",
+    languages: "",
+    locations: "",
+    bio: "",
+    tourCategories: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const profile = await tourGuideApi.getMyProfile();
+        if (profile.isVerified === "Pending") {
+          setIsSubmitted(true);
+        }
+      } catch (error) {
+        // Not found is fine
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkStatus();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await tourGuideApi.registerAsGuide(formData);
+      setIsSubmitted(true);
+      toast.success("Đăng ký thành công! Đang chờ duyệt.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi đăng ký.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   if (isSubmitted) {
     return (
@@ -188,7 +228,7 @@ export function BecomeGuidePage() {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="experience">Số năm kinh nghiệm</Label>
-                  <Select>
+                  <Select value={formData.experience} onValueChange={(val) => setFormData({...formData, experience: val})}>
                     <SelectTrigger id="experience">
                       <SelectValue placeholder="Chọn số năm" />
                     </SelectTrigger>
@@ -202,11 +242,11 @@ export function BecomeGuidePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="languages">Ngôn ngữ sử dụng</Label>
-                  <Input id="languages" placeholder="VD: Tiếng Việt, Tiếng Anh" />
+                  <Input id="languages" placeholder="VD: Tiếng Việt, Tiếng Anh" value={formData.languages} onChange={e => setFormData({...formData, languages: e.target.value})} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="locations">Địa điểm hoạt động</Label>
-                  <Input id="locations" placeholder="VD: Hà Nội, Đà Nẵng, TP.HCM" />
+                  <Input id="locations" placeholder="VD: Hà Nội, Đà Nẵng, TP.HCM" value={formData.locations} onChange={e => setFormData({...formData, locations: e.target.value})} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="bio">Giới thiệu bản thân</Label>
@@ -214,6 +254,8 @@ export function BecomeGuidePage() {
                     id="bio" 
                     placeholder="Hãy chia sẻ về kinh nghiệm, phong cách dẫn tour và những điều thú vị về bạn..." 
                     className="min-h-[120px]"
+                    value={formData.bio}
+                    onChange={e => setFormData({...formData, bio: e.target.value})}
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">
@@ -221,7 +263,16 @@ export function BecomeGuidePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {["Tour Thành Phố", "Tour Ẩm Thực", "Tour Văn Hóa", "Tour Lịch Sử", "Tour Thiên Nhiên", "Tour Khám Phá"].map((cat) => (
                       <div key={cat} className="flex items-center space-x-2 bg-muted/40 dark:bg-muted/20 p-2 rounded-md border border-transparent hover:border-primary/30 transition-colors">
-                        <Checkbox id={`cat-${cat}`} />
+                        <Checkbox 
+                           id={`cat-${cat}`} 
+                           checked={formData.tourCategories?.includes(cat)}
+                           onCheckedChange={(checked) => {
+                             let cats = formData.tourCategories ? formData.tourCategories.split(',').filter(Boolean) : [];
+                             if (checked) cats.push(cat);
+                             else cats = cats.filter(c => c !== cat);
+                             setFormData({...formData, tourCategories: cats.join(',')})
+                           }}
+                        />
                         <label
                           htmlFor={`cat-${cat}`}
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer w-full"
@@ -298,10 +349,10 @@ export function BecomeGuidePage() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col sm:flex-row gap-4 border-t pt-6">
-                <Button type="submit" size="lg" className="w-full sm:w-auto">
-                  Gửi Đăng Ký
+                <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={isSubmitting}>
+                  {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang gửi...</> : "Gửi Đăng Ký"}
                 </Button>
-                <Button type="button" variant="outline" size="lg" className="w-full sm:w-auto">
+                <Button type="button" variant="outline" size="lg" className="w-full sm:w-auto" disabled={isSubmitting}>
                   Lưu Nháp
                 </Button>
               </CardFooter>

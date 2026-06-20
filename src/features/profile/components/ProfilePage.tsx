@@ -532,7 +532,7 @@ export function ProfilePage() {
                       className="flex gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all"
                     >
                       <img
-                        src={booking.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+                        src={booking.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
                         alt={booking.tourTitle}
                         className="w-20 h-20 rounded-lg object-cover"
                       />

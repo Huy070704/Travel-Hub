@@ -28,9 +28,15 @@ export function RootLayout() {
     { path: "/community", label: "Cộng đồng", icon: Users },
     { path: "/chat", label: "Tin nhắn", icon: MessageCircle },
     { path: "/profile", label: "Hồ sơ", icon: User },
-    { path: "/become-guide", label: "HDV", icon: Award },
-
   ];
+
+  if (user?.role === "TourGuide") {
+    navLinks.push({ path: "/guide-portal", label: "Guide Portal", icon: Award });
+  } else if (user?.role === "Customer") {
+    navLinks.push({ path: "/become-guide", label: "Trở thành HDV", icon: Award });
+  } else if (!user) {
+    navLinks.push({ path: "/become-guide", label: "Trở thành HDV", icon: Award });
+  }
 
   return (
     <div className="min-h-screen bg-background relative">

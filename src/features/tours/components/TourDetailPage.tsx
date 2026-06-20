@@ -69,7 +69,7 @@ export function TourDetailPage() {
           tourID: tour.tourID,
           tourTitle: tour.title,
           destination: tour.destination,
-          imageUrl: tour.imageUrl || "",
+          imageUrl: tour.imageUrl?.split(',')[0] || "",
           departureDate: tour.departureDate,
           fullName: fullName,
           phone: phone,
@@ -125,7 +125,7 @@ export function TourDetailPage() {
         <div className="relative">
           <div className="h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl relative group">
             <img
-              src={tour.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+              src={tour.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
               alt={tour.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />

@@ -10,17 +10,26 @@ export function TourSearchPage() {
   const [searchParams] = useSearchParams();
   const [tours, setTours] = useState<TourResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 12;
 
   const destination = searchParams.get("destination") || "";
   const departureDate = searchParams.get("date") || "";
   const departureLocation = searchParams.get("from") || "";
 
+  // Reset page when search params change
+  useEffect(() => {
+    setPage(1);
+  }, [destination, departureDate, departureLocation]);
+
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
       try {
-        const results = await searchTours(destination, departureLocation, departureDate);
-        setTours(results);
+        const results = await searchTours(destination, departureLocation, departureDate, page, pageSize);
+        setTours(results.data);
+        setTotalPages(results.totalPages);
       } catch (error) {
         console.error("Failed to fetch tours", error);
       } finally {
@@ -28,7 +37,7 @@ export function TourSearchPage() {
       }
     };
     fetchTours();
-  }, [destination, departureDate, departureLocation]);
+  }, [destination, departureDate, departureLocation, page]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-cyan-50/30 to-background relative overflow-hidden">
@@ -134,12 +143,12 @@ export function TourSearchPage() {
                 <p className="text-muted-foreground">Hãy thử thay đổi điều kiện tìm kiếm hoặc chọn điểm đến khác.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {tours.map((tour) => (
                   <Link key={tour.tourID} to={`/tours/${tour.tourID}`} className="glass rounded-2xl overflow-hidden hover:shadow-xl transition-all group flex flex-col h-full hover:-translate-y-1 cursor-pointer block">
                     <div className="relative aspect-[4/3] overflow-hidden">
                       <img 
-                        src={tour.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"} 
+                        src={tour.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"} 
                         alt={tour.title} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -195,6 +204,63 @@ export function TourSearchPage() {
                     </div>
                   </Link>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-center mt-10 gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    setPage(Math.max(1, page - 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={page === 1}
+                  className="px-4 py-2 border border-border rounded-lg bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  Trước
+                </button>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {(() => {
+                    const getVisiblePages = (current: number, total: number) => {
+                      if (total <= 7) return Array.from({ length: total }).map((_, i) => i + 1);
+                      if (current <= 4) return [1, 2, 3, 4, 5, "...", total];
+                      if (current >= total - 3) return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+                      return [1, "...", current - 1, current, current + 1, "...", total];
+                    };
+
+                    return getVisiblePages(page, totalPages).map((p, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (p !== "...") {
+                            setPage(p as number);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        }}
+                        disabled={p === "..."}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
+                          p === "..." ? "cursor-default text-muted-foreground" :
+                          page === p
+                            ? "bg-primary text-white"
+                            : "border border-border bg-background hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ));
+                  })()}
+                </div>
+                <button
+                  onClick={() => {
+                    setPage(Math.min(totalPages, page + 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 border border-border rounded-lg bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  Sau
+                </button>
               </div>
             )}
           </div>

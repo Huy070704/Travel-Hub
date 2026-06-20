@@ -1,11 +1,27 @@
 import axiosInstance from "./axiosInstance";
 import type { TourResponse, TourBooking, TourBookingRequest } from "@/types/tours";
 
-export const searchTours = async (destination?: string, departureLocation?: string, departureDate?: string): Promise<TourResponse[]> => {
+export interface PaginatedTourResponse {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  data: TourResponse[];
+}
+
+export const searchTours = async (
+  destination?: string, 
+  departureLocation?: string, 
+  departureDate?: string,
+  page: number = 1,
+  pageSize: number = 12
+): Promise<PaginatedTourResponse> => {
   const params = new URLSearchParams();
   if (destination && destination !== "Tất cả") params.append("destination", destination);
   if (departureLocation && departureLocation !== "Tất cả") params.append("departureLocation", departureLocation);
   if (departureDate) params.append("departureDate", departureDate);
+  params.append("page", page.toString());
+  params.append("pageSize", pageSize.toString());
   
   const response = await axiosInstance.get(`/Tour/search?${params.toString()}`);
   return response.data;
@@ -36,7 +52,17 @@ export const getAllTourBookings = async (): Promise<TourBooking[]> => {
   return response.data;
 };
 
-export const updateTourBookingStatus = async (id: number, status: string): Promise<{message: string}> => {
-  const response = await axiosInstance.put(`/Tour/bookings/${id}/status`, { status });
+export const updateTourBookingStatus = async (bookingId: number, status: string) => {
+  const response = await axiosInstance.put(`/Tour/bookings/${bookingId}/status`, { status });
+  return response.data;
+};
+
+export const createTour = async (tourData: any) => {
+  const response = await axiosInstance.post('/Tour', tourData);
+  return response.data;
+};
+
+export const getMyTours = async () => {
+  const response = await axiosInstance.get('/Tour/my-tours');
   return response.data;
 };
