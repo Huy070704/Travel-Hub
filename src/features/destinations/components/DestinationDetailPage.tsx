@@ -230,7 +230,7 @@ export function DestinationDetailPage() {
 
           {/* Floating Action Buttons */}
           <div className="absolute top-4 right-4 flex gap-2">
-            <button className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white hover:scale-105 transition-all">
+            <button className="p-3 bg-card/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-card hover:scale-105 transition-all">
               <Share2 className="w-5 h-5" />
             </button>
             <button
@@ -238,7 +238,7 @@ export function DestinationDetailPage() {
               className={`p-3 rounded-full shadow-lg hover:scale-105 transition-all ${
                 savedDestination
                   ? "bg-red-500 text-white"
-                  : "bg-white/90 backdrop-blur-sm hover:bg-white"
+                  : "bg-card/90 backdrop-blur-sm hover:bg-card"
               }`}
             >
               <Heart className={`w-5 h-5 ${savedDestination ? "fill-white" : ""}`} />
@@ -269,7 +269,7 @@ export function DestinationDetailPage() {
             </div>
 
             {/* Weather Forecast */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-card rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold mb-4">Dự báo thời tiết 5 ngày tới</h3>
               {weatherForecast.length > 0 ? (
                 <div className="grid grid-cols-5 gap-4">
@@ -291,7 +291,7 @@ export function DestinationDetailPage() {
             </div>
 
             {/* Expense Breakdown */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-card rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">Chi phí dự kiến hàng ngày</h3>
                 {aiMatch && (
@@ -324,7 +324,7 @@ export function DestinationDetailPage() {
             </div>
 
             {/* Nearby Attractions */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-card rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold mb-6">Các điểm tham quan lân cận</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {attractions.map((attraction, index) => (
@@ -369,7 +369,7 @@ export function DestinationDetailPage() {
               </div>
               
               {aiMatch && (
-                <div className="mb-6 p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-primary/20 shadow-inner">
+                <div className="mb-6 p-4 bg-card/60 dark:bg-black/20 rounded-xl border border-primary/20 shadow-inner">
                   <p className="text-foreground leading-relaxed text-lg">
                     <strong className="text-primary flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4"/> Đánh giá từ AI:</strong> 
                     {aiMatch.reasons[0]}
@@ -379,7 +379,7 @@ export function DestinationDetailPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {aiTips.map((tip, index) => (
-                  <div key={index} className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl p-4">
+                  <div key={index} className="bg-card/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl p-4">
                     <h4 className="font-semibold mb-2">{tip.title}</h4>
                     <p className="text-sm text-muted-foreground">{tip.content}</p>
                   </div>
@@ -392,7 +392,7 @@ export function DestinationDetailPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-4">
               {/* Booking Card */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-card rounded-2xl shadow-lg p-6">
                 <div className="mb-6">
                   <div className="text-3xl font-bold text-primary mb-1">
                     {aiMatch?.estimatedCost || (realDestination?.estimatedBaseCostVND ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(realDestination.estimatedBaseCostVND) : "11.500.000đ")}
@@ -429,6 +429,11 @@ export function DestinationDetailPage() {
 
                 <Link
                   to={`/itinerary/${id || 1}`}
+                  state={{
+                    days: startDate && endDate 
+                      ? Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1) 
+                      : undefined
+                  }}
                   className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-3"
                 >
                   <span>Tạo lịch trình</span>
@@ -449,7 +454,7 @@ export function DestinationDetailPage() {
               </div>
 
               {/* Quick Facts */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-card rounded-2xl shadow-lg p-6">
                 <h4 className="font-semibold mb-4">Thông tin nhanh</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
