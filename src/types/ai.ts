@@ -11,6 +11,8 @@ export type AiRecommendRequest = {
   preferredWeather?: string;
   accommodationType?: string;
   budgetStyle?: string;
+  page?: number;
+  pageSize?: number;
 };
 
 export type AiRecommendResponse = {
@@ -28,6 +30,13 @@ export type AiRecommendResponse = {
     entertainment: string;
     shopping: string;
   };
+};
+
+export type PaginatedAiResponse = {
+  items: AiRecommendResponse[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
 };
 
 export type AiGenerateItineraryRequest = {

@@ -3,11 +3,12 @@ import type {
   AiRecommendRequest, 
   AiRecommendResponse, 
   AiGenerateItineraryRequest, 
-  AiGenerateItineraryResponse 
+  AiGenerateItineraryResponse,
+  PaginatedAiResponse
 } from "../types/ai";
 
 export async function getAiRecommendations(data: AiRecommendRequest) {
-  const response = await axiosInstance.post<AiRecommendResponse[]>("/Ai/recommend", data);
+  const response = await axiosInstance.post<PaginatedAiResponse>("/Ai/recommend", data);
   return response.data;
 }
 

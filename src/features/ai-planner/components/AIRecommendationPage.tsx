@@ -67,14 +67,22 @@ export function AIRecommendationPage() {
       travelGroup: "",
     };
   });
+  const [page, setPage] = useState(() => {
+    const saved = localStorage.getItem("ai_page");
+    return saved ? Number(saved) : 1;
+  });
+  const [totalPages, setTotalPages] = useState(() => {
+    const saved = localStorage.getItem("ai_totalPages");
+    return saved ? Number(saved) : 1;
+  });
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Scroll ref for results
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchRecommendations = async (currentPage: number, isLoadMore: boolean = false) => {
     const requestPayload: AiRecommendRequest = {
       budgetVND: Number(formData.budget),
       days: Number(formData.days),
@@ -88,13 +96,21 @@ export function AIRecommendationPage() {
       preferredWeather: "no_preference",
       accommodationType: "no_preference",
       budgetStyle: "balanced",
+      page: currentPage,
+      pageSize: 10,
     };
 
     localStorage.setItem("ai_formData", JSON.stringify(formData));
-    setIsLoading(true);
+    
+    if (isLoadMore) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
+
     try {
       const response = await getAiRecommendations(requestPayload);
-      const mapped = response.map((item, index) => ({
+      const mapped = response.items.map((item, index) => ({
         id: item.destinationID,
         destination: `${item.name}, ${item.cityProvince}`,
         distance: item.distance,
@@ -104,26 +120,46 @@ export function AIRecommendationPage() {
         confidence: 90 + (index % 10),
         weather: { temp: "28°C", condition: "Đẹp" },
         flightDuration: "Tùy vị trí",
-        matchScore: 98 - index,
+        matchScore: 98 - (isLoadMore ? realRecommendations.length + index : index),
         reasons: [item.matchReason],
         highlights: ["Khám phá địa phương", "Ẩm thực đặc sắc", "Văn hóa phong phú"],
         dailyCostBreakdown: item.dailyCostBreakdown,
         estimatedCostValue: item.estimatedCostVND
       }));
-      setRealRecommendations(mapped);
+
+      const newRecommendations = isLoadMore ? [...realRecommendations, ...mapped] : mapped;
+      
+      setRealRecommendations(newRecommendations);
+      setPage(response.page);
+      setTotalPages(response.totalPages);
       setShowResults(true);
-      localStorage.setItem("ai_recommendations", JSON.stringify(mapped));
+      
+      localStorage.setItem("ai_recommendations", JSON.stringify(newRecommendations));
       localStorage.setItem("ai_showResults", "true");
+      localStorage.setItem("ai_page", response.page.toString());
+      localStorage.setItem("ai_totalPages", response.totalPages.toString());
 
-      // Scroll to results
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 500);
-
+      if (!isLoadMore) {
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
+      }
     } catch (error) {
       console.error("Failed to get AI recommendations", error);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await fetchRecommendations(1, false);
+  };
+
+  const handleLoadMore = async () => {
+    if (page < totalPages) {
+      await fetchRecommendations(page + 1, true);
     }
   };
 
@@ -502,6 +538,22 @@ export function AIRecommendationPage() {
                 </motion.div>
               ))}
             </div>
+            
+            {page < totalPages && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="px-8 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold rounded-full shadow-lg transition-all disabled:opacity-70 flex items-center gap-2"
+                >
+                  {isLoadingMore ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>Tải Thêm Điểm Đến</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
