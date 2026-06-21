@@ -38,6 +38,7 @@ export interface TourGuideProfile {
   certUrl?: string;
   guideAvatarUrl?: string;
   isVerified: 'Pending' | 'Approved' | 'Rejected';
+  adminNote?: string | null;
   createdAt: string;
 }
 

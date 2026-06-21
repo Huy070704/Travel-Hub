@@ -21,10 +21,11 @@ export const getPendingGuides = async () => {
   return response.data;
 };
 
-export const approveGuide = async (profileId: number, approve: boolean) => {
+export const approveGuide = async (profileId: number, approve: boolean, note?: string) => {
   const response = await axiosInstance.post('/Admin/guides/approve', {
     profileID: profileId,
-    approve: approve
+    approve: approve,
+    note: note ?? null
   });
   return response.data;
 };
