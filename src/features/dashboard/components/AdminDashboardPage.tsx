@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
 import { getAllUsers, getPendingGuides, approveGuide } from "@/api/adminApi";
 import type { TourBooking } from "@/types/tours";
@@ -23,11 +24,13 @@ import {
   X,
   BadgeCheck,
   CheckCircle,
-  XCircle
+  XCircle,
+  FileSearch
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function AdminDashboardPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings" | "guides">("overview");
   
   // Tour bookings state
@@ -808,14 +811,14 @@ export function AdminDashboardPage() {
                                   </button>
                                   <button 
                                     onClick={() => handleApproveGuide(guide.profileID, true)}
-                                    className="p-2 hover:bg-green-50 text-green-600 rounded transition-all"
+                                    className="p-2 hover:bg-green-50 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 rounded transition-all"
                                     title="Phê duyệt"
                                   >
                                     <CheckCircle className="w-5 h-5" />
                                   </button>
                                   <button 
                                     onClick={() => handleApproveGuide(guide.profileID, false)}
-                                    className="p-2 hover:bg-red-50 text-red-600 rounded transition-all"
+                                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded transition-all"
                                     title="Từ chối"
                                   >
                                     <XCircle className="w-5 h-5" />
@@ -892,28 +895,28 @@ export function AdminDashboardPage() {
       {/* Guide Details Modal */}
       {isGuideModalOpen && selectedGuide && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-border bg-gray-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-border bg-gray-50 dark:bg-muted/30">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <BadgeCheck className="w-6 h-6 text-primary" />
                 Chi Tiết Hồ Sơ Hướng Dẫn Viên
               </h3>
-              <button onClick={() => setIsGuideModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+              <button onClick={() => setIsGuideModalOpen(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-muted rounded-full transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-5 overflow-y-auto flex-1">
               {/* User Identity Info */}
-              <div className="flex items-start gap-6 mb-8 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+              <div className="flex items-start gap-6 mb-1 bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-xl border border-blue-100 dark:border-blue-900/30">
                 <img 
                   src={selectedGuide.guideAvatarUrl || "https://ui-avatars.com/api/?name=" + selectedGuide.fullName} 
                   alt="Avatar" 
-                  className="w-24 h-24 rounded-xl object-cover border-4 border-white shadow-md"
+                  className="w-20 h-20 rounded-xl object-cover border-4 border-white dark:border-slate-800 shadow-md"
                 />
                 <div>
-                  <h4 className="text-2xl font-bold text-gray-900 mb-1">{selectedGuide.fullName}</h4>
-                  <p className="text-muted-foreground mb-4">{selectedGuide.email}</p>
-                  <p className="text-sm text-gray-700 max-w-2xl bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-foreground mb-1">{selectedGuide.fullName}</h4>
+                  <p className="text-sm text-muted-foreground mb-4">{selectedGuide.email}</p>
+                  <p className="text-xs text-gray-700 dark:text-slate-300 max-w-2xl bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm">
                     <span className="font-semibold block mb-1">Giới thiệu bản thân (Bio):</span>
                     {selectedGuide.bio || "Không có phần giới thiệu."}
                   </p>
@@ -921,23 +924,23 @@ export function AdminDashboardPage() {
               </div>
 
               {/* Professional Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">Thông tin chuyên môn</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+                <div className="text-l">
+                  <h4 className="font-semibold text-gray-900 dark:text-foreground mb-4 pb-2 border-b border-border">Thông tin chuyên môn</h4>
                   <ul className="space-y-3">
-                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                    <li className="flex justify-between border-b border-gray-50 dark:border-border/50 pb-2">
                       <span className="text-muted-foreground">Kinh nghiệm:</span>
                       <span className="font-medium">{selectedGuide.experience} năm</span>
                     </li>
-                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                    <li className="flex justify-between border-b border-gray-50 dark:border-border/50 pb-2">
                       <span className="text-muted-foreground">Ngôn ngữ hỗ trợ:</span>
                       <span className="font-medium text-right max-w-[200px]">{selectedGuide.languages}</span>
                     </li>
-                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                    <li className="flex justify-between border-b border-gray-50 dark:border-border/50 pb-2">
                       <span className="text-muted-foreground">Địa điểm hoạt động:</span>
                       <span className="font-medium text-right max-w-[200px]">{selectedGuide.locations}</span>
                     </li>
-                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                    <li className="flex justify-between border-b border-gray-50 dark:border-border/50 pb-2">
                       <span className="text-muted-foreground">Danh mục Tour:</span>
                       <span className="font-medium text-right max-w-[200px]">{selectedGuide.tourCategories}</span>
                     </li>
@@ -950,11 +953,11 @@ export function AdminDashboardPage() {
                 
                 {/* Documents / Images */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">Giấy tờ tùy thân & Chứng chỉ</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-foreground mb-4 pb-2 border-b border-border">Giấy tờ tùy thân & Chứng chỉ</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt trước)</span>
-                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <div className="aspect-video bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
                         {selectedGuide.idFrontUrl && selectedGuide.idFrontUrl.startsWith('http') ? (
                           <img src={selectedGuide.idFrontUrl} alt="Mặt trước CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
                         ) : (
@@ -964,7 +967,7 @@ export function AdminDashboardPage() {
                     </div>
                     <div className="space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt sau)</span>
-                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <div className="aspect-video bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
                         {selectedGuide.idBackUrl && selectedGuide.idBackUrl.startsWith('http') ? (
                           <img src={selectedGuide.idBackUrl} alt="Mặt sau CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
                         ) : (
@@ -974,7 +977,7 @@ export function AdminDashboardPage() {
                     </div>
                     <div className="col-span-2 space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">Chứng chỉ thẻ Hướng dẫn viên</span>
-                      <div className="h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <div className="h-32 bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
                         {selectedGuide.certUrl && selectedGuide.certUrl.startsWith('http') ? (
                           <img src={selectedGuide.certUrl} alt="Chứng chỉ" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
                         ) : (
@@ -988,10 +991,17 @@ export function AdminDashboardPage() {
             </div>
 
             {/* Actions Footer */}
-            <div className="p-6 border-t border-border bg-gray-50 flex justify-end gap-4">
-              <button 
+            <div className="p-6 border-t border-border bg-gray-50 dark:bg-muted/30 flex flex-col sm:flex-row sm:justify-end gap-4">
+              <button
+                onClick={() => navigate(`/admin/guides/${selectedGuide.profileID}`, { state: { guide: selectedGuide } })}
+                className="px-6 py-2.5 bg-muted text-foreground rounded-xl hover:bg-muted/70 font-semibold transition-colors flex items-center justify-center gap-2 sm:mr-auto"
+              >
+                <FileSearch className="w-5 h-5" />
+                Xem chi tiết
+              </button>
+              <button
                 onClick={() => handleApproveGuide(selectedGuide.profileID, false)}
-                className="px-6 py-2.5 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 font-semibold transition-colors flex items-center gap-2"
+                className="px-6 py-2.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 <XCircle className="w-5 h-5" />
                 Từ chối hồ sơ

@@ -1,6 +1,12 @@
 import api from './axiosInstance';
 
 export interface TourGuideRegistrationRequest {
+  fullName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
   experience?: string;
   languages?: string;
   locations?: string;
@@ -18,6 +24,10 @@ export interface TourGuideProfile {
   username: string;
   email: string;
   fullName: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
   experience?: string;
   languages?: string;
   locations?: string;

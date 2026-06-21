@@ -27,6 +27,12 @@ export function BecomeGuidePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TourGuideRegistrationRequest>({
+    fullName: "",
+    dateOfBirth: "",
+    gender: "",
+    phone: "",
+    email: "",
+    address: "",
     experience: "0-1",
     languages: "",
     locations: "",
@@ -182,15 +188,15 @@ export function BecomeGuidePage() {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Họ và tên</Label>
-                  <Input id="fullName" placeholder="Nguyễn Văn A" required />
+                  <Input id="fullName" placeholder="Nguyễn Văn A" required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dob">Ngày sinh</Label>
-                  <Input id="dob" type="date" max={todayISO()} required />
+                  <Input id="dob" type="date" max={todayISO()} required value={formData.dateOfBirth} onChange={e => setFormData({...formData, dateOfBirth: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Giới tính</Label>
-                  <Select>
+                  <Select value={formData.gender} onValueChange={(val) => setFormData({...formData, gender: val})}>
                     <SelectTrigger id="gender">
                       <SelectValue placeholder="Chọn giới tính" />
                     </SelectTrigger>
@@ -204,15 +210,15 @@ export function BecomeGuidePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Số điện thoại</Label>
-                  <Input id="phone" type="tel" placeholder="0987654321" required />
+                  <Input id="phone" type="tel" placeholder="0987654321" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="email">Địa chỉ Email</Label>
-                  <Input id="email" type="email" placeholder="nguyenvana@example.com" required />
+                  <Input id="email" type="email" placeholder="nguyenvana@example.com" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Địa chỉ đầy đủ</Label>
-                  <Input id="address" placeholder="123 Đường Lê Lợi, Quận 1, TP.HCM" required />
+                  <Input id="address" placeholder="123 Đường Lê Lợi, Quận 1, TP.HCM" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                 </div>
               </CardContent>
             </Card>
@@ -261,7 +267,7 @@ export function BecomeGuidePage() {
                 <div className="space-y-3 md:col-span-2">
                   <Label>Danh mục Tour</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {["Tour Thành Phố", "Tour Ẩm Thực", "Tour Văn Hóa", "Tour Lịch Sử", "Tour Thiên Nhiên", "Tour Khám Phá"].map((cat) => (
+                    {["Tour Thành Phố", "Tour Ẩm Thực", "Tour Văn Hóa", "Tour Lịch Sử", "Tour Thiên Nhiên", "Tour Khám Phá", "Khác"].map((cat) => (
                       <div key={cat} className="flex items-center space-x-2 bg-muted/40 dark:bg-muted/20 p-2 rounded-md border border-transparent hover:border-primary/30 transition-colors">
                         <Checkbox 
                            id={`cat-${cat}`} 
@@ -300,7 +306,7 @@ export function BecomeGuidePage() {
                   { id: 'id-front', label: 'Mặt Trước CMND/CCCD', icon: <FileText className="h-6 w-6" /> },
                   { id: 'id-back', label: 'Mặt Sau CMND/CCCD', icon: <FileText className="h-6 w-6" /> },
                   { id: 'cert', label: 'Chứng Chỉ Hướng Dẫn Viên', icon: <Briefcase className="h-6 w-6" /> },
-                  { id: 'photo', label: 'Ảnh Đại Diện', icon: <Camera className="h-6 w-6" /> },
+                  { id: 'photo', label: 'Hồ sơ CV', icon: <Briefcase className="h-6 w-6" /> },
                 ].map((doc) => (
                   <div key={doc.id} className="border-2 border-dashed border-muted-foreground/30 dark:border-muted-foreground/20 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-muted/40 dark:hover:bg-muted/10 transition-colors cursor-pointer group">
                     <div className="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:scale-110 transition-transform">
