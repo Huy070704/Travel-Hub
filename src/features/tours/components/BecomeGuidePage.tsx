@@ -9,14 +9,12 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "../../../components/ui/select";
+
 import { 
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator 
 } from "../../../components/ui/breadcrumb";
 import {
-  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera, Loader2
+  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera, Loader2, ChevronDown
 } from "lucide-react";
 import { todayISO } from "../../../utils/dateValidation";
 import { tourGuideApi, TourGuideRegistrationRequest } from "../../../api/tourGuideApi";
@@ -196,17 +194,21 @@ export function BecomeGuidePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Giới tính</Label>
-                  <Select value={formData.gender} onValueChange={(val) => setFormData({...formData, gender: val})}>
-                    <SelectTrigger id="gender">
-                      <SelectValue placeholder="Chọn giới tính" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Nam</SelectItem>
-                      <SelectItem value="female">Nữ</SelectItem>
-                      <SelectItem value="other">Khác</SelectItem>
-                      <SelectItem value="prefer-not-to-say">Không muốn tiết lộ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative group">
+                    <select
+                      id="gender"
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className={`flex h-10 w-full appearance-none items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 hover:border-primary/50 cursor-pointer ${!formData.gender ? "text-muted-foreground" : "text-foreground"}`}
+                    >
+                      <option value="" disabled hidden>Chọn giới tính</option>
+                      <option value="male" className="text-foreground">Nam</option>
+                      <option value="female" className="text-foreground">Nữ</option>
+                      <option value="other" className="text-foreground">Khác</option>
+                      <option value="prefer-not-to-say" className="text-foreground">Không muốn tiết lộ</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none group-hover:text-primary transition-colors" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Số điện thoại</Label>
@@ -234,17 +236,21 @@ export function BecomeGuidePage() {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="experience">Số năm kinh nghiệm</Label>
-                  <Select value={formData.experience} onValueChange={(val) => setFormData({...formData, experience: val})}>
-                    <SelectTrigger id="experience">
-                      <SelectValue placeholder="Chọn số năm" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0-1">0-1 năm (Người mới)</SelectItem>
-                      <SelectItem value="1-3">1-3 năm</SelectItem>
-                      <SelectItem value="3-5">3-5 năm</SelectItem>
-                      <SelectItem value="5+">5+ năm (Chuyên gia)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative group">
+                    <select
+                      id="experience"
+                      value={formData.experience}
+                      onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                      className={`flex h-10 w-full appearance-none items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 hover:border-primary/50 cursor-pointer ${!formData.experience ? "text-muted-foreground" : "text-foreground"}`}
+                    >
+                      <option value="" disabled hidden>Chọn số năm</option>
+                      <option value="0-1" className="text-foreground">0-1 năm (Người mới)</option>
+                      <option value="1-3" className="text-foreground">1-3 năm</option>
+                      <option value="3-5" className="text-foreground">3-5 năm</option>
+                      <option value="5+" className="text-foreground">5+ năm (Chuyên gia)</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none group-hover:text-primary transition-colors" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="languages">Ngôn ngữ sử dụng</Label>
