@@ -103,7 +103,7 @@ export function AIRecommendationPage() {
     };
 
     localStorage.setItem("ai_formData", JSON.stringify(formData));
-    
+
     if (isLoadMore) {
       setIsLoadingMore(true);
     } else {
@@ -130,12 +130,12 @@ export function AIRecommendationPage() {
       }));
 
       const newRecommendations = isLoadMore ? [...realRecommendations, ...mapped] : mapped;
-      
+
       setRealRecommendations(newRecommendations);
       setPage(response.page);
       setTotalPages(response.totalPages);
       setShowResults(true);
-      
+
       localStorage.setItem("ai_recommendations", JSON.stringify(newRecommendations));
       localStorage.setItem("ai_showResults", "true");
       localStorage.setItem("ai_page", response.page.toString());
@@ -156,6 +156,21 @@ export function AIRecommendationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const daysValue = Number(formData.days);
+
+    // Thực hiện validate logic số ngày
+    if (isNaN(daysValue) || daysValue < 1) {
+      alert("Số ngày du lịch phải lớn hơn 0!");
+      return;
+    }
+
+    if (daysValue > 7) {
+      alert("Chuyến đi tối đa do AI lên kế hoạch hiện tại là 7 ngày!");
+      return;
+    }
+
+    // Nếu hợp lệ thì mới gọi API lấy dữ liệu
     await fetchRecommendations(1, false);
   };
 
@@ -277,6 +292,8 @@ export function AIRecommendationPage() {
                   </div>
                   <input
                     type="number"
+                    min="1"
+                    max="7"
                     value={formData.days}
                     onChange={(e) => setFormData({ ...formData, days: e.target.value })}
                     placeholder="Số ngày"
@@ -565,7 +582,7 @@ export function AIRecommendationPage() {
                 </motion.div>
               ))}
             </div>
-            
+
             {page < totalPages && (
               <div className="flex justify-center mt-10">
                 <button

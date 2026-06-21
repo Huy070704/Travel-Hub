@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { approveGuide } from "@/api/adminApi";
 import {
@@ -23,11 +24,12 @@ export function GuideProfileDetailPage() {
   const params = useParams();
   // Guide data is passed via router state from the Admin dashboard list.
   const guide = (location.state as any)?.guide ?? null;
+  const [adminNote, setAdminNote] = useState("");
 
   const handleApproveGuide = async (isApproved: boolean) => {
     if (!guide) return;
     try {
-      await approveGuide(guide.profileID, isApproved);
+      await approveGuide(guide.profileID, isApproved, adminNote);
       alert(`Đã ${isApproved ? "phê duyệt" : "từ chối"} hướng dẫn viên thành công.`);
       navigate("/admin");
     } catch (error) {
@@ -68,7 +70,7 @@ export function GuideProfileDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 py-8">
-        
+
         {/* Top bar */}
         <button
           onClick={() => navigate("/admin")}
@@ -83,7 +85,7 @@ export function GuideProfileDetailPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Left Column (col-span-3) */}
           <div className="lg:col-span-3 flex flex-col gap-6">
             <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center">
@@ -94,11 +96,11 @@ export function GuideProfileDetailPage() {
               />
               <h2 className="text-lg font-bold text-center">{guide.fullName}</h2>
               <p className="text-sm text-muted-foreground mb-3">HDV-{guide.profileID?.toString().padStart(6, '0') || 'N/A'}</p>
-              
+
               <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 mb-6">
                 Đang chờ duyệt
               </span>
-              
+
               <div className="w-full space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-4 h-4 shrink-0" />
@@ -114,7 +116,7 @@ export function GuideProfileDetailPage() {
 
           {/* Middle Column (col-span-5) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            
+
             {/* Thông tin cá nhân */}
             <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
               <h3 className="text-lg font-bold mb-4">Thông tin cá nhân</h3>
@@ -175,9 +177,12 @@ export function GuideProfileDetailPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-muted-foreground">Ghi chú của Admin</label>
-                  <textarea 
-                    className="w-full p-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  <textarea
+                    className="w-full p-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground/50"
                     rows={3}
+                    placeholder="Ghi chú gửi tới ứng viên khi duyệt/từ chối (tuỳ chọn)..."
+                    value={adminNote}
+                    onChange={(e) => setAdminNote(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2 text-sm pt-2">
@@ -204,7 +209,7 @@ export function GuideProfileDetailPage() {
 
           {/* Right Column (col-span-4) */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            
+
             {/* Tài liệu đính kèm */}
             <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
               <h3 className="text-lg font-bold mb-4">Tài liệu đính kèm</h3>

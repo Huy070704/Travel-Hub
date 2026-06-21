@@ -14,14 +14,158 @@ import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator 
 } from "../../../components/ui/breadcrumb";
 import {
-  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera, Loader2, ChevronDown
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle
+} from "../../../components/ui/dialog";
+import {
+  CheckCircle, Clock, Wallet, Star, Users, Plane, FileText, Briefcase, Camera, Loader2, ChevronDown, XCircle, MessageSquareText
 } from "lucide-react";
 import { todayISO } from "../../../utils/dateValidation";
 import { tourGuideApi, TourGuideRegistrationRequest } from "../../../api/tourGuideApi";
 import { toast } from "sonner";
 
+// Trạng thái hồ sơ HDV: "idle" = chưa đăng ký, còn lại khớp với backend IsVerified
+type GuideStatus = "idle" | "Pending" | "Approved" | "Rejected";
+
+// Trạng thái hiển thị của từng bước trong timeline
+type StepState = "idle" | "active" | "loading" | "waiting" | "complete" | "rejected" | "disabled";
+
+const REGISTER_STEPS = [
+  { title: "Gửi Đăng Ký", desc: "Hoàn thành biểu mẫu này với thông tin của bạn." },
+  { title: "Xem Xét Xác Minh", desc: "Hệ thống tự động kiểm tra và chuyển hồ sơ vào hàng chờ của quản trị viên." },
+  { title: "Quản Trị Viên Phê Duyệt", desc: "Quản trị viên tiến hành đánh giá và đưa ra quyết định cuối cùng." },
+  { title: "Hướng Dẫn Viên Hoạt Động", desc: "Tài khoản được kích hoạt quyền HDV. Bắt đầu dẫn tour!" },
+];
+
+// Ánh xạ trạng thái hồ sơ -> trạng thái 4 bước trên timeline
+function getStepStates(status: GuideStatus, verifying: boolean): StepState[] {
+  switch (status) {
+    case "Approved":
+      // Admin bấm "Chấp nhận": tất cả bước xanh, tài khoản kích hoạt quyền HDV
+      return ["complete", "complete", "complete", "complete"];
+    case "Rejected":
+      // Admin bấm "Từ chối": bước 3 báo từ chối, bước 4 chuyển xám/disabled
+      return ["complete", "complete", "rejected", "disabled"];
+    case "Pending":
+      // Vừa gửi: bước 2 "xác minh" vài giây rồi xanh; sau đó bước 3 loading chờ admin duyệt
+      return verifying
+        ? ["complete", "loading", "idle", "idle"]
+        : ["complete", "complete", "waiting", "idle"];
+    default:
+      // Chưa gửi đăng ký
+      return ["active", "idle", "idle", "idle"];
+  }
+}
+
+function StepNode({ state, index }: { state: StepState; index: number }) {
+  const base =
+    "flex items-center justify-center w-8 h-8 rounded-full border-2 shrink-0 z-10 shadow-sm transition-colors";
+  switch (state) {
+    case "complete":
+      return <div className={`${base} border-green-500 bg-green-500 text-white`}><CheckCircle className="h-4 w-4" /></div>;
+    case "loading":
+      return <div className={`${base} border-yellow-500 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500`}><Clock className="h-4 w-4" /></div>;
+    case "waiting":
+      return <div className={`${base} border-yellow-500 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500`}><Clock className="h-4 w-4" /></div>;
+    case "rejected":
+      return <div className={`${base} border-red-500 bg-red-500 text-white`}><XCircle className="h-4 w-4" /></div>;
+    case "disabled":
+      return <div className={`${base} border-muted bg-muted/30 text-muted-foreground/40`}><span className="text-xs font-bold">{index + 1}</span></div>;
+    case "active":
+      return <div className={`${base} border-primary bg-background text-primary`}><span className="text-xs font-bold">{index + 1}</span></div>;
+    default:
+      return <div className={`${base} border-muted bg-background text-muted-foreground`}><span className="text-xs font-bold">{index + 1}</span></div>;
+  }
+}
+
+// Timeline động dùng chung cho sidebar và màn hình trạng thái
+function StatusTimeline({
+  status,
+  verifying,
+  onStep3Click,
+}: {
+  status: GuideStatus;
+  verifying: boolean;
+  onStep3Click?: () => void;
+}) {
+  const states = getStepStates(status, verifying);
+  return (
+    <div className="space-y-5 relative before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:-translate-x-1/2 before:bg-muted">
+      {REGISTER_STEPS.map((step, i) => {
+        const state = states[i];
+        // Bước 3 (index 2) click được để xem ghi chú của admin khi đã duyệt/từ chối
+        const clickable = i === 2 && !!onStep3Click && (state === "complete" || state === "rejected");
+        const cardClass =
+          state === "complete" ? "border-green-500/30 bg-green-500/5"
+          : (state === "loading" || state === "waiting") ? "border-yellow-500/40 bg-yellow-500/5"
+          : state === "rejected" ? "border-red-500/30 bg-red-500/5"
+          : state === "disabled" ? "border-transparent bg-muted/10 opacity-50"
+          : state === "active" ? "border-primary/30 bg-card"
+          : "border-transparent bg-muted/20";
+        const titleClass =
+          (state === "loading" || state === "waiting") ? "text-yellow-600 dark:text-yellow-500"
+          : state === "rejected" ? "text-red-600 dark:text-red-500"
+          : state === "disabled" ? "text-muted-foreground/50"
+          : state === "complete" || state === "active" ? "text-foreground"
+          : "text-muted-foreground";
+        const badge =
+          (state === "loading" || state === "waiting") ? "Đang xem xét"
+          : state === "rejected" ? "Bị từ chối"
+          : null;
+        return (
+          <div key={i} className="relative flex items-center gap-4">
+            <StepNode state={state} index={i} />
+            <div
+              className={`flex-1 p-3 rounded border shadow-sm transition-all ${cardClass} ${
+                clickable ? "cursor-pointer hover:shadow-md hover:border-primary/50" : ""
+              }`}
+              role={clickable ? "button" : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onClick={clickable ? onStep3Click : undefined}
+              onKeyDown={
+                clickable
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onStep3Click?.();
+                      }
+                    }
+                  : undefined
+              }
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h4 className={`font-semibold text-sm ${titleClass}`}>{step.title}</h4>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {badge && (
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                        (state === "loading" || state === "waiting")
+                          ? "bg-yellow-500/15 text-yellow-600 dark:text-yellow-500"
+                          : "bg-red-500/15 text-red-600 dark:text-red-500"
+                      }`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                  {clickable && <MessageSquareText className="h-4 w-4 text-primary" />}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
+              {clickable && (
+                <p className="text-[11px] font-medium text-primary mt-1.5">Xem ghi chú của Admin →</p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function BecomeGuidePage() {
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [status, setStatus] = useState<GuideStatus>("idle");
+  const [verifying, setVerifying] = useState(false);
+  const [adminNote, setAdminNote] = useState<string | null>(null);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TourGuideRegistrationRequest>({
@@ -42,11 +186,13 @@ export function BecomeGuidePage() {
     const checkStatus = async () => {
       try {
         const profile = await tourGuideApi.getMyProfile();
-        if (profile.isVerified === "Pending") {
-          setIsSubmitted(true);
+        // Khớp trực tiếp trạng thái backend: Pending / Approved / Rejected
+        if (profile?.isVerified) {
+          setStatus(profile.isVerified as GuideStatus);
         }
+        setAdminNote(profile?.adminNote ?? null);
       } catch (error) {
-        // Not found is fine
+        // Chưa có hồ sơ (404) -> giữ trạng thái "idle", hiển thị form
       } finally {
         setIsLoading(false);
       }
@@ -59,7 +205,11 @@ export function BecomeGuidePage() {
     setIsSubmitting(true);
     try {
       await tourGuideApi.registerAsGuide(formData);
-      setIsSubmitted(true);
+      // Hệ thống xác nhận: bước 1 hoàn tất. Bước 2 "xác minh" vài giây rồi xanh,
+      // sau đó bước 3 chuyển sang "đang xem xét" chờ admin duyệt.
+      setStatus("Pending");
+      setVerifying(true);
+      window.setTimeout(() => setVerifying(false), 15 * 60 * 1000); // 15 minutes
       toast.success("Đăng ký thành công! Đang chờ duyệt.");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Có lỗi xảy ra khi đăng ký.");
@@ -70,42 +220,6 @@ export function BecomeGuidePage() {
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl min-h-[80vh] flex flex-col items-center justify-center">
-        <Card className="w-full text-center border-primary/20 shadow-lg animate-in fade-in zoom-in duration-300">
-          <CardHeader className="pb-4">
-            <div className="flex justify-center mb-4">
-              <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-10 w-10 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl sm:text-3xl">Gửi Đăng Ký Thành Công</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Đơn đăng ký của bạn đã được tiếp nhận và hiện đang được xem xét. Chúng tôi sẽ thông báo cho bạn sau khi quá trình xác minh hoàn tất.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-8 text-sm">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Thời gian xem xét dự kiến: <strong className="text-foreground">2–5 ngày làm việc</strong></span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsSubmitted(false)}>
-              Xem Trạng Thái Đăng Ký
-            </Button>
-            <Button asChild className="w-full sm:w-auto">
-              <Link to="/">Quay Về Trang Chủ</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
   }
 
   return (
@@ -376,57 +490,11 @@ export function BecomeGuidePage() {
         <div className="hidden lg:block lg:col-span-4 sticky top-24 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Hướng Dẫn Trạng Thái Đăng Ký</CardTitle>
+              <CardTitle>Trạng Thái Đăng Ký</CardTitle>
               <CardDescription>Điều gì xảy ra sau khi bạn đăng ký?</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[13px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
-                
-                {/* Step 1 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary bg-background text-primary shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-                    <span className="text-xs font-bold">1</span>
-                  </div>
-                  <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.25rem)] p-4 rounded border bg-card shadow-sm ml-4 md:ml-0">
-                    <h4 className="font-semibold text-sm">Gửi Đăng Ký</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Hoàn thành biểu mẫu này với thông tin của bạn.</p>
-                  </div>
-                </div>
-
-                {/* Step 2 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-muted bg-background text-muted-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <span className="text-xs font-bold">2</span>
-                  </div>
-                  <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.25rem)] p-4 rounded border bg-muted/20 ml-4 md:ml-0">
-                    <h4 className="font-semibold text-sm text-muted-foreground">Xem Xét Xác Minh</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Chúng tôi xem xét tài liệu của bạn.</p>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-muted bg-background text-muted-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <span className="text-xs font-bold">3</span>
-                  </div>
-                  <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.25rem)] p-4 rounded border bg-muted/20 ml-4 md:ml-0">
-                    <h4 className="font-semibold text-sm text-muted-foreground">Quản Trị Viên Phê Duyệt</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Nhóm của chúng tôi tiến hành đánh giá cuối cùng.</p>
-                  </div>
-                </div>
-
-                {/* Step 4 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-muted bg-background text-muted-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <span className="text-xs font-bold">4</span>
-                  </div>
-                  <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.25rem)] p-4 rounded border bg-muted/20 ml-4 md:ml-0">
-                    <h4 className="font-semibold text-sm text-muted-foreground">Hướng Dẫn Viên Hoạt Động</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Bắt đầu dẫn tour!</p>
-                  </div>
-                </div>
-
-              </div>
+              <StatusTimeline status={status} verifying={verifying} onStep3Click={() => setNoteOpen(true)} />
             </CardContent>
             <CardFooter className="bg-muted/50 border-t mt-4">
               <div className="flex items-center gap-2 pt-4 pb-2 w-full justify-center text-sm">
@@ -437,6 +505,25 @@ export function BecomeGuidePage() {
           </Card>
         </div>
       </div>
+
+      {/* Modal hiển thị ghi chú của Admin khi click vào bước 3 (đã duyệt/từ chối) */}
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquareText className="h-5 w-5 text-primary" />
+              Ghi chú của Admin
+            </DialogTitle>
+            <DialogDescription asChild>
+              {adminNote && adminNote.trim() ? (
+                <p className="text-foreground whitespace-pre-line pt-2 text-sm leading-relaxed">{adminNote}</p>
+              ) : (
+                <p className="italic pt-2 text-sm">Người phê duyệt đã không note gì thêm.</p>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
