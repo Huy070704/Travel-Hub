@@ -15,10 +15,11 @@ import {
   Loader2,
   X,
   FileText,
-  Trash2
+  Trash2,
+  Flag
 } from "lucide-react";
 import { toast } from "sonner";
-import { getPosts, createPost, deletePost, toggleLike, getComments, addComment } from "@/api/feedApi";
+import { getPosts, createPost, deletePost, toggleLike, getComments, addComment, reportPost } from "@/api/feedApi";
 import { todayISO, isTodayOrFuture, isAfter } from "@/utils/dateValidation";
 import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
@@ -76,6 +77,11 @@ export function CommunityFeedPage() {
   // Share state
   const [shareModalPostId, setShareModalPostId] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+
+  // Report state
+  const [reportModalPostId, setReportModalPostId] = useState<number | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [isReporting, setIsReporting] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -501,7 +507,7 @@ export function CommunityFeedPage() {
                       </div>
                     </div>
                     {/* Delete button - only visible to the post's author */}
-                    {post.userID === userProfile?.userID && (
+                    {post.userID === userProfile?.userID ? (
                       <button
                         onClick={() => handleDeletePost(post.postID)}
                         disabled={isDeleting[post.postID]}
@@ -510,6 +516,14 @@ export function CommunityFeedPage() {
                         className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-full transition-all disabled:opacity-50"
                       >
                         {isDeleting[post.postID] ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setReportModalPostId(post.postID)}
+                        title="Báo cáo bài viết"
+                        className="p-2 text-muted-foreground hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all"
+                      >
+                        <Flag className="w-5 h-5" />
                       </button>
                     )}
                   </div>
@@ -747,12 +761,14 @@ export function CommunityFeedPage() {
                       </Link>
                       <div className="text-xs text-muted-foreground">{buddy.matchScore}% Phù hợp</div>
                     </div>
-                    <Link 
-                      to={`/chat/${buddy.userID}`}
-                      className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all font-semibold"
-                    >
-                      Kết nối
-                    </Link>
+                    {buddy.userID !== userProfile?.userID && (
+                      <Link 
+                        to={`/chat/${buddy.userID}`}
+                        className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all font-semibold"
+                      >
+                        Kết nối
+                      </Link>
+                    )}
                   </div>
                 )) : (
                   <div className="text-sm text-muted-foreground">Chưa tìm thấy gợi ý nào. Cập nhật hồ sơ của bạn để nhận gợi ý!</div>
@@ -807,6 +823,70 @@ export function CommunityFeedPage() {
                   Chưa có bạn bè nào để chia sẻ. Hãy kết nối thêm!
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {reportModalPostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-border flex justify-between items-center">
+              <h2 className="font-bold text-lg text-red-500 flex items-center gap-2"><Flag className="w-5 h-5" /> Báo cáo bài viết</h2>
+              <button 
+                onClick={() => { setReportModalPostId(null); setReportReason(""); }}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-muted-foreground mb-4">Vui lòng chọn lý do báo cáo bài viết này:</p>
+              <select 
+                value={reportReason} 
+                onChange={e => setReportReason(e.target.value)}
+                className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-red-500 outline-none mb-6"
+              >
+                <option value="">-- Chọn lý do --</option>
+                <option value="Spam hoặc quảng cáo trái phép">Spam hoặc quảng cáo trái phép</option>
+                <option value="Nội dung phản cảm, không phù hợp">Nội dung phản cảm, không phù hợp</option>
+                <option value="Thông tin sai lệch hoặc lừa đảo">Thông tin sai lệch hoặc lừa đảo</option>
+                <option value="Vi phạm bản quyền hoặc quyền riêng tư">Vi phạm bản quyền hoặc quyền riêng tư</option>
+                <option value="Khác">Lý do khác...</option>
+              </select>
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => { setReportModalPostId(null); setReportReason(""); }}
+                  className="px-4 py-2 bg-muted text-foreground rounded-xl font-semibold hover:bg-muted/80 transition-all"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (!reportReason) {
+                      toast.error("Vui lòng chọn một lý do!");
+                      return;
+                    }
+                    setIsReporting(true);
+                    try {
+                      await reportPost(reportModalPostId, reportReason);
+                      toast.success("Đã gửi báo cáo thành công. Cảm ơn bạn!");
+                      setReportModalPostId(null);
+                      setReportReason("");
+                    } catch (error: any) {
+                      toast.error(error?.response?.data || "Có lỗi xảy ra, vui lòng thử lại.");
+                    } finally {
+                      setIsReporting(false);
+                    }
+                  }}
+                  disabled={isReporting || !reportReason}
+                  className="px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isReporting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Gửi báo cáo
+                </button>
+              </div>
             </div>
           </div>
         </div>

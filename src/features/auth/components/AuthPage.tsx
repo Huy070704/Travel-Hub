@@ -96,6 +96,17 @@ export function AuthPage() {
     setIsLoading(true);
     resetMessages();
 
+    if (!/[A-Z]/.test(formData.password)) {
+      setErrorMsg("Mật khẩu phải có ít nhất 1 chữ hoa.");
+      setIsLoading(false);
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      setErrorMsg("Mật khẩu phải có ít nhất 1 ký tự đặc biệt.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await registerRequest({
         username: formData.username,
@@ -107,7 +118,10 @@ export function AuthPage() {
       setMode("login");
     } catch (error: any) {
       console.error("Register failed:", error);
-      setErrorMsg(getErrorMessage(error, "Không thể đăng ký tài khoản."));
+      let msg = getErrorMessage(error, "Không thể đăng ký tài khoản.");
+      if (msg === "Username already exists.") msg = "Tên người dùng đã tồn tại.";
+      if (msg === "Email already exists.") msg = "Email đã được sử dụng.";
+      setErrorMsg(msg);
     } finally {
       setIsLoading(false);
     }

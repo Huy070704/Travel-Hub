@@ -29,3 +29,13 @@ export const approveGuide = async (profileId: number, approve: boolean, note?: s
   });
   return response.data;
 };
+
+export const getReports = async () => {
+  const response = await axiosInstance.get('/Admin/reports');
+  return response.data;
+};
+
+export const updateReportStatus = async (reportId: number, status: 'Resolved' | 'Rejected') => {
+  const response = await axiosInstance.put(`/Admin/reports/${reportId}/status`, { status });
+  return response.data;
+};

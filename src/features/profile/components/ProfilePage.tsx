@@ -26,6 +26,7 @@ import type { TourBooking } from "@/types/tours";
 import { getPendingRequests, respondToBuddyRequest } from "@/api/buddiesApi";
 import type { BuddyDto } from "@/types/buddies";
 import defaultAvatar from "@/assets/default-avatar.png";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getAvatar = (id: number) => {
   return defaultAvatar;
@@ -64,7 +65,8 @@ export function ProfilePage() {
   const [isProcessingRequest, setIsProcessingRequest] = useState(false);
 
   const { userId } = useParams();
-  const isMyProfile = !userId;
+  const { user: currentUser } = useAuth();
+  const isMyProfile = !userId || Number(userId) === currentUser?.userID;
 
   useEffect(() => {
     const fetchData = async () => {

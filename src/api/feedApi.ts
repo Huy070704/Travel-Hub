@@ -40,3 +40,8 @@ export async function addComment(postId: number, data: CreateCommentRequest) {
   const response = await axiosInstance.post<{ message: string, commentID: number }>(`/Feed/posts/${postId}/comments`, data);
   return response.data;
 }
+
+export async function reportPost(postId: number, reason: string) {
+  const response = await axiosInstance.post<{ message: string }>(`/Feed/posts/${postId}/report`, { reason });
+  return response.data;
+}
