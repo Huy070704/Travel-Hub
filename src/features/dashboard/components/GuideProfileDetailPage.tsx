@@ -10,6 +10,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const GENDER_LABELS: Record<string, string> = {
   male: "Nam",
@@ -30,11 +31,11 @@ export function GuideProfileDetailPage() {
     if (!guide) return;
     try {
       await approveGuide(guide.profileID, isApproved, adminNote);
-      alert(`Đã ${isApproved ? "phê duyệt" : "từ chối"} hướng dẫn viên thành công.`);
+      toast.success(`Đã ${isApproved ? "phê duyệt" : "từ chối"} hướng dẫn viên thành công.`);
       navigate("/admin");
     } catch (error) {
       console.error("Failed to approve guide", error);
-      alert("Có lỗi xảy ra khi duyệt hướng dẫn viên.");
+      toast.error("Có lỗi xảy ra khi duyệt hướng dẫn viên.");
     }
   };
 

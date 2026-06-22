@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, UploadCloud, MapPin, Check, Image as ImageIcon, Save, Send, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTour } from "@/api/toursApi";
+import { toast } from "sonner";
 
 interface CreateExperienceModalProps {
   onClose: () => void;
@@ -43,7 +44,7 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
       setIsSubmitting(true);
       // Validate Basic Requirements
       if (!formData.title || !formData.destination || !formData.departureLocation || !formData.departureDate) {
-        alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+        toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc!");
         setIsSubmitting(false);
         return;
       }
@@ -60,11 +61,11 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
         imageUrl: imageUrls.join(','),
         departureDate: new Date(formData.departureDate).toISOString()
       });
-      alert("Tạo Tour thành công!");
+      toast.success("Tạo Tour thành công!");
       onCreated();
     } catch (error: any) {
       console.error(error);
-      alert("Lỗi: " + (error.response?.data?.message || error.message || "Có lỗi xảy ra khi tạo tour!"));
+      toast.error("Lỗi: " + (error.response?.data?.message || error.message || "Có lỗi xảy ra khi tạo tour!"));
     } finally {
       setIsSubmitting(false);
     }

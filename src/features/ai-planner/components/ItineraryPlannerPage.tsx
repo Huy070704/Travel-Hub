@@ -24,6 +24,7 @@ import {
   Share2,
   Users
 } from "lucide-react";
+import { toast } from "sonner";
 import { generateAiItinerary } from "../../../api/aiApi";
 import { getDestinationDetails } from "@/api/destinationsApi";
 import type { AiGenerateItineraryResponse, AiActivity } from "../../../types/ai";
@@ -138,10 +139,10 @@ export function ItineraryPlannerPage() {
       });
 
       setSavedItineraryId(response.itineraryID);
-      alert("Đã lưu lịch trình thành công!");
+      toast.success("Đã lưu lịch trình thành công!");
     } catch (error) {
       console.error("Failed to save itinerary", error);
-      alert("Có lỗi xảy ra khi lưu lịch trình.");
+      toast.error("Có lỗi xảy ra khi lưu lịch trình.");
     } finally {
       setIsSaving(false);
     }

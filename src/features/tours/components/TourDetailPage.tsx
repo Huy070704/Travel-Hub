@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
+import { toast } from "sonner";
 
 export function TourDetailPage() {
   const { id } = useParams();
@@ -46,7 +47,7 @@ export function TourDetailPage() {
 
   const handleBookTour = async () => {
     if (!isAuthenticated) {
-      alert("Vui lòng đăng nhập để đặt tour.");
+      toast.error("Vui lòng đăng nhập để đặt tour.");
       navigate("/auth");
       return;
     }
@@ -86,7 +87,7 @@ export function TourDetailPage() {
       }
     } catch (error) {
       console.error("Lỗi đặt tour:", error);
-      alert("Có lỗi xảy ra, vui lòng thử lại.");
+      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
       setIsBooking(false);
     }

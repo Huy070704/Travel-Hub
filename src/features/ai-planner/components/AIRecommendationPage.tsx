@@ -22,6 +22,7 @@ import {
   Search,
   ChevronDown
 } from "lucide-react";
+import { toast } from "sonner";
 import { getAiRecommendations } from "../../../api/aiApi";
 import type { AiRecommendRequest } from "../../../types/ai";
 
@@ -161,12 +162,12 @@ export function AIRecommendationPage() {
 
     // Thực hiện validate logic số ngày
     if (isNaN(daysValue) || daysValue < 1) {
-      alert("Số ngày du lịch phải lớn hơn 0!");
+      toast.error("Số ngày du lịch phải lớn hơn 0!");
       return;
     }
 
     if (daysValue > 7) {
-      alert("Chuyến đi tối đa do AI lên kế hoạch hiện tại là 7 ngày!");
+      toast.error("Chuyến đi tối đa do AI lên kế hoạch hiện tại là 7 ngày!");
       return;
     }
 

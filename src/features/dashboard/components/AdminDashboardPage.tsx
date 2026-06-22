@@ -27,6 +27,7 @@ import {
   XCircle,
   FileSearch
 } from "lucide-react";
+import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function AdminDashboardPage() {
@@ -107,12 +108,12 @@ export function AdminDashboardPage() {
   const handleApproveGuide = async (profileId: number, isApproved: boolean) => {
     try {
       await approveGuide(profileId, isApproved);
-      alert(`Đã ${isApproved ? 'phê duyệt' : 'từ chối'} hướng dẫn viên thành công.`);
+      toast.success(`Đã ${isApproved ? 'phê duyệt' : 'từ chối'} hướng dẫn viên thành công.`);
       setIsGuideModalOpen(false);
       fetchPendingGuides(); // Reload list
     } catch (error) {
       console.error("Failed to approve guide", error);
-      alert("Có lỗi xảy ra khi duyệt hướng dẫn viên.");
+      toast.error("Có lỗi xảy ra khi duyệt hướng dẫn viên.");
     }
   };
 
@@ -125,7 +126,7 @@ export function AdminDashboardPage() {
       fetchBookings();
     } catch (error) {
       console.error("Failed to update status", error);
-      alert("Cập nhật trạng thái thất bại");
+      toast.error("Cập nhật trạng thái thất bại");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -146,11 +147,11 @@ export function AdminDashboardPage() {
   const handleUpdateReport = async (reportId: number, status: 'Resolved' | 'Rejected') => {
     try {
       await updateReportStatus(reportId, status);
-      alert(`Đã ${status === 'Resolved' ? 'duyệt (ẩn bài viết)' : 'từ chối'} báo cáo thành công.`);
+      toast.success(`Đã ${status === 'Resolved' ? 'duyệt (ẩn bài viết)' : 'từ chối'} báo cáo thành công.`);
       fetchReportsData(); // Refresh list
     } catch (error) {
       console.error("Failed to update report", error);
-      alert("Có lỗi xảy ra khi xử lý báo cáo.");
+      toast.error("Có lỗi xảy ra khi xử lý báo cáo.");
     }
   };
 

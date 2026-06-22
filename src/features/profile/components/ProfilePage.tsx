@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 import { getMyProfile, updateMyProfile, getDashboardStats, getPublicProfile } from "@/api/usersApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getUserTourBookings } from "@/api/toursApi";
@@ -141,7 +142,7 @@ export function ProfilePage() {
       }
     } catch (error) {
       console.error("Failed to respond to request", error);
-      alert("Lỗi khi xử lý yêu cầu.");
+      toast.error("Lỗi khi xử lý yêu cầu.");
     } finally {
       setIsProcessingRequest(false);
     }

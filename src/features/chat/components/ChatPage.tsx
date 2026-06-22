@@ -25,6 +25,7 @@ import { signalrService } from "@/api/signalrService";
 import { getMyProfile, getPublicProfile } from "@/api/usersApi";
 import type { ConversationDto, MessageDto } from "@/types/chat";
 import type { UserProfileDto, PublicUserProfileDto } from "@/types/users";
+import { toast } from "sonner";
 
 const getAvatar = (id: number) => {
   const avatars = [
@@ -213,7 +214,7 @@ export function ChatPage() {
       }
 
       if (!targetReceiverId && !currentChatId) {
-        alert("Lỗi: Không xác định được người nhận tin nhắn.");
+        toast.error("Lỗi: Không xác định được người nhận tin nhắn.");
         return;
       }
     }
@@ -238,7 +239,7 @@ export function ChatPage() {
     setIsCreatingGroup(true);
     try {
       const res = await createGroupChat(newGroupName);
-      alert("Tạo nhóm thành công!");
+      toast.success("Tạo nhóm thành công!");
       setShowCreateGroupModal(false);
       setNewGroupName("");
       const convos = await getConversations();
@@ -246,7 +247,7 @@ export function ChatPage() {
       setCurrentChatId(res.chatID);
     } catch (error) {
       console.error("Failed to create group", error);
-      alert("Có lỗi xảy ra khi tạo nhóm.");
+      toast.error("Có lỗi xảy ra khi tạo nhóm.");
     } finally {
       setIsCreatingGroup(false);
     }
@@ -254,18 +255,28 @@ export function ChatPage() {
 
   const handleDeleteGroup = async () => {
     if (!currentChatId || !currentConversationInfo?.isGroupChat) return;
-    if (!confirm("Bạn có chắc chắn muốn giải tán nhóm này không? Mọi tin nhắn sẽ bị xóa vĩnh viễn.")) return;
 
-    try {
-      await deleteGroupChat(currentChatId);
-      alert("Đã giải tán nhóm thành công.");
-      setCurrentChatId(null);
-      const convos = await getConversations();
-      setConversations(convos);
-    } catch (error) {
-      console.error("Failed to delete group", error);
-      alert("Có lỗi xảy ra khi giải tán nhóm.");
-    }
+    toast("Xác nhận giải tán nhóm", {
+      description: "Bạn có chắc chắn muốn giải tán nhóm này không? Mọi tin nhắn sẽ bị xóa vĩnh viễn.",
+      action: {
+        label: "Giải tán",
+        onClick: async () => {
+          try {
+            await deleteGroupChat(currentChatId);
+            toast.success("Đã giải tán nhóm thành công.");
+            setCurrentChatId(null);
+            const convos = await getConversations();
+            setConversations(convos);
+          } catch (error) {
+            console.error("Failed to delete group", error);
+            toast.error("Có lỗi xảy ra khi giải tán nhóm.");
+          }
+        }
+      },
+      cancel: {
+        label: "Hủy"
+      }
+    });
   };
 
   const handleOpenAddMember = async () => {
@@ -275,7 +286,7 @@ export function ChatPage() {
       setShowAddMemberModal(true);
     } catch (error) {
       console.error("Failed to load buddies", error);
-      alert("Không thể tải danh sách bạn bè.");
+      toast.error("Không thể tải danh sách bạn bè.");
     }
   };
 
@@ -284,30 +295,40 @@ export function ChatPage() {
     setIsAddingMember(true);
     try {
       await addParticipantToGroup(currentChatId, userId);
-      alert("Đã thêm thành viên vào nhóm!");
+      toast.success("Đã thêm thành viên vào nhóm!");
       setShowAddMemberModal(false);
       // Giả sử backend trả về event hoặc ta fetch lại chat để cập nhật số thành viên
       const convos = await getConversations();
       setConversations(convos);
     } catch (error: any) {
       console.error("Failed to add member", error);
-      alert(error.response?.data || "Có lỗi xảy ra khi thêm thành viên.");
+      toast.error(error.response?.data || "Có lỗi xảy ra khi thêm thành viên.");
     } finally {
       setIsAddingMember(false);
     }
   };
 
   const handleDeleteMessage = async (messageId: number) => {
-    if (!confirm("Bạn có chắc muốn xóa tin nhắn này?")) return;
-
-    try {
-      await deleteMessage(messageId);
-      // Xóa tin nhắn khỏi state
-      setMessages(prev => prev.filter(m => m.messageID !== messageId));
-    } catch (error) {
-      console.error("Failed to delete message", error);
-      alert("Có lỗi xảy ra khi xóa tin nhắn.");
-    }
+    toast("Xác nhận xóa", {
+      description: "Bạn có chắc muốn xóa tin nhắn này?",
+      action: {
+        label: "Xóa",
+        onClick: async () => {
+          try {
+            await deleteMessage(messageId);
+            // Xóa tin nhắn khỏi state
+            setMessages(prev => prev.filter(m => m.messageID !== messageId));
+            toast.success("Đã xóa tin nhắn.");
+          } catch (error) {
+            console.error("Failed to delete message", error);
+            toast.error("Có lỗi xảy ra khi xóa tin nhắn.");
+          }
+        }
+      },
+      cancel: {
+        label: "Hủy"
+      }
+    });
   };
 
   if (isLoading) {
