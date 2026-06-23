@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAiRecommendations } from "../../../api/aiApi";
+import { Coins } from 'lucide-react';
 import type { AiRecommendRequest } from "../../../types/ai";
 
 type PlannerFormData = {
@@ -272,7 +273,7 @@ export function AIRecommendationPage() {
                 {/* Budget */}
                 <div className="flex-[0.8] w-full relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                    <DollarSign className="w-5 h-5" />
+                    <Coins className="w-5 h-5" />
                   </div>
                   <input
                     type="number"
