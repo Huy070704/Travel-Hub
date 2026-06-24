@@ -41,10 +41,10 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // Xử lý các lỗi phổ biến (ví dụ 401 Unauthorized)
       if (error.response.status === 401) {
-        // Tùy chọn: Xóa token và điều hướng về trang đăng nhập
+        // Xóa token và điều hướng về trang đăng nhập
         console.error('Unauthorized, please login again.');
-        // localStorage.removeItem('token');
-        // window.location.href = '/login';
+        localStorage.removeItem('token');
+        window.location.href = '/auth';
       }
     }
     return Promise.reject(error);

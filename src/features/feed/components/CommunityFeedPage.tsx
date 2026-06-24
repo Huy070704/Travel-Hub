@@ -16,7 +16,8 @@ import {
   X,
   FileText,
   Trash2,
-  Flag
+  Flag,
+  Lock
 } from "lucide-react";
 import { toast } from "sonner";
 import { getPosts, createPost, deletePost, toggleLike, getComments, addComment, reportPost } from "@/api/feedApi";
@@ -25,6 +26,8 @@ import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getMyProfile } from "@/api/usersApi";
 import { sendDirectMessage } from "@/api/chatApi";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router";
 import type { PostDto, CommentDto } from "@/types/feed";
 import type { BuddyRecommendationDto } from "@/types/buddies";
 import type { DestinationDto } from "@/types/destinations";
@@ -46,6 +49,8 @@ const getAvatar = (id: number) => {
 };
 
 export function CommunityFeedPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<PostDto[]>([]);
   const [buddies, setBuddies] = useState<BuddyRecommendationDto[]>([]);
   const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
@@ -122,6 +127,11 @@ export function CommunityFeedPage() {
   }, []);
 
   const handleCreatePost = async () => {
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
+
     let created = false;
 
     if (isBuddyPostMode) {
@@ -257,6 +267,10 @@ export function CommunityFeedPage() {
   };
 
   const handleJoinBuddyRequest = async (postId: number, receiverId: number) => {
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
     if (isJoining[postId]) return;
     setIsJoining(prev => ({ ...prev, [postId]: true }));
     try {
@@ -275,6 +289,10 @@ export function CommunityFeedPage() {
   };
 
   const handleLike = async (postId: number) => {
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
     // Optimistic UI update
     const originalPosts = [...posts];
     setPosts(posts.map(p => {
@@ -315,6 +333,10 @@ export function CommunityFeedPage() {
   };
 
   const handleAddComment = async (postId: number) => {
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
     const content = commentInputs[postId];
     if (!content?.trim()) return;
 
@@ -430,8 +452,8 @@ export function CommunityFeedPage() {
                       </div>
                       <div className="flex justify-end gap-2 mt-2">
                         <button onClick={() => setIsBuddyPostMode(false)} className="px-4 py-2 bg-white border border-border rounded-lg text-sm font-semibold hover:bg-muted transition-all">Hủy</button>
-                        <button onClick={handleCreatePost} disabled={isPosting || !buddyPostData.destination.trim()} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all flex items-center gap-2">
-                          {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Đăng bài
+                        <button onClick={handleCreatePost} disabled={isPosting || (!user?.isPremium ? false : !buddyPostData.destination.trim())} className={`px-4 py-2 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"} text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-all flex items-center gap-2`}>
+                          {!user?.isPremium ? <Lock className="w-4 h-4" /> : (isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />)} Đăng bài
                         </button>
                       </div>
                     </div>
@@ -448,10 +470,10 @@ export function CommunityFeedPage() {
                       />
                       <button 
                         onClick={handleCreatePost}
-                        disabled={isPosting || !newPostContent.trim()}
-                        className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all"
+                        disabled={isPosting || (!user?.isPremium ? false : !newPostContent.trim())}
+                        className={`p-3 text-white rounded-xl disabled:opacity-50 transition-all ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
                       >
-                        {isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                        {!user?.isPremium ? <Lock className="w-5 h-5" /> : (isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />)}
                       </button>
                     </div>
                   )}
@@ -566,9 +588,9 @@ export function CommunityFeedPage() {
                                   <button 
                                     onClick={() => handleJoinBuddyRequest(post.postID, post.userID)}
                                     disabled={isJoining[post.postID]}
-                                    className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className={`flex-1 py-2 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
                                   >
-                                    {isJoining[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} Xin tham gia
+                                    {!user?.isPremium ? <Lock className="w-4 h-4" /> : (isJoining[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />)} Xin tham gia
                                   </button>
                                   <Link
                                     to={`/chat/${post.userID}`}
@@ -610,9 +632,9 @@ export function CommunityFeedPage() {
                     <div className="flex items-center gap-6">
                       <button 
                         onClick={() => handleLike(post.postID)}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-all"
+                        className={`flex items-center gap-2 transition-all ${!user?.isPremium ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-red-500"}`}
                       >
-                        <Heart className={`w-5 h-5 ${post.isLikedByCurrentUser ? "fill-red-500 text-red-500" : ""}`} />
+                        {!user?.isPremium ? <Lock className="w-4 h-4" /> : <Heart className={`w-5 h-5 ${post.isLikedByCurrentUser ? "fill-red-500 text-red-500" : ""}`} />}
                         <span className="text-sm font-semibold">{post.likesCount}</span>
                       </button>
                       <button 
@@ -693,10 +715,10 @@ export function CommunityFeedPage() {
                         />
                         <button 
                           onClick={() => handleAddComment(post.postID)}
-                          disabled={isSubmittingComment[post.postID] || !(commentInputs[post.postID]?.trim())}
-                          className="p-2 text-primary hover:bg-primary/10 rounded-full disabled:opacity-50 transition-all"
+                          disabled={isSubmittingComment[post.postID] || (!user?.isPremium ? false : !(commentInputs[post.postID]?.trim()))}
+                          className={`p-2 rounded-full disabled:opacity-50 transition-all ${!user?.isPremium ? "text-amber-500 hover:bg-amber-100" : "text-primary hover:bg-primary/10"}`}
                         >
-                          {isSubmittingComment[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                          {!user?.isPremium ? <Lock className="w-4 h-4" /> : (isSubmittingComment[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />)}
                         </button>
                       </div>
                     </div>

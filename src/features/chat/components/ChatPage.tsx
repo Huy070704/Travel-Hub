@@ -16,7 +16,8 @@ import {
   Users,
   Plus,
   Trash2,
-  UserPlus
+  UserPlus,
+  Lock
 } from "lucide-react";
 import { getConversations, getMessages, createGroupChat, deleteGroupChat, deleteMessage, addParticipantToGroup } from "@/api/chatApi";
 import { getAcceptedBuddies } from "@/api/buddiesApi";
@@ -26,6 +27,8 @@ import { getMyProfile, getPublicProfile } from "@/api/usersApi";
 import type { ConversationDto, MessageDto } from "@/types/chat";
 import type { UserProfileDto, PublicUserProfileDto } from "@/types/users";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router";
 
 const getAvatar = (id: number) => {
   const avatars = [
@@ -62,6 +65,8 @@ const renderMessageWithLinks = (text: string) => {
 };
 
 export function ChatPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { userId } = useParams();
   const receiverIdFromUrl = userId ? Number(userId) : null;
 
@@ -196,6 +201,10 @@ export function ChatPage() {
   // 4. Send Message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
     if (!messageInput.trim() || !myProfile) return;
 
     const currentConversationInfo = conversations.find(c => c.chatID === currentChatId);
@@ -235,6 +244,10 @@ export function ChatPage() {
   };
 
   const handleCreateGroup = async () => {
+    if (!user?.isPremium) {
+      navigate("/premium");
+      return;
+    }
     if (!newGroupName.trim()) return;
     setIsCreatingGroup(true);
     try {
@@ -359,11 +372,17 @@ export function ChatPage() {
                     Tin nhắn
                   </h2>
                   <button 
-                    onClick={() => setShowCreateGroupModal(true)}
-                    className="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary hover:text-white transition-all shadow-sm"
+                    onClick={() => {
+                      if (!user?.isPremium) {
+                        navigate("/premium");
+                        return;
+                      }
+                      setShowCreateGroupModal(true);
+                    }}
+                    className={`p-2 rounded-full transition-all shadow-sm ${!user?.isPremium ? "bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"}`}
                     title="Tạo Nhóm Mới"
                   >
-                    <Plus className="w-5 h-5" />
+                    {!user?.isPremium ? <Lock className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                   </button>
                 </div>
               <div className="relative">
@@ -556,8 +575,15 @@ export function ChatPage() {
                         type="text"
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder="Nhập tin nhắn..."
-                        className="w-full px-5 py-4 bg-muted/50 rounded-2xl border border-border focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-12 text-[15px] text-foreground placeholder:text-muted-foreground"
+                        onFocus={(e) => {
+                          if (!user?.isPremium) {
+                            e.target.blur();
+                            navigate("/premium");
+                          }
+                        }}
+                        placeholder={!user?.isPremium ? "🔒 Mở khóa Premium để nhắn tin" : "Nhập tin nhắn..."}
+                        className={`w-full px-5 py-4 bg-muted/50 rounded-2xl border border-border focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-12 text-[15px] ${!user?.isPremium ? "text-amber-500 font-medium placeholder:text-amber-500/70" : "text-foreground placeholder:text-muted-foreground"}`}
+                        disabled={!user?.isPremium}
                       />
                       <button
                         type="button"

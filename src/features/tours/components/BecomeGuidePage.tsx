@@ -26,6 +26,13 @@ import { toast } from "sonner";
 // Trạng thái hồ sơ HDV: "idle" = chưa đăng ký, còn lại khớp với backend IsVerified
 type GuideStatus = "idle" | "Pending" | "Approved" | "Rejected";
 
+export const getFileUrl = (path: string | undefined | null) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseUrl = ((import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080/api').replace('/api', '');
+  return `${baseUrl}${path}`;
+};
+
 // Trạng thái hiển thị của từng bước trong timeline
 type StepState = "idle" | "active" | "loading" | "waiting" | "complete" | "rejected" | "disabled";
 
@@ -168,6 +175,7 @@ export function BecomeGuidePage() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [formData, setFormData] = useState<TourGuideRegistrationRequest>({
     fullName: "",
     dateOfBirth: "",
@@ -199,6 +207,23 @@ export function BecomeGuidePage() {
     };
     checkStatus();
   }, []);
+
+  const handleFileUpload = async (id: string, file: File) => {
+    setUploading(prev => ({ ...prev, [id]: true }));
+    try {
+      const url = await tourGuideApi.uploadFile(file);
+      toast.success(`Đã tải lên ${file.name} thành công!`);
+      
+      if (id === 'id-front') setFormData(prev => ({ ...prev, idFrontUrl: url }));
+      if (id === 'id-back') setFormData(prev => ({ ...prev, idBackUrl: url }));
+      if (id === 'cert') setFormData(prev => ({ ...prev, certUrl: url }));
+      if (id === 'photo') setFormData(prev => ({ ...prev, guideAvatarUrl: url }));
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || `Lỗi tải lên file ${file.name}`);
+    } finally {
+      setUploading(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -423,20 +448,63 @@ export function BecomeGuidePage() {
               </CardHeader>
               <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { id: 'id-front', label: 'Mặt Trước CMND/CCCD', icon: <FileText className="h-6 w-6" /> },
-                  { id: 'id-back', label: 'Mặt Sau CMND/CCCD', icon: <FileText className="h-6 w-6" /> },
-                  { id: 'cert', label: 'Chứng Chỉ Hướng Dẫn Viên', icon: <Briefcase className="h-6 w-6" /> },
-                  { id: 'photo', label: 'Hồ sơ CV', icon: <Briefcase className="h-6 w-6" /> },
-                ].map((doc) => (
-                  <div key={doc.id} className="border-2 border-dashed border-muted-foreground/30 dark:border-muted-foreground/20 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-muted/40 dark:hover:bg-muted/10 transition-colors cursor-pointer group">
-                    <div className="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:scale-110 transition-transform">
-                      {doc.icon}
-                    </div>
-                    <p className="font-medium text-sm mb-1">{doc.label}</p>
-                    <p className="text-xs text-muted-foreground mb-3">Kéo thả hoặc nhấp để tải lên</p>
-                    <Button type="button" variant="secondary" size="sm">Chọn Tệp</Button>
+                  { id: 'id-front', label: 'Mặt Trước CMND/CCCD', icon: <FileText className="h-6 w-6" />, field: 'idFrontUrl' },
+                  { id: 'id-back', label: 'Mặt Sau CMND/CCCD', icon: <FileText className="h-6 w-6" />, field: 'idBackUrl' },
+                  { id: 'cert', label: 'Chứng Chỉ Hướng Dẫn Viên', icon: <Briefcase className="h-6 w-6" />, field: 'certUrl' },
+                  { id: 'photo', label: 'Hồ sơ CV (hoặc Ảnh Thẻ)', icon: <Camera className="h-6 w-6" />, field: 'guideAvatarUrl' },
+                ].map((doc) => {
+                  const isUploaded = !!formData[doc.field as keyof TourGuideRegistrationRequest];
+                  const isUploading = uploading[doc.id];
+                  return (
+                  <div key={doc.id} className={`relative border-2 border-dashed ${isUploaded ? 'border-green-500 bg-green-50 dark:bg-green-500/10' : 'border-muted-foreground/30 dark:border-muted-foreground/20'} rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-muted/40 dark:hover:bg-muted/10 transition-colors cursor-pointer group overflow-hidden min-h-[200px]`}>
+                    <input 
+                      type="file" 
+                      accept="image/*,.pdf" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(doc.id, file);
+                        // Reset input để có thể chọn lại cùng 1 file
+                        e.target.value = '';
+                      }}
+                      disabled={isUploading}
+                    />
+                    
+                    {isUploaded && !isUploading ? (
+                      <div className="absolute inset-0 w-full h-full p-1 z-0">
+                        {String(formData[doc.field as keyof TourGuideRegistrationRequest] || '').toLowerCase().endsWith('.pdf') ? (
+                           <div className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-muted rounded-md shadow-sm">
+                              <FileText className="h-10 w-10 text-red-500 mb-2" />
+                              <span className="text-xs font-semibold">Tài liệu PDF</span>
+                           </div>
+                        ) : (
+                          <img 
+                            src={getFileUrl(formData[doc.field as keyof TourGuideRegistrationRequest] as string)} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover rounded-md opacity-90 group-hover:opacity-100 transition-opacity" 
+                          />
+                        )}
+                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1 shadow-md z-10">
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className={`p-3 rounded-full mb-3 group-hover:scale-110 transition-transform ${isUploaded ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'}`}>
+                          {isUploaded ? <CheckCircle className="h-6 w-6" /> : doc.icon}
+                        </div>
+                        <p className="font-medium text-sm mb-1">{doc.label}</p>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {isUploading ? "Đang tải lên..." : "Kéo thả hoặc nhấp để tải lên"}
+                        </p>
+                      </>
+                    )}
+                    
+                    <Button type="button" variant={isUploaded ? "outline" : "secondary"} size="sm" className={`relative z-10 mt-auto ${isUploaded ? "border-green-500 text-green-700 bg-green-50 hover:bg-green-100 shadow-sm" : ""}`}>
+                      {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang tải...</> : isUploaded ? "Tải Lại Tệp" : "Chọn Tệp"}
+                    </Button>
                   </div>
-                ))}
+                )})}
               </CardContent>
             </Card>
 

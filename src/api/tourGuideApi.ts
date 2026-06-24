@@ -52,4 +52,17 @@ export const tourGuideApi = {
     const response = await api.get('/tourguide/my-profile');
     return response.data;
   },
+
+  uploadFile: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post('/uploads', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data.url;
+  },
 };

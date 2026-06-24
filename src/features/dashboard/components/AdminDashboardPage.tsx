@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
-import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus } from "@/api/adminApi";
+import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview } from "@/api/adminApi";
 import type { TourBooking } from "@/types/tours";
 import type { AdminUser } from "@/types/admin";
 import {
@@ -29,6 +29,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+const getFileUrl = (path: string | undefined | null) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseUrl = ((import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080/api').replace('/api', '');
+  return `${baseUrl}${path}`;
+};
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -60,6 +67,10 @@ export function AdminDashboardPage() {
   const [isLoadingReports, setIsLoadingReports] = useState(false);
   const [reportFilter, setReportFilter] = useState("Tất cả báo cáo");
 
+  // Overview state
+  const [overviewData, setOverviewData] = useState<any>(null);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(false);
+
   const fetchBookings = () => {
     getAllTourBookings().then(setTourBookings).catch(console.error);
   };
@@ -79,6 +90,9 @@ export function AdminDashboardPage() {
   };
 
   useEffect(() => {
+    if (activeTab === "overview") {
+      fetchOverviewData();
+    }
     if (activeTab === "bookings") {
       fetchBookings();
     }
@@ -92,6 +106,18 @@ export function AdminDashboardPage() {
       fetchReportsData();
     }
   }, [activeTab, userCurrentPage, userOfflineFilter]);
+
+  const fetchOverviewData = async () => {
+    setIsLoadingOverview(true);
+    try {
+      const data = await getAdminOverview();
+      setOverviewData(data);
+    } catch (error) {
+      console.error("Failed to fetch overview data", error);
+    } finally {
+      setIsLoadingOverview(false);
+    }
+  };
 
   const fetchPendingGuides = async () => {
     setIsLoadingGuides(true);
@@ -155,96 +181,44 @@ export function AdminDashboardPage() {
     }
   };
 
-  const stats = [
+  const stats = overviewData ? [
     {
       label: "Tổng người dùng",
-      value: "12,847",
-      change: "+12.5%",
+      value: overviewData.stats.totalUsers.toLocaleString('vi-VN'),
+      change: "Cập nhật",
       trend: "up",
       icon: Users,
       color: "from-blue-500 to-cyan-500",
     },
     {
       label: "Điểm đến hoạt động",
-      value: "234",
-      change: "+8.2%",
+      value: overviewData.stats.activeDestinations.toLocaleString('vi-VN'),
+      change: "Cập nhật",
       trend: "up",
       icon: MapPin,
       color: "from-purple-500 to-pink-500",
     },
     {
       label: "Bài viết cộng đồng",
-      value: "3,492",
-      change: "+24.1%",
+      value: overviewData.stats.totalPosts.toLocaleString('vi-VN'),
+      change: "Cập nhật",
       trend: "up",
       icon: MessageSquare,
       color: "from-orange-500 to-amber-500",
     },
     {
-      label: "Doanh thu",
-      value: "45,291,000đ",
-      change: "+18.7%",
+      label: "Doanh thu Đặt Tour",
+      value: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(overviewData.stats.totalRevenue),
+      change: "Cập nhật",
       trend: "up",
       icon: DollarSign,
       color: "from-green-500 to-emerald-500",
     },
-  ];
+  ] : [];
 
-  const userGrowthData = [
-    { month: "Tháng 1", users: 8420, active: 6234 },
-    { month: "Tháng 2", users: 9150, active: 6891 },
-    { month: "Tháng 3", users: 9850, active: 7420 },
-    { month: "Tháng 4", users: 10680, active: 8156 },
-    { month: "Tháng 5", users: 11520, active: 8945 },
-    { month: "Tháng 6", users: 12847, active: 9823 },
-  ];
-
-  const destinationData = [
-    { name: "Châu Á", value: 45, color: "#3B82F6" },
-    { name: "Châu Âu", value: 30, color: "#06B6D4" },
-    { name: "Châu Mỹ", value: 15, color: "#FB923C" },
-    { name: "Châu Phi", value: 7, color: "#8B5CF6" },
-    { name: "Châu Đại Dương", value: 3, color: "#EC4899" },
-  ];
-
-  const recentUsers = [
-    {
-      id: 1,
-      name: "Sarah Chen",
-      email: "sarah.chen@berkeley.edu",
-      university: "UC Berkeley",
-      joined: "2 giờ trước",
-      status: "đang hoạt động",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-    },
-    {
-      id: 2,
-      name: "Marcus Johnson",
-      email: "marcus.j@nyu.edu",
-      university: "NYU",
-      joined: "5 giờ trước",
-      status: "đang hoạt động",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-    },
-    {
-      id: 3,
-      name: "Emma Rodriguez",
-      email: "emma.r@mit.edu",
-      university: "MIT",
-      joined: "1 ngày trước",
-      status: "đang hoạt động",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-    },
-    {
-      id: 4,
-      name: "Alex Kim",
-      email: "alex.kim@stanford.edu",
-      university: "Stanford",
-      joined: "2 ngày trước",
-      status: "không hoạt động",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-    },
-  ];
+  const userGrowthData = overviewData?.userGrowth || [];
+  const destinationData = overviewData?.destinationDistribution || [];
+  const recentUsers = overviewData?.recentUsers || [];
 
   const destinations = [
     { id: 1, name: "Bali, Indonesia", category: "Biển", users: 2847, avgBudget: "12,500,000đ", status: "hoạt động" },
@@ -324,8 +298,15 @@ export function AdminDashboardPage() {
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <div className="space-y-8">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {isLoadingOverview ? (
+                   <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-4">
+                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      Đang tải dữ liệu tổng quan...
+                   </div>
+                ) : overviewData ? (
+                  <>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {stats.map((stat, index) => (
                     <div key={index} className="relative overflow-hidden bg-white rounded-2xl shadow-lg p-6">
                       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.color}`} />
@@ -399,23 +380,20 @@ export function AdminDashboardPage() {
                         <tr className="border-b border-border">
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trường đại học</th>
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
                           <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentUsers.map((user) => (
+                        {recentUsers.map((user: any) => (
                           <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-all">
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-3">
-                                <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                                <img src={getFileUrl(user.avatar)} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
                                 <span className="font-semibold">{user.name}</span>
                               </div>
                             </td>
                             <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>
-                            <td className="py-3 px-4 text-sm">{user.university}</td>
                             <td className="py-3 px-4 text-sm text-muted-foreground">{user.joined}</td>
                             <td className="py-3 px-4">
                               <span className={`px-2 py-1 rounded-full text-xs ${
@@ -426,17 +404,16 @@ export function AdminDashboardPage() {
                                 {user.status}
                               </span>
                             </td>
-                            <td className="py-3 px-4">
-                              <button className="p-1 hover:bg-muted rounded transition-all">
-                                <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                              </button>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
+                  </>
+                ) : (
+                  <div className="text-center py-10 text-muted-foreground">Không có dữ liệu</div>
+                )}
               </div>
             )}
 
@@ -966,7 +943,7 @@ export function AdminDashboardPage() {
               {/* User Identity Info */}
               <div className="flex items-start gap-6 mb-1 bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-xl border border-blue-100 dark:border-blue-900/30">
                 <img 
-                  src={selectedGuide.guideAvatarUrl || "https://ui-avatars.com/api/?name=" + selectedGuide.fullName} 
+                  src={getFileUrl(selectedGuide.guideAvatarUrl) || "https://ui-avatars.com/api/?name=" + selectedGuide.fullName} 
                   alt="Avatar" 
                   className="w-20 h-20 rounded-xl object-cover border-4 border-white dark:border-slate-800 shadow-md"
                 />
@@ -1015,8 +992,15 @@ export function AdminDashboardPage() {
                     <div className="space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt trước)</span>
                       <div className="aspect-video bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
-                        {selectedGuide.idFrontUrl && selectedGuide.idFrontUrl.startsWith('http') ? (
-                          <img src={selectedGuide.idFrontUrl} alt="Mặt trước CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        {selectedGuide.idFrontUrl ? (
+                          selectedGuide.idFrontUrl.toLowerCase().endsWith('.pdf') ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-red-500">
+                              <FileText className="w-8 h-8 mb-1" />
+                              <span className="text-xs">Tài liệu PDF</span>
+                            </div>
+                          ) : (
+                            <img src={getFileUrl(selectedGuide.idFrontUrl)} alt="Mặt trước CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                          )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
                         )}
@@ -1025,8 +1009,15 @@ export function AdminDashboardPage() {
                     <div className="space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">CMND/CCCD (Mặt sau)</span>
                       <div className="aspect-video bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
-                        {selectedGuide.idBackUrl && selectedGuide.idBackUrl.startsWith('http') ? (
-                          <img src={selectedGuide.idBackUrl} alt="Mặt sau CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        {selectedGuide.idBackUrl ? (
+                          selectedGuide.idBackUrl.toLowerCase().endsWith('.pdf') ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-red-500">
+                              <FileText className="w-8 h-8 mb-1" />
+                              <span className="text-xs">Tài liệu PDF</span>
+                            </div>
+                          ) : (
+                            <img src={getFileUrl(selectedGuide.idBackUrl)} alt="Mặt sau CMND" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                          )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
                         )}
@@ -1035,8 +1026,15 @@ export function AdminDashboardPage() {
                     <div className="col-span-2 space-y-2">
                       <span className="text-sm text-muted-foreground font-medium">Chứng chỉ thẻ Hướng dẫn viên</span>
                       <div className="h-32 bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
-                        {selectedGuide.certUrl && selectedGuide.certUrl.startsWith('http') ? (
-                          <img src={selectedGuide.certUrl} alt="Chứng chỉ" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                        {selectedGuide.certUrl ? (
+                          selectedGuide.certUrl.toLowerCase().endsWith('.pdf') ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-red-500">
+                              <FileText className="w-8 h-8 mb-1" />
+                              <span className="text-xs">Tài liệu PDF</span>
+                            </div>
+                          ) : (
+                            <img src={getFileUrl(selectedGuide.certUrl)} alt="Chứng chỉ" className="w-full h-full object-cover hover:scale-110 transition-transform cursor-pointer" />
+                          )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Không có ảnh</div>
                         )}

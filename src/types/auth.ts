@@ -3,6 +3,7 @@ export type AuthUser = {
   username?: string;
   email?: string;
   role?: string;
+  isPremium?: boolean;
 };
 
 export type LoginCredentials = {
@@ -16,6 +17,7 @@ export type AuthResponse = {
   userID: number;
   username: string;
   role: string;
+  isPremium?: boolean;
 };
 
 // Map LoginResponse to AuthResponse to maintain compatibility

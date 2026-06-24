@@ -19,6 +19,13 @@ const GENDER_LABELS: Record<string, string> = {
   "prefer-not-to-say": "Không muốn tiết lộ",
 };
 
+const getFileUrl = (path: string | undefined | null) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseUrl = ((import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080/api').replace('/api', '');
+  return `${baseUrl}${path}`;
+};
+
 export function GuideProfileDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,7 +98,7 @@ export function GuideProfileDetailPage() {
           <div className="lg:col-span-3 flex flex-col gap-6">
             <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center">
               <img
-                src={guide.guideAvatarUrl || "https://ui-avatars.com/api/?name=" + guide.fullName}
+                src={getFileUrl(guide.guideAvatarUrl) || "https://ui-avatars.com/api/?name=" + guide.fullName}
                 alt={guide.fullName}
                 className="w-full aspect-square object-cover rounded-xl mb-4 border border-border/50"
               />
@@ -221,14 +228,22 @@ export function GuideProfileDetailPage() {
                       {doc.label}
                     </span>
                     <div className="aspect-[4/3] bg-muted/50 rounded-xl overflow-hidden border border-border transition-all hover:border-primary/40 relative flex items-center justify-center">
-                      {doc.url && doc.url.startsWith("http") ? (
-                        <a href={doc.url} target="_blank" rel="noreferrer" className="w-full h-full block">
-                          <img
-                            src={doc.url}
-                            alt={doc.label}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                          />
-                        </a>
+                      {doc.url ? (
+                        doc.url.toLowerCase().endsWith('.pdf') ? (
+                          <a href={getFileUrl(doc.url)} target="_blank" rel="noreferrer" className="w-full h-full flex flex-col items-center justify-center hover:bg-muted/70 transition-colors">
+                            <FileText className="w-12 h-12 text-red-500 mb-2" />
+                            <span className="text-sm font-semibold text-foreground">Tài liệu PDF</span>
+                            <span className="text-xs text-muted-foreground mt-1">Nhấp để xem</span>
+                          </a>
+                        ) : (
+                          <a href={getFileUrl(doc.url)} target="_blank" rel="noreferrer" className="w-full h-full block">
+                            <img
+                              src={getFileUrl(doc.url)}
+                              alt={doc.label}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            />
+                          </a>
+                        )
                       ) : (
                         <div className="text-muted-foreground flex flex-col items-center gap-2">
                           <FileText className="w-8 h-8 opacity-20" />

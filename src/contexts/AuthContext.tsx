@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username: data.username,
       email: data.username || credentials.email,
       role: data.role,
+      isPremium: data.isPremium,
     };
 
     localStorage.setItem("token", data.accessToken);
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username: data.username,
       email: data.username, // using username as email fallback if needed
       role: data.role,
+      isPremium: data.isPremium,
     };
 
     localStorage.setItem("token", data.accessToken);

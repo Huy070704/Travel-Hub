@@ -1,6 +1,11 @@
 import axiosInstance from './axiosInstance';
 import type { AdminUserResponse } from '../types/admin';
 
+export const getAdminOverview = async () => {
+  const response = await axiosInstance.get('/Admin/overview');
+  return response.data;
+};
+
 export const getAllUsers = async (
   page: number = 1,
   pageSize: number = 30,
