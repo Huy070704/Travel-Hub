@@ -62,7 +62,17 @@ export const createTour = async (tourData: any) => {
   return response.data;
 };
 
+export const updateTour = async (id: number, tourData: any) => {
+  const response = await axiosInstance.put(`/Tour/${id}`, tourData);
+  return response.data;
+};
+
 export const getMyTours = async () => {
   const response = await axiosInstance.get('/Tour/my-tours');
+  return response.data;
+};
+
+export const getRecentTours = async (): Promise<TourResponse[]> => {
+  const response = await axiosInstance.get('/Tour/recent');
   return response.data;
 };

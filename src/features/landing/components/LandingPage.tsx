@@ -28,11 +28,13 @@ import { FloatingBlob } from "../../../components/shared/AnimatedBackground";
 import { FloatingIllustrations } from "../../../components/shared/FloatingIllustrations";
 import { TourSearchBar } from "../../tours/components/TourSearchBar";
 import { getTrendingDestinations } from "@/api/destinationsApi";
+import { getRecentTours } from "@/api/toursApi";
 import { getWeatherForecast } from "@/api/weatherApi";
 import { getAiRecommendations } from "../../../api/aiApi";
 import type { DestinationDto } from "@/types/destinations";
 import type { WeatherForecastDto } from "@/types/weather";
 import type { AiRecommendResponse } from "../../../types/ai";
+import type { TourResponse } from "@/types/tours";
 
 const getPlaceholderImage = (id: number) => {
   const destImages = [
@@ -51,12 +53,17 @@ export function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [aiResults, setAiResults] = useState<AiRecommendResponse[] | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [recentTours, setRecentTours] = useState<TourResponse[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const dests = await getTrendingDestinations(3);
+        const [dests, tours] = await Promise.all([
+          getTrendingDestinations(3),
+          getRecentTours()
+        ]);
         setTrendingDestinations(dests);
+        setRecentTours(tours);
 
         const weatherData: Record<number, WeatherForecastDto> = {};
         for (const dest of dests) {
@@ -123,19 +130,21 @@ export function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background Blobs — giữ 2 thay vì 3 để nhẹ hơn */}
-        <FloatingBlob
-          delay={0}
-          className="w-[450px] h-[450px] bg-gradient-to-br from-purple-500/25 to-blue-500/25 top-0 left-0"
-        />
-        <FloatingBlob
-          delay={3}
-          className="w-[450px] h-[450px] bg-gradient-to-br from-cyan-500/25 to-teal-500/25 bottom-0 right-0"
-        />
+      <section className="relative min-h-screen flex items-center justify-center">
+        {/* Animated Background Blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <FloatingBlob
+            delay={0}
+            className="w-[450px] h-[450px] bg-gradient-to-br from-purple-500/25 to-blue-500/25 top-0 left-0"
+          />
+          <FloatingBlob
+            delay={3}
+            className="w-[450px] h-[450px] bg-gradient-to-br from-cyan-500/25 to-teal-500/25 bottom-0 right-0"
+          />
 
-        <div className="absolute inset-0 -translate-y-10 pointer-events-none">
-          <FloatingIllustrations />
+          <div className="absolute inset-0 -translate-y-10">
+            <FloatingIllustrations />
+          </div>
         </div>
 
         {/* Hero Content */}
@@ -271,6 +280,97 @@ export function LandingPage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Tours */}
+      <section className="relative py-20 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="flex items-center justify-between mb-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <span className="text-sm text-accent uppercase tracking-wide font-semibold">Mới nhất</span>
+              </div>
+              <h2 className="text-4xl font-bold">Tour từ Hướng dẫn viên</h2>
+            </div>
+            <Link to="/tours/search">
+              <motion.button
+                className="flex items-center gap-2 text-primary hover:gap-3 transition-all"
+                whileHover={{ x: 5 }}
+              >
+                <span className="font-semibold">Xem tất cả</span>
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {recentTours.map((tour, index) => (
+              <motion.div
+                key={tour.tourID}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link to={`/tours/${tour.tourID}`}>
+                  <motion.div
+                    className="group relative overflow-hidden rounded-2xl bg-card border border-border hover:shadow-2xl hover:border-primary/50 transition-all flex flex-col h-full"
+                    whileHover={{ y: -8 }}
+                  >
+                    <div className="aspect-[4/3] relative overflow-hidden">
+                      <motion.img
+                        src={tour.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+                        alt={tour.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute top-4 left-4 px-3 py-1.5 bg-background/90 backdrop-blur-md text-foreground rounded-xl flex items-center gap-2 text-sm font-semibold shadow-sm">
+                        <Calendar className="w-4 h-4 text-primary" />
+                        {new Date(tour.departureDate).toLocaleDateString('vi-VN')}
+                      </div>
+                      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-accent text-accent-foreground rounded-xl text-sm font-bold shadow-lg">
+                        {tour.durationText || `${tour.durationDays} Ngày`}
+                      </div>
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        <span>{tour.destination}</span>
+                        <span className="w-1 h-1 rounded-full bg-border mx-1" />
+                        <span className="truncate">Từ {tour.departureLocation}</span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-4 line-clamp-2 leading-tight group-hover:text-primary transition-colors">{tour.title}</h3>
+                      <div className="mt-auto flex items-end justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Giá từ</p>
+                          <p className="text-2xl font-bold text-accent">
+                            {tour.priceVND.toLocaleString()}₫
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                          <Users className="w-3.5 h-3.5" />
+                          <span>{tour.numberOfBookings} đã đặt</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              </motion.div>
+            ))}
+
+            {recentTours.length === 0 && (
+              <div className="col-span-3 text-center py-20 text-muted-foreground bg-card border border-border rounded-2xl">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                <p>Đang tải Tour...</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

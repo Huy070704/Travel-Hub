@@ -1,19 +1,40 @@
-import { useState } from "react";
-import { X, UploadCloud, MapPin, Check, Image as ImageIcon, Save, Send, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, UploadCloud, MapPin, Check, Image as ImageIcon, Save, Send, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createTour } from "@/api/toursApi";
+import { createTour, updateTour } from "@/api/toursApi";
 import { toast } from "sonner";
+import { tourGuideApi } from "@/api/tourGuideApi";
 
 interface CreateExperienceModalProps {
   onClose: () => void;
   onCreated: () => void;
+  initialData?: any;
 }
 
-export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceModalProps) {
+export function CreateExperienceModal({ onClose, onCreated, initialData }: CreateExperienceModalProps) {
   const [activeSection, setActiveSection] = useState("basic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [currentImageUrl, setCurrentImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(!!initialData);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingImage(true);
+      const url = await tourGuideApi.uploadFile(file);
+      setImageUrls(prev => [...prev, url]);
+      toast.success("Tải ảnh lên thành công!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Lỗi khi tải ảnh lên");
+    } finally {
+      setIsUploadingImage(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -21,7 +42,7 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
     destination: "",
     departureLocation: "",
     departureDate: "",
-    durationDays: 1,
+    durationText: "",
     priceVND: 0,
     description: "",
     imageUrl: "",
@@ -35,9 +56,45 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "durationDays" || name === "priceVND" ? Number(value) : value
+      [name]: name === "priceVND" ? Number(value) : value
     }));
   };
+
+  useEffect(() => {
+    if (initialData) {
+      const extractSection = (text: string, sectionName: string) => {
+        const regex = new RegExp(`\\*\\*${sectionName}:\\*\\*\\n?([\\s\\S]*?)(?:\\n\\n\\*\\*|$)`, 'i');
+        const match = text?.match(regex);
+        return match ? match[1].trim() : "";
+      };
+
+      const descText = initialData.description || "";
+      const highlights = extractSection(descText, "Điểm nổi bật");
+      const included = extractSection(descText, "Bao gồm");
+      const excluded = extractSection(descText, "Không bao gồm");
+      const meetingPoint = extractSection(descText, "Điểm hẹn");
+      const mainDescription = descText.split('\n\n**')[0] || descText;
+
+      setFormData({
+        title: initialData.title || "",
+        destination: initialData.destination || "",
+        departureLocation: initialData.departureLocation || "",
+        departureDate: initialData.departureDate ? new Date(initialData.departureDate).toISOString().split('T')[0] : "",
+        durationText: initialData.durationText || "",
+        priceVND: initialData.priceVND || 0,
+        description: mainDescription,
+        imageUrl: initialData.imageUrl || "",
+        highlights: highlights,
+        included: included,
+        excluded: excluded,
+        meetingPoint: meetingPoint
+      });
+      
+      if (initialData.imageUrl) {
+        setImageUrls(initialData.imageUrl.split(',').filter(Boolean));
+      }
+    }
+  }, [initialData]);
 
   const handleSubmit = async () => {
     try {
@@ -48,6 +105,13 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
         setIsSubmitting(false);
         return;
       }
+
+      if (imageUrls.length < 3) {
+        toast.error("Vui lòng tải lên ít nhất 3 ảnh cho tour của bạn!");
+        setActiveSection("gallery");
+        setIsSubmitting(false);
+        return;
+      }
       
       let fullDescription = formData.description;
       if (formData.highlights) fullDescription += `\n\n**Điểm nổi bật:**\n${formData.highlights}`;
@@ -55,13 +119,26 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
       if (formData.excluded) fullDescription += `\n\n**Không bao gồm:**\n${formData.excluded}`;
       if (formData.meetingPoint) fullDescription += `\n\n**Điểm hẹn:**\n${formData.meetingPoint}`;
 
-      await createTour({
+      const match = formData.durationText.match(/\d+/);
+      const parsedDays = match ? parseInt(match[0], 10) : 1;
+
+      const submitData = {
         ...formData,
+        durationDays: parsedDays,
+        durationText: formData.durationText,
         description: fullDescription,
         imageUrl: imageUrls.join(','),
         departureDate: new Date(formData.departureDate).toISOString()
-      });
-      toast.success("Tạo Tour thành công!");
+      };
+
+      if (isEditMode) {
+        await updateTour(initialData.tourID, submitData);
+        toast.success("Cập nhật Tour thành công!");
+      } else {
+        await createTour(submitData);
+        toast.success("Tạo Tour thành công!");
+      }
+      
       onCreated();
     } catch (error: any) {
       console.error(error);
@@ -86,7 +163,7 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
           <div>
-            <h2 className="text-xl font-bold">Tạo trải nghiệm mới</h2>
+            <h2 className="text-xl font-bold">{isEditMode ? "Cập nhật trải nghiệm" : "Tạo trải nghiệm mới"}</h2>
             <p className="text-sm text-muted-foreground">Điền các chi tiết để liệt kê tour mới của bạn.</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
@@ -167,7 +244,7 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Số ngày (Duration) <span className="text-red-500">*</span></label>
-                        <input name="durationDays" value={formData.durationDays || ""} onChange={handleChange} type="number" placeholder="3" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                        <input name="durationText" value={formData.durationText} onChange={handleChange} type="text" placeholder="VD: 3N2D" className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Ngày khởi hành <span className="text-red-500">*</span></label>
@@ -218,44 +295,30 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
 
               {activeSection === "gallery" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                  <h3 className="text-xl font-bold mb-4">Tải lên thư viện ảnh</h3>
+                  <h3 className="text-xl font-bold mb-4">Tải lên thư viện ảnh <span className="text-red-500 text-sm font-normal ml-2">(Yêu cầu ít nhất 3 ảnh)</span></h3>
                   
-                  <div className="mb-6 space-y-3">
-                    <label className="block text-sm font-medium mb-1.5">Link ảnh Tour (Image URL)</label>
-                    <div className="flex gap-2">
-                      <input 
-                        value={currentImageUrl} 
-                        onChange={(e) => setCurrentImageUrl(e.target.value)} 
-                        type="text" 
-                        placeholder="https://images.unsplash.com/..." 
-                        className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" 
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            if (currentImageUrl.trim()) {
-                              setImageUrls(prev => [...prev, currentImageUrl.trim()]);
-                              setCurrentImageUrl("");
-                            }
-                          }
-                        }}
-                      />
-                      <Button 
-                        type="button" 
-                        onClick={() => {
-                          if (currentImageUrl.trim()) {
-                            setImageUrls(prev => [...prev, currentImageUrl.trim()]);
-                            setCurrentImageUrl("");
-                          }
-                        }}
-                      >
-                        Thêm ảnh
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                    <p className="font-bold text-lg mb-1">Thư viện ảnh của bạn</p>
-                    <p className="text-sm text-muted-foreground">Dán link vào ô phía trên và bấm "Thêm ảnh" để tạo bộ sưu tập.</p>
+                  <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[160px]">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={isUploadingImage}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                    />
+                    {isUploadingImage ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                        <p className="text-sm font-medium text-primary">Đang tải ảnh lên...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <UploadCloud className="w-6 h-6 text-primary" />
+                        </div>
+                        <p className="font-bold text-lg mb-1">Tải ảnh lên từ máy</p>
+                        <p className="text-sm text-muted-foreground">Nhấp hoặc kéo thả ảnh vào đây để thêm vào bộ sưu tập.</p>
+                      </>
+                    )}
                   </div>
 
                   {imageUrls.length > 0 && (
@@ -276,7 +339,12 @@ export function CreateExperienceModal({ onClose, onCreated }: CreateExperienceMo
 
                   <div className="pt-6 flex justify-between">
                     <Button variant="outline" onClick={() => setActiveSection("description")}>Quay lại</Button>
-                    <Button onClick={() => setActiveSection("location")}>Bước tiếp theo</Button>
+                    <Button onClick={() => {
+                      if (imageUrls.length < 3) {
+                        toast.warning("Vui lòng tải lên đủ 3 ảnh trước khi xuất bản!");
+                      }
+                      setActiveSection("location");
+                    }}>Bước tiếp theo</Button>
                   </div>
                 </div>
               )}

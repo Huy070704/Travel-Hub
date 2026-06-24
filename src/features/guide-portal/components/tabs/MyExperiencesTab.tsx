@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router";
 import { 
   Plus, 
   Search, 
@@ -19,6 +20,7 @@ import { getMyTours } from "@/api/toursApi";
 
 export function MyExperiencesTab() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingTour, setEditingTour] = useState<any>(null);
   const [experiences, setExperiences] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,7 +102,7 @@ export function MyExperiencesTab() {
           {experiences.map((exp) => (
             <div key={exp.tourID} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-all group">
               {/* Image */}
-              <div className="relative h-48 overflow-hidden bg-muted">
+              <Link to={`/tours/${exp.tourID}`} className="block relative h-48 overflow-hidden bg-muted">
                 <img 
                   src={exp.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"} 
                   alt={exp.title} 
@@ -116,7 +118,7 @@ export function MyExperiencesTab() {
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
+              </Link>
 
               {/* Content */}
               <div className="p-5">
@@ -131,9 +133,11 @@ export function MyExperiencesTab() {
                   </div>
                 </div>
                 
-                <h3 className="font-bold text-lg leading-tight mb-3 line-clamp-2 min-h-[44px]">
-                  {exp.title}
-                </h3>
+                <Link to={`/tours/${exp.tourID}`} className="block hover:text-primary transition-colors">
+                  <h3 className="font-bold text-lg leading-tight mb-3 line-clamp-2 min-h-[44px]">
+                    {exp.title}
+                  </h3>
+                </Link>
                 
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4 border-b border-border pb-4">
                   <div className="flex items-center gap-1.5">
@@ -154,7 +158,14 @@ export function MyExperiencesTab() {
                 
                 {/* Actions Dropdown simulation via flex for now */}
                 <div className="flex gap-1 border border-border rounded-lg overflow-hidden">
-                  <button className="p-2 hover:bg-muted text-muted-foreground transition-colors" title="Sửa">
+                  <button 
+                    onClick={() => {
+                      setEditingTour(exp);
+                      setIsCreateModalOpen(true);
+                    }}
+                    className="p-2 hover:bg-muted text-muted-foreground transition-colors" 
+                    title="Sửa"
+                  >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button className="p-2 hover:bg-muted text-muted-foreground transition-colors border-l border-border" title="Ẩn/Hiện">
@@ -170,9 +181,14 @@ export function MyExperiencesTab() {
 
       {isCreateModalOpen && (
         <CreateExperienceModal 
-          onClose={() => setIsCreateModalOpen(false)} 
+          initialData={editingTour}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingTour(null);
+          }} 
           onCreated={() => {
             setIsCreateModalOpen(false);
+            setEditingTour(null);
             fetchTours();
           }}
         />

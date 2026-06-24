@@ -5,6 +5,7 @@ export interface TourResponse {
   departureLocation: string;
   departureDate: string;
   durationDays: number;
+  durationText?: string;
   priceVND: number;
   imageUrl?: string;
   description?: string;

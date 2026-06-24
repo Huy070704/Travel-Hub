@@ -10,6 +10,7 @@ type AuthContextValue = {
   login: (credentials: LoginCredentials) => Promise<void>;
   googleLogin: (idToken: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -85,6 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = (updates: Partial<AuthUser>) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  };
+
   const value = useMemo(
     () => ({
       token,
@@ -93,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       googleLogin,
       logout,
+      updateUser,
     }),
     [token, user]
   );

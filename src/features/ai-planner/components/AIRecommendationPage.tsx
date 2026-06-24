@@ -573,10 +573,10 @@ export function AIRecommendationPage() {
                       <div className="text-xs text-muted-foreground mb-4">Tổng ước tính (bao gồm thuế)</div>
 
                       <Link
-                        to={`/destination/${rec.id}`}
+                        to={rec.id >= 20000 ? `/tours/${rec.id - 20000}` : `/destination/${rec.id}`}
                         className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-xl font-semibold transition-colors shadow-lg shadow-primary/20 mt-auto md:mt-0"
                       >
-                        Chọn Điểm Đến
+                        {rec.id >= 20000 ? "Xem Chi Tiết Tour" : "Chọn Điểm Đến"}
                       </Link>
                     </div>
 

@@ -14,6 +14,10 @@ export function TourSearchPage() {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 12;
 
+  const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
+  const [selectedDurations, setSelectedDurations] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState("Giá thấp đến cao");
+
   const destination = searchParams.get("destination") || "";
   const departureDate = searchParams.get("date") || "";
   const departureLocation = searchParams.get("from") || "";
@@ -38,6 +42,40 @@ export function TourSearchPage() {
     };
     fetchTours();
   }, [destination, departureDate, departureLocation, page]);
+
+  // Apply filters and sorting locally
+  const filteredTours = tours.filter(tour => {
+    let priceMatch = true;
+    if (selectedPrices.length > 0) {
+      priceMatch = selectedPrices.some(priceOpt => {
+        if (priceOpt === "Dưới 5 triệu") return tour.priceVND < 5000000;
+        if (priceOpt === "5 - 10 triệu") return tour.priceVND >= 5000000 && tour.priceVND <= 10000000;
+        if (priceOpt === "10 - 20 triệu") return tour.priceVND > 10000000 && tour.priceVND <= 20000000;
+        if (priceOpt === "Trên 20 triệu") return tour.priceVND > 20000000;
+        return true;
+      });
+    }
+
+    let durationMatch = true;
+    if (selectedDurations.length > 0) {
+      durationMatch = selectedDurations.some(durationOpt => {
+        const d = tour.durationDays;
+        if (durationOpt === "1-3 ngày") return d >= 1 && d <= 3;
+        if (durationOpt === "4-7 ngày") return d >= 4 && d <= 7;
+        if (durationOpt === "Trên 7 ngày") return d > 7;
+        return true;
+      });
+    }
+
+    return priceMatch && durationMatch;
+  });
+
+  const sortedTours = [...filteredTours].sort((a, b) => {
+    if (sortOption === "Giá thấp đến cao") return a.priceVND - b.priceVND;
+    if (sortOption === "Giá cao đến thấp") return b.priceVND - a.priceVND;
+    if (sortOption === "Đánh giá cao nhất") return (b.numberOfBookings || 0) - (a.numberOfBookings || 0);
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-cyan-50/30 to-background relative overflow-hidden">
@@ -85,25 +123,51 @@ export function TourSearchPage() {
               <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold mb-3">Mức giá</h4>
-                  <div className="space-y-2">
-                    {["Dưới 5 triệu", "5 - 10 triệu", "10 - 20 triệu", "Trên 20 triệu"].map((price, i) => (
-                      <label key={i} className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" className="rounded border-border text-primary focus:ring-primary" />
-                        <span className="text-sm">{price}</span>
-                      </label>
-                    ))}
+                  <div className="flex flex-wrap gap-2">
+                    {["Dưới 5 triệu", "5 - 10 triệu", "10 - 20 triệu", "Trên 20 triệu"].map((price, i) => {
+                      const isSelected = selectedPrices.includes(price);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (isSelected) setSelectedPrices(prev => prev.filter(p => p !== price));
+                            else setSelectedPrices(prev => [...prev, price]);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all duration-200 border ${
+                            isSelected 
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" 
+                              : "bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {price}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-semibold mb-3">Thời gian</h4>
-                  <div className="space-y-2">
-                    {["1-3 ngày", "4-7 ngày", "Trên 7 ngày"].map((duration, i) => (
-                      <label key={i} className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" className="rounded border-border text-primary focus:ring-primary" />
-                        <span className="text-sm">{duration}</span>
-                      </label>
-                    ))}
+                  <div className="flex flex-wrap gap-2">
+                    {["1-3 ngày", "4-7 ngày", "Trên 7 ngày"].map((duration, i) => {
+                      const isSelected = selectedDurations.includes(duration);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (isSelected) setSelectedDurations(prev => prev.filter(d => d !== duration));
+                            else setSelectedDurations(prev => [...prev, duration]);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all duration-200 border ${
+                            isSelected 
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" 
+                              : "bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {duration}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -117,11 +181,15 @@ export function TourSearchPage() {
                 <h2 className="text-2xl font-bold mb-1">
                   {destination ? `Tour du lịch ${destination}` : "Tất cả các Tour"}
                 </h2>
-                <p className="text-muted-foreground text-sm">Tìm thấy {tours.length} tours phù hợp</p>
+                <p className="text-muted-foreground text-sm">Tìm thấy {sortedTours.length} tours phù hợp</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Sắp xếp:</span>
-                <select className="bg-transparent border border-border rounded-lg px-3 py-1.5 text-sm font-medium outline-none">
+                <select 
+                  className="bg-transparent border border-border rounded-lg px-3 py-1.5 text-sm font-medium outline-none cursor-pointer hover:bg-muted/50"
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                >
                   <option>Giá thấp đến cao</option>
                   <option>Giá cao đến thấp</option>
                   <option>Đánh giá cao nhất</option>
@@ -134,7 +202,7 @@ export function TourSearchPage() {
                 <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
                 <p>Đang tìm kiếm tour phù hợp...</p>
               </div>
-            ) : tours.length === 0 ? (
+            ) : sortedTours.length === 0 ? (
               <div className="glass rounded-2xl p-12 text-center">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <MapPin className="w-8 h-8 text-muted-foreground" />
@@ -143,9 +211,13 @@ export function TourSearchPage() {
                 <p className="text-muted-foreground">Hãy thử thay đổi điều kiện tìm kiếm hoặc chọn điểm đến khác.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {tours.map((tour) => (
-                  <Link key={tour.tourID} to={`/tours/${tour.tourID}`} className="glass rounded-2xl overflow-hidden hover:shadow-xl transition-all group flex flex-col h-full hover:-translate-y-1 cursor-pointer block">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedTours.map((tour) => (
+                  <Link 
+                    key={tour.tourID} 
+                    to={`/tours/${tour.tourID}`} 
+                    className="glass rounded-2xl overflow-hidden hover:shadow-xl transition-all group flex flex-col h-full hover:-translate-y-1 cursor-pointer block"
+                  >
                     <div className="relative aspect-[4/3] overflow-hidden">
                       <img 
                         src={tour.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"} 
@@ -177,7 +249,7 @@ export function TourSearchPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="w-4 h-4" /> 
-                          <span>Thời gian: <span className="font-medium text-foreground">{tour.durationDays} ngày {tour.durationDays - 1} đêm</span></span>
+                          <span>Thời gian: <span className="font-medium text-foreground">{tour.durationText || `${tour.durationDays} ngày ${tour.durationDays - 1} đêm`}</span></span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-4 h-4" /> 

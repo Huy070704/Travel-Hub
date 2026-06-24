@@ -119,14 +119,49 @@ export function TourDetailPage() {
     );
   }
 
+  const extractSection = (text: string, sectionName: string) => {
+    const regex = new RegExp(`\\*\\*${sectionName}:\\*\\*\\n?([\\s\\S]*?)(?:\\n\\n\\*\\*|$)`, 'i');
+    const match = text.match(regex);
+    return match ? match[1].trim() : "";
+  };
+
+  const descText = tour.description || "";
+  const mainDescription = descText.split('\n\n**')[0] || descText;
+  const highlights = extractSection(descText, "Điểm nổi bật");
+  const includedText = extractSection(descText, "Bao gồm");
+  const excludedText = extractSection(descText, "Không bao gồm");
+  const meetingPoint = extractSection(descText, "Điểm hẹn");
+
+  const parseList = (text: string, defaultList: string[]) => {
+    if (!text) return defaultList;
+    return text.split('\n').map(item => item.replace(/^- /, '').trim()).filter(Boolean);
+  };
+
+  const includedList = parseList(includedText, [
+    "Khách sạn tiêu chuẩn",
+    "Các bữa ăn theo chương trình",
+    "Hướng dẫn viên nhiệt tình",
+    "Bảo hiểm du lịch",
+  ]);
+
+  const excludedList = parseList(excludedText, [
+    "Chi phí mua sắm cá nhân",
+    "Phí làm hộ chiếu/visa (nếu có)",
+    "Tiền tips cho HDV và tài xế",
+    "Các chi phí phát sinh ngoài chương trình",
+  ]);
+
+  const images = tour.imageUrl ? tour.imageUrl.split(',').filter(Boolean) : ["https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"];
+
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Image Gallery */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <div className="relative">
-          <div className="h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl relative group">
+        <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl group flex gap-2 bg-muted">
+          {/* Main Image */}
+          <div className="relative flex-1 h-full overflow-hidden">
             <img
-              src={tour.imageUrl?.split(',')[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+              src={images[0]}
               alt={tour.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
@@ -147,9 +182,37 @@ export function TourDetailPage() {
                 {tour.title}
               </h1>
             </div>
+          </div>
 
-            {/* Floating Action Buttons */}
-            <div className="absolute top-6 right-6 flex gap-3">
+          {/* Additional Images (Desktop) */}
+          {images.length > 1 && (
+            <div className="hidden md:flex w-[30%] flex-col gap-2 h-full">
+              <div className="flex-1 relative overflow-hidden">
+                <img
+                  src={images[1]}
+                  alt={`${tour.title} - photo 2`}
+                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                />
+              </div>
+              {images.length > 2 && (
+                <div className="flex-1 relative overflow-hidden">
+                  <img
+                    src={images[2]}
+                    alt={`${tour.title} - photo 3`}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                  />
+                  {images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors">
+                      <span className="text-white font-bold text-lg">+{images.length - 3} Ảnh</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Floating Action Buttons */}
+          <div className="absolute top-6 right-6 flex gap-3 z-10">
               <button className="p-3 bg-white/20 backdrop-blur-md rounded-full shadow-lg hover:bg-white/40 transition-all text-white border border-white/30">
                 <Share2 className="w-5 h-5" />
               </button>
@@ -166,7 +229,6 @@ export function TourDetailPage() {
             </div>
           </div>
         </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -180,7 +242,7 @@ export function TourDetailPage() {
                   <span className="text-muted-foreground text-sm flex items-center gap-1">
                     <Clock className="w-4 h-4" /> Thời gian
                   </span>
-                  <span className="font-semibold text-lg">{tour.durationDays} ngày {tour.durationDays - 1 > 0 ? tour.durationDays - 1 : 0} đêm</span>
+                  <span className="font-semibold text-lg">{tour.durationText || `${tour.durationDays} ngày ${tour.durationDays - 1 > 0 ? tour.durationDays - 1 : 0} đêm`}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-muted-foreground text-sm flex items-center gap-1">
@@ -202,9 +264,22 @@ export function TourDetailPage() {
                 </div>
               </div>
 
-              <div className="prose max-w-none text-muted-foreground text-lg leading-relaxed">
-                <p>{tour.description || "Hãy tham gia chuyến hành trình tuyệt vời này để khám phá những nét đẹp văn hóa, ẩm thực và cảnh quan đặc sắc. Tour được thiết kế dành riêng cho bạn với sự thoải mái và trải nghiệm được ưu tiên hàng đầu."}</p>
-                <p className="mt-4">Lịch trình chi tiết và các điểm tham quan nổi bật sẽ được hướng dẫn viên giới thiệu trên suốt chặng đường. Đừng bỏ lỡ cơ hội tạo ra những kỷ niệm khó quên!</p>
+              <div className="prose max-w-none text-muted-foreground text-lg leading-relaxed whitespace-pre-wrap">
+                {mainDescription || "Hãy tham gia chuyến hành trình tuyệt vời này để khám phá những nét đẹp văn hóa, ẩm thực và cảnh quan đặc sắc. Tour được thiết kế dành riêng cho bạn với sự thoải mái và trải nghiệm được ưu tiên hàng đầu."}
+                
+                {highlights && (
+                  <div className="mt-6">
+                    <h4 className="font-bold text-xl text-foreground mb-3">Điểm nổi bật</h4>
+                    <p className="whitespace-pre-wrap">{highlights}</p>
+                  </div>
+                )}
+                
+                {meetingPoint && (
+                  <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border">
+                    <h4 className="font-bold text-foreground mb-2 flex items-center gap-2"><MapPin className="w-5 h-5 text-primary"/> Điểm hẹn</h4>
+                    <p className="whitespace-pre-wrap">{meetingPoint}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -213,13 +288,7 @@ export function TourDetailPage() {
               <div className="bg-green-50/50 rounded-3xl p-8 border border-green-100">
                 <h4 className="font-bold text-lg mb-4 text-green-800">Dịch vụ bao gồm</h4>
                 <ul className="space-y-3">
-                  {[
-                    "Khách sạn tiêu chuẩn 4 sao",
-                    "Vé máy bay khứ hồi (nếu có)",
-                    "Các bữa ăn theo chương trình",
-                    "Hướng dẫn viên nhiệt tình",
-                    "Bảo hiểm du lịch",
-                  ].map((item, i) => (
+                  {includedList.map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-green-700/80">
                       <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                       <span>{item}</span>
@@ -230,12 +299,7 @@ export function TourDetailPage() {
               <div className="bg-red-50/50 rounded-3xl p-8 border border-red-100">
                 <h4 className="font-bold text-lg mb-4 text-red-800">Không bao gồm</h4>
                 <ul className="space-y-3">
-                  {[
-                    "Chi phí mua sắm cá nhân",
-                    "Phí làm hộ chiếu/visa (nếu có)",
-                    "Tiền tips cho HDV và tài xế",
-                    "Các chi phí phát sinh ngoài chương trình",
-                  ].map((item, i) => (
+                  {excludedList.map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-red-700/80">
                       <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />

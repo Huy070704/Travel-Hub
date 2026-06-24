@@ -3,10 +3,12 @@ import { useNavigate } from "react-router";
 import { CheckCircle2, Crown, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import axiosInstance from "@/api/axiosInstance";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function PremiumUpgradePage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
 
   const handleUpgrade = async () => {
     try {
@@ -14,9 +16,11 @@ export function PremiumUpgradePage() {
       await axiosInstance.post("/payment/upgrade-premium");
       toast.success("Thanh toán thành công! Chào mừng bạn đến với Premium.");
       
-      // Reload lại trang và điều hướng về /community để làm mới AuthContext
+      // Cập nhật trạng thái người dùng trong AuthContext ngay lập tức
+      updateUser({ isPremium: true });
+
       setTimeout(() => {
-        window.location.href = "/community";
+        navigate("/community");
       }, 1500);
 
     } catch (error) {
