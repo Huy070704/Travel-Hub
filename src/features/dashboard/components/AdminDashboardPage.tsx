@@ -40,6 +40,22 @@ const getFileUrl = (path: string | undefined | null) => {
   return `${baseUrl}${path}`;
 };
 
+const PROVINCES = [
+  "Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", 
+  "An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu", 
+  "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", 
+  "Bình Thuận", "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông", 
+  "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", 
+  "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình", 
+  "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", 
+  "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", 
+  "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Quảng Bình", 
+  "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sóc Trăng", 
+  "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hóa", 
+  "Thừa Thiên Huế", "Tiền Giang", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", 
+  "Vĩnh Phúc", "Yên Bái", "Phú Yên"
+];
+
 export function AdminDashboardPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "destinations" | "posts" | "reports" | "bookings" | "guides">("overview");
@@ -76,6 +92,7 @@ export function AdminDashboardPage() {
   const [destPage, setDestPage] = useState(1);
   const [destTotalPages, setDestTotalPages] = useState(1);
   const [destSearch, setDestSearch] = useState("");
+  const [destLocation, setDestLocation] = useState("all");
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<DestinationDto | null>(null);
   const [isDestModalOpen, setIsDestModalOpen] = useState(false);
@@ -121,12 +138,12 @@ export function AdminDashboardPage() {
     if (activeTab === "reports") {
       fetchReportsData();
     }
-  }, [activeTab, userCurrentPage, userOfflineFilter, destPage, destSearch]);
+  }, [activeTab, userCurrentPage, userOfflineFilter, destPage, destSearch, destLocation]);
 
   const fetchDestinationsData = async () => {
     setIsLoadingDestinations(true);
     try {
-      const response = await getDestinations(destSearch, undefined, undefined, destPage, 10);
+      const response = await getDestinations(destSearch, undefined, undefined, destPage, 10, destLocation === "all" ? undefined : destLocation);
       setDestinations(response.items);
       setTotalDestinations(response.totalCount);
       setDestTotalPages(response.totalPages);
@@ -585,9 +602,25 @@ export function AdminDashboardPage() {
                         className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
+                    <div className="relative border border-border rounded-xl bg-muted overflow-hidden focus-within:ring-2 focus-within:ring-primary md:w-64 shrink-0">
+                      <select 
+                        value={destLocation}
+                        onChange={(e) => {
+                          setDestLocation(e.target.value);
+                          setDestPage(1);
+                        }}
+                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="all">Tất cả tỉnh/thành</option>
+                        {PROVINCES.map(prov => (
+                          <option key={prov} value={prov}>{prov}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
                     <button 
                       onClick={() => { setSelectedDestination(null); setIsDestModalOpen(true); }}
-                      className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all"
+                      className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all whitespace-nowrap"
                     >
                       Thêm điểm đến
                     </button>

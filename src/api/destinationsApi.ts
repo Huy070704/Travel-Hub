@@ -6,10 +6,11 @@ export async function getDestinations(
   budget?: string,
   category?: string,
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  location?: string
 ) {
   const response = await axiosInstance.get<PaginatedList<DestinationDto>>("/Destinations", {
-    params: { search, budget, category, page, pageSize },
+    params: { search, budget, category, page, pageSize, location },
   });
   return response.data;
 }
