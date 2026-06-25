@@ -218,18 +218,14 @@ export function CreateExperienceModal({ onClose, onCreated, initialData }: Creat
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Điểm đến <span className="text-red-500">*</span></label>
-                        <select name="destination" value={formData.destination} onChange={handleChange} className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all">
-                          <option value="">Chọn Tỉnh/Thành phố</option>
-                          <option value="Hà Nội">Hà Nội</option>
-                          <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                          <option value="Đà Nẵng">Đà Nẵng</option>
-                          <option value="Nha Trang">Nha Trang</option>
-                          <option value="Phú Quốc">Phú Quốc</option>
-                          <option value="Sapa">Sapa</option>
-                          <option value="Hội An">Hội An</option>
-                          <option value="Đà Lạt">Đà Lạt</option>
-                          <option value="Hạ Long">Hạ Long</option>
-                        </select>
+                        <input 
+                          name="destination" 
+                          value={formData.destination} 
+                          onChange={handleChange} 
+                          type="text" 
+                          placeholder="VD: Sapa - Hà Nội - Hạ Long" 
+                          className="w-full px-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all" 
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1.5">Điểm khởi hành <span className="text-red-500">*</span></label>
