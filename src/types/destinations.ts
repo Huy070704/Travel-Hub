@@ -3,8 +3,13 @@ export type DestinationDto = {
   name: string;
   cityProvince: string;
   description?: string;
-  estimatedBaseCostVND?: number;
-  openWeatherMapCityID?: string;
+  rate?: number;
+  image?: string;
+  keyMain?: string;
+  entranceFee?: number;
+  accommodationCost?: number;
+  totalTourCost?: number;
+  tourPricePerPerson?: number;
 };
 
 export type PaginatedList<T> = {

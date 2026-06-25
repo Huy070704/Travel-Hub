@@ -25,3 +25,13 @@ export async function getDestinationDetails(id: number) {
   const response = await axiosInstance.get<DestinationDto>(`/Destinations/${id}`);
   return response.data;
 }
+
+export async function createDestination(data: Partial<DestinationDto>) {
+  const response = await axiosInstance.post<{ message: string; destinationId: number }>("/Destinations", data);
+  return response.data;
+}
+
+export async function updateDestination(id: number, data: Partial<DestinationDto>) {
+  const response = await axiosInstance.put<{ message: string; destinationId: number }>(`/Destinations/${id}`, data);
+  return response.data;
+}

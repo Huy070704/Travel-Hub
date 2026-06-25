@@ -39,19 +39,26 @@ export function DestinationDetailPage() {
   const aiRecommendations = JSON.parse(localStorage.getItem("ai_recommendations") || "[]");
   const aiMatch = aiRecommendations.find((rec: any) => rec.id.toString() === id);
 
+  const dbImages = realDestination?.image ? realDestination.image.split(',').filter(Boolean).map(url => url.startsWith('http') ? url : `http://localhost:8080${url}`) : [];
+  const defaultImages = [
+    aiMatch ? aiMatch.image : "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
+    "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200",
+    "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=1200",
+    "https://images.unsplash.com/photo-1559628376-f3fe5f782a2e?w=1200",
+    "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=1200",
+  ];
+  const finalImages = [...dbImages];
+  while (finalImages.length < 5) {
+    finalImages.push(defaultImages[finalImages.length % defaultImages.length]);
+  }
+
   const destination = {
     name: realDestination ? `${realDestination.name}, ${realDestination.cityProvince}` : (aiMatch ? aiMatch.destination : "Bali, Indonesia"),
     country: "Việt Nam",
-    rating: 4.8,
+    rating: realDestination?.rate || 4.8,
     reviews: 2847,
     description: realDestination?.description || "Một thiên đường nhiệt đới với những bãi biển tuyệt đẹp, những ngôi đền cổ kính, những thửa ruộng bậc thang xanh mướt và nền văn hóa sôi động. Hoàn hảo cho những sinh viên du lịch tiết kiệm đang tìm kiếm cả sự phiêu lưu và thư giãn.",
-    images: [
-      aiMatch ? aiMatch.image : "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200",
-      "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200",
-      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=1200",
-      "https://images.unsplash.com/photo-1559628376-f3fe5f782a2e?w=1200",
-      "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=1200",
-    ],
+    images: finalImages,
   };
 
   const [startDate, setStartDate] = useState<string>("");

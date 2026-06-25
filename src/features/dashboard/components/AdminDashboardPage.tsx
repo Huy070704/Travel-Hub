@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
 import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview } from "@/api/adminApi";
+import { getDestinations } from "@/api/destinationsApi";
 import type { TourBooking } from "@/types/tours";
 import type { AdminUser } from "@/types/admin";
+import type { DestinationDto } from "@/types/destinations";
+import { DestinationModal } from "./DestinationModal";
 import {
   Users,
   MapPin,
@@ -67,6 +70,16 @@ export function AdminDashboardPage() {
   const [isLoadingReports, setIsLoadingReports] = useState(false);
   const [reportFilter, setReportFilter] = useState("Tất cả báo cáo");
 
+  // Destinations state
+  const [destinations, setDestinations] = useState<DestinationDto[]>([]);
+  const [totalDestinations, setTotalDestinations] = useState(0);
+  const [destPage, setDestPage] = useState(1);
+  const [destTotalPages, setDestTotalPages] = useState(1);
+  const [destSearch, setDestSearch] = useState("");
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<DestinationDto | null>(null);
+  const [isDestModalOpen, setIsDestModalOpen] = useState(false);
+
   // Overview state
   const [overviewData, setOverviewData] = useState<any>(null);
   const [isLoadingOverview, setIsLoadingOverview] = useState(false);
@@ -99,13 +112,30 @@ export function AdminDashboardPage() {
     if (activeTab === "guides") {
       fetchPendingGuides();
     }
+    if (activeTab === "destinations") {
+      fetchDestinationsData();
+    }
     if (activeTab === "users") {
       fetchAdminUsersData();
     }
     if (activeTab === "reports") {
       fetchReportsData();
     }
-  }, [activeTab, userCurrentPage, userOfflineFilter]);
+  }, [activeTab, userCurrentPage, userOfflineFilter, destPage, destSearch]);
+
+  const fetchDestinationsData = async () => {
+    setIsLoadingDestinations(true);
+    try {
+      const response = await getDestinations(destSearch, undefined, undefined, destPage, 10);
+      setDestinations(response.items);
+      setTotalDestinations(response.totalCount);
+      setDestTotalPages(response.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch destinations", error);
+    } finally {
+      setIsLoadingDestinations(false);
+    }
+  };
 
   const fetchOverviewData = async () => {
     setIsLoadingOverview(true);
@@ -219,13 +249,6 @@ export function AdminDashboardPage() {
   const userGrowthData = overviewData?.userGrowth || [];
   const destinationData = overviewData?.destinationDistribution || [];
   const recentUsers = overviewData?.recentUsers || [];
-
-  const destinations = [
-    { id: 1, name: "Bali, Indonesia", category: "Biển", users: 2847, avgBudget: "12,500,000đ", status: "hoạt động" },
-    { id: 2, name: "Tokyo, Nhật Bản", category: "Văn hóa", users: 3291, avgBudget: "23,000,000đ", status: "hoạt động" },
-    { id: 3, name: "Barcelona, Tây Ban Nha", category: "Thành phố", users: 2156, avgBudget: "16,000,000đ", status: "hoạt động" },
-    { id: 4, name: "Iceland", category: "Phiêu lưu", users: 1423, avgBudget: "30,000,000đ", status: "hoạt động" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -557,10 +580,15 @@ export function AdminDashboardPage() {
                       <input
                         type="text"
                         placeholder="Tìm điểm đến..."
+                        value={destSearch}
+                        onChange={(e) => setDestSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
-                    <button className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all">
+                    <button 
+                      onClick={() => { setSelectedDestination(null); setIsDestModalOpen(true); }}
+                      className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all"
+                    >
                       Thêm điểm đến
                     </button>
                   </div>
@@ -568,53 +596,103 @@ export function AdminDashboardPage() {
 
                 {/* Destinations Table */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Điểm đến</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Danh mục</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngân sách TB</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
-                          <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {destinations.map((dest) => (
-                          <tr key={dest.id} className="border-b border-border hover:bg-muted/50 transition-all">
-                            <td className="py-3 px-4 font-semibold">{dest.name}</td>
-                            <td className="py-3 px-4">
-                              <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
-                                {dest.category}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-sm text-muted-foreground">{dest.users}</td>
-                            <td className="py-3 px-4 text-sm font-semibold text-primary">{dest.avgBudget}</td>
-                            <td className="py-3 px-4">
-                              <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                                {dest.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-muted rounded transition-all">
-                                  <Eye className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                                <button className="p-2 hover:bg-muted rounded transition-all">
-                                  <Edit className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                                <button className="p-2 hover:bg-red-50 rounded transition-all">
-                                  <Trash2 className="w-4 h-4 text-red-500" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {isLoadingDestinations ? (
+                    <div className="py-12 text-center text-muted-foreground">Đang tải dữ liệu...</div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-border">
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Điểm đến</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Từ khóa</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Tỉnh/Thành phố</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Chi phí (VND)</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Trạng thái</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {destinations.map((dest) => (
+                              <tr key={dest.destinationID} className="border-b border-border hover:bg-muted/50 transition-all">
+                                <td className="py-3 px-4 font-semibold">
+                                  <div className="flex items-center gap-3">
+                                    <img src={dest.image?.split(',')[0] || "https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=100"} alt={dest.name} className="w-10 h-10 rounded-lg object-cover" />
+                                    <span>{dest.name}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                                    {dest.keyMain || "Chưa có"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground">{dest.cityProvince}</td>
+                                <td className="py-3 px-4 text-sm font-semibold text-primary">{dest.totalTourCost ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(dest.totalTourCost) : "N/A"}</td>
+                                <td className="py-3 px-4">
+                                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                                    Hoạt động
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <button className="p-2 hover:bg-muted rounded transition-all" onClick={() => window.open(`/destination/${dest.destinationID}`, '_blank')}>
+                                      <Eye className="w-4 h-4 text-muted-foreground" />
+                                    </button>
+                                    <button className="p-2 hover:bg-muted rounded transition-all" onClick={() => { setSelectedDestination(dest); setIsDestModalOpen(true); }}>
+                                      <Edit className="w-4 h-4 text-muted-foreground" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                            {destinations.length === 0 && (
+                              <tr>
+                                <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                                  Không tìm thấy điểm đến nào.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* Pagination */}
+                      {destTotalPages > 1 && (
+                        <div className="mt-6 flex items-center justify-center gap-2">
+                          <button 
+                            disabled={destPage === 1}
+                            onClick={() => setDestPage(prev => Math.max(1, prev - 1))}
+                            className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Trước
+                          </button>
+                          <span className="text-sm font-medium mx-4">
+                            Trang {destPage} / {destTotalPages}
+                          </span>
+                          <button 
+                            disabled={destPage === destTotalPages}
+                            onClick={() => setDestPage(prev => Math.min(destTotalPages, prev + 1))}
+                            className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Sau
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
+
+                {/* Modal */}
+                {isDestModalOpen && (
+                  <DestinationModal 
+                    initialData={selectedDestination} 
+                    onClose={() => setIsDestModalOpen(false)} 
+                    onSaved={() => {
+                      setIsDestModalOpen(false);
+                      fetchDestinationsData();
+                    }} 
+                  />
+                )}
               </div>
             )}
 
