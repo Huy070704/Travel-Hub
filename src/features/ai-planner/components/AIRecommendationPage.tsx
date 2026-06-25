@@ -119,7 +119,7 @@ export function AIRecommendationPage() {
         destination: `${item.name}, ${item.cityProvince}`,
         distance: item.distance,
         country: "Việt Nam",
-        image: `https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=800&q=80&auto=format&fit=crop&sig=${item.destinationID}`,
+        image: item.imageUrl ? item.imageUrl.split(',')[0] : `https://images.unsplash.com/photo-1598977123118-4e30ba3c4f5b?w=800&q=80&auto=format&fit=crop&sig=${item.destinationID}`,
         estimatedCost: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.estimatedCostVND),
         confidence: 90 + (index % 10),
         weather: { temp: "28°C", condition: "Đẹp" },

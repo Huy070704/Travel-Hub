@@ -22,6 +22,7 @@ export type AiRecommendResponse = {
   matchReason: string;
   distance: string;
   estimatedCostVND: number;
+  imageUrl?: string;
   dailyCostBreakdown: {
     accommodation: string;
     food: string;
