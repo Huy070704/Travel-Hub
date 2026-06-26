@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
-import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview } from "@/api/adminApi";
+import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview, getUserDetail, updateUser, blockUser } from "@/api/adminApi";
 import { getDestinations } from "@/api/destinationsApi";
 import type { TourBooking } from "@/types/tours";
-import type { AdminUser } from "@/types/admin";
+import type { AdminUser, AdminUserDetail } from "@/types/admin";
 import type { DestinationDto } from "@/types/destinations";
 import { DestinationModal } from "./DestinationModal";
 import {
@@ -18,8 +18,10 @@ import {
   Filter,
   MoreVertical,
   Edit,
-  Trash2,
   Eye,
+  Ban,
+  ShieldCheck,
+  Loader2,
   ChevronDown,
   BarChart3,
   PieChart,
@@ -75,6 +77,15 @@ export function AdminDashboardPage() {
   const [userOfflineFilter, setUserOfflineFilter] = useState("all");
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
+  // User view / edit / block modal state
+  const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null);
+  const [isUserViewOpen, setIsUserViewOpen] = useState(false);
+  const [isUserEditOpen, setIsUserEditOpen] = useState(false);
+  const [isLoadingUserDetail, setIsLoadingUserDetail] = useState(false);
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [blockingUserId, setBlockingUserId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ fullName: "", email: "", studentCode: "", gender: "", role: "Customer" });
+
   // Pending guides state
   const [pendingGuides, setPendingGuides] = useState<any[]>([]);
   const [isLoadingGuides, setIsLoadingGuides] = useState(false);
@@ -117,6 +128,116 @@ export function AdminDashboardPage() {
     } finally {
       setIsLoadingUsers(false);
     }
+  };
+
+  const handleViewUser = async (user: AdminUser) => {
+    setIsUserViewOpen(true);
+    setSelectedUser(null);
+    setIsLoadingUserDetail(true);
+    try {
+      const id = user.userID || (user as any).userId;
+      const detail = await getUserDetail(id);
+      setSelectedUser(detail);
+    } catch (error) {
+      console.error("Failed to fetch user detail", error);
+      toast.error("Không thể tải thông tin người dùng.");
+      setIsUserViewOpen(false);
+    } finally {
+      setIsLoadingUserDetail(false);
+    }
+  };
+
+  const handleEditUser = async (user: AdminUser) => {
+    setIsUserEditOpen(true);
+    setSelectedUser(null);
+    setIsLoadingUserDetail(true);
+    try {
+      const id = user.userID || (user as any).userId;
+      const detail = await getUserDetail(id);
+      setSelectedUser(detail);
+      setEditForm({
+        fullName: detail.fullName ?? "",
+        email: detail.email ?? "",
+        studentCode: detail.studentCode ?? "",
+        gender: detail.gender ?? "",
+        role: detail.role ?? "Customer",
+      });
+    } catch (error) {
+      console.error("Failed to fetch user detail", error);
+      toast.error("Không thể tải thông tin người dùng.");
+      setIsUserEditOpen(false);
+    } finally {
+      setIsLoadingUserDetail(false);
+    }
+  };
+
+  const handleSaveUser = async () => {
+    if (!selectedUser) return;
+    setIsSavingUser(true);
+    try {
+      const id = selectedUser.userID || (selectedUser as any).userId;
+      await updateUser(id, {
+        fullName: editForm.fullName,
+        email: editForm.email,
+        studentCode: editForm.studentCode,
+        gender: editForm.gender,
+        role: editForm.role,
+      });
+      toast.success("Cập nhật người dùng thành công.");
+      setIsUserEditOpen(false);
+      fetchAdminUsersData();
+    } catch (error: any) {
+      console.error("Failed to update user", error);
+      toast.error(error?.response?.data?.message || "Cập nhật người dùng thất bại.");
+    } finally {
+      setIsSavingUser(false);
+    }
+  };
+
+  const handleToggleBlock = async (user: AdminUser) => {
+    const nextBlocked = !user.isBlocked;
+    const confirmMsg = nextBlocked
+      ? `Chặn người dùng "${user.fullName || user.username}"?`
+      : `Bỏ chặn người dùng "${user.fullName || user.username}"?`;
+    const description = nextBlocked 
+      ? "Họ sẽ bị đăng xuất và không thể truy cập lại website nữa." 
+      : "Họ sẽ có thể đăng nhập và sử dụng hệ thống bình thường.";
+
+    toast(
+      <div className="flex flex-col gap-1.5">
+        <span className="font-semibold text-[15px]">{confirmMsg}</span>
+        <span className="text-sm opacity-90">{description}</span>
+      </div>, 
+      {
+        duration: 8000,
+        className: "border-border dark:border-slate-700 p-4",
+        classNames: {
+          actionButton: "!bg-primary hover:!bg-primary/90 !text-white !font-semibold !rounded-lg !px-4 !py-2 !transition-all",
+          cancelButton: "!bg-muted hover:!bg-muted/80 !text-foreground dark:!text-white !font-semibold !rounded-lg !px-4 !py-2 !transition-all !border-transparent"
+        },
+        action: {
+          label: "Xác nhận",
+          onClick: async () => {
+            const id = user.userID || (user as any).userId;
+            setBlockingUserId(id);
+            try {
+              await blockUser(id, nextBlocked);
+              toast.success(nextBlocked ? "Đã chặn người dùng thành công." : "Đã bỏ chặn người dùng thành công.");
+              setAdminUsers(prev => prev.map(u => (u.userID || (u as any).userId) === id ? { ...u, isBlocked: nextBlocked } : u));
+            } catch (error: any) {
+              console.error("Failed to toggle block", error);
+              toast.error(error?.response?.data?.message || "Thao tác thất bại.");
+            } finally {
+              setBlockingUserId(null);
+            }
+          }
+        },
+        cancel: {
+          label: "Hủy",
+          onClick: () => {}
+        }
+      }
+    );
   };
 
   useEffect(() => {
@@ -461,9 +582,9 @@ export function AdminDashboardPage() {
             {activeTab === "users" && (
               <div className="space-y-6">
                 {/* Header Information */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="bg-card dark:bg-slate-900 rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-bold">Danh sách người dùng</h2>
+                    <h2 className="text-xl font-bold dark:text-white">Danh sách người dùng</h2>
                     <p className="text-muted-foreground mt-1">Tổng số người dùng: <span className="font-bold text-primary">{totalUsers}</span></p>
                   </div>
                   <div className="flex gap-4 w-full md:w-auto">
@@ -472,21 +593,21 @@ export function AdminDashboardPage() {
                       <input
                         type="text"
                         placeholder="Tìm người dùng..."
-                        className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-muted dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
-                    <div className="relative border border-border rounded-xl bg-muted overflow-hidden focus-within:ring-2 focus-within:ring-primary">
+                    <div className="relative border border-border dark:border-slate-700 rounded-xl bg-muted dark:bg-slate-800 overflow-hidden focus-within:ring-2 focus-within:ring-primary">
                       <select 
                         value={userOfflineFilter} 
                         onChange={(e) => {
                           setUserOfflineFilter(e.target.value);
                           setUserCurrentPage(1);
                         }}
-                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent outline-none appearance-none cursor-pointer"
+                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent outline-none appearance-none cursor-pointer dark:text-white"
                       >
-                        <option value="all">Tất cả</option>
-                        <option value="1_24_hours">1-24 giờ chưa online</option>
-                        <option value="1_30_days">1-30 ngày chưa online</option>
+                        <option value="all" className="dark:bg-slate-800">Tất cả</option>
+                        <option value="1_24_hours" className="dark:bg-slate-800">1-24 giờ chưa online</option>
+                        <option value="1_30_days" className="dark:bg-slate-800">1-30 ngày chưa online</option>
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
@@ -494,7 +615,7 @@ export function AdminDashboardPage() {
                 </div>
 
                 {/* Users Table */}
-                <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="bg-card dark:bg-slate-900 rounded-2xl shadow-lg p-6">
                   {isLoadingUsers ? (
                     <div className="py-12 text-center text-muted-foreground">Đang tải dữ liệu...</div>
                   ) : (
@@ -502,54 +623,89 @@ export function AdminDashboardPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b border-border">
-                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Người dùng</th>
-                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Email</th>
-                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Ngày tham gia</th>
-                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Thời gian chưa online</th>
-                              <th className="text-left py-3 px-4 text-sm text-muted-foreground">Hành động</th>
+                            <tr className="border-b border-border dark:border-slate-800">
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Người dùng</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Email</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Ngày tham gia</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Thời gian chưa online</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Trạng thái</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Hành động</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {adminUsers.map((user) => (
-                              <tr key={user.userID} className="border-b border-border hover:bg-muted/50 transition-all">
+                            {adminUsers.map((user) => {
+                              const uId = user.userID || (user as any).userId;
+                              return (
+                              <tr key={uId} className="border-b border-border dark:border-slate-800 hover:bg-muted/50 dark:hover:bg-slate-800/50 transition-all">
                                 <td className="py-3 px-4">
                                   <div className="flex items-center gap-3">
-                                    <img src={user.avatarURL || "https://ui-avatars.com/api/?name=" + (user.fullName || user.username)} alt={user.username} className="w-10 h-10 rounded-full object-cover" />
-                                    <span className="font-semibold">{user.fullName || user.username}</span>
+                                    <img src={user.avatarURL || (user as any).avatarUrl || "https://ui-avatars.com/api/?name=" + (user.fullName || user.username)} alt={user.username} className="w-10 h-10 rounded-full object-cover" />
+                                    <span className="font-semibold dark:text-white">{user.fullName || user.username}</span>
                                   </div>
                                 </td>
-                                <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>
-                                <td className="py-3 px-4 text-sm text-muted-foreground">{new Date(user.registrationDate).toLocaleDateString("vi-VN")}</td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground dark:text-slate-300">{user.email}</td>
+                                <td className="py-3 px-4 text-sm text-muted-foreground dark:text-slate-300">{new Date(user.registrationDate).toLocaleDateString("vi-VN")}</td>
                                 <td className="py-3 px-4">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     user.offlineDurationText === "Vừa mới online" || user.offlineDurationText.includes("phút")
-                                      ? "bg-green-100 text-green-700" 
+                                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
                                       : user.offlineDurationText === "Chưa từng online"
-                                      ? "bg-gray-100 text-gray-700"
-                                      : "bg-yellow-100 text-yellow-700"
+                                      ? "bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300"
+                                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                                   }`}>
                                     {user.offlineDurationText}
                                   </span>
                                 </td>
                                 <td className="py-3 px-4">
+                                  {user.isBlocked ? (
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                      Đã chặn
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                      Hoạt động
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
                                   <div className="flex items-center gap-2">
-                                    <button className="p-2 hover:bg-muted rounded transition-all">
-                                      <Eye className="w-4 h-4 text-muted-foreground" />
+                                    <button
+                                      onClick={() => handleViewUser(user)}
+                                      title="Xem chi tiết"
+                                      className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded transition-all"
+                                    >
+                                      <Eye className="w-4 h-4 text-muted-foreground dark:text-slate-400" />
                                     </button>
-                                    <button className="p-2 hover:bg-muted rounded transition-all">
-                                      <Edit className="w-4 h-4 text-muted-foreground" />
+                                    <button
+                                      onClick={() => handleEditUser(user)}
+                                      title="Chỉnh sửa"
+                                      className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded transition-all"
+                                    >
+                                      <Edit className="w-4 h-4 text-muted-foreground dark:text-slate-400" />
                                     </button>
-                                    <button className="p-2 hover:bg-red-50 rounded transition-all">
-                                      <Trash2 className="w-4 h-4 text-red-500" />
+                                    <button
+                                      onClick={() => handleToggleBlock(user)}
+                                      disabled={blockingUserId === uId}
+                                      title={user.isBlocked ? "Bỏ chặn" : "Chặn người dùng"}
+                                      className={`p-2 rounded transition-all disabled:opacity-50 ${
+                                        user.isBlocked ? "hover:bg-green-50 dark:hover:bg-green-900/30" : "hover:bg-red-50 dark:hover:bg-red-900/30"
+                                      }`}
+                                    >
+                                      {blockingUserId === uId ? (
+                                        <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                                      ) : user.isBlocked ? (
+                                        <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-500" />
+                                      ) : (
+                                        <Ban className="w-4 h-4 text-red-500 dark:text-red-400" />
+                                      )}
                                     </button>
                                   </div>
                                 </td>
                               </tr>
-                            ))}
+                            )})}
                             {adminUsers.length === 0 && (
                               <tr>
-                                <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                                <td colSpan={6} className="text-center py-8 text-muted-foreground">
                                   Không tìm thấy người dùng nào.
                                 </td>
                               </tr>
@@ -609,11 +765,11 @@ export function AdminDashboardPage() {
                           setDestLocation(e.target.value);
                           setDestPage(1);
                         }}
-                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent outline-none appearance-none cursor-pointer"
+                        className="w-full h-full pl-4 pr-10 py-3 bg-transparent text-foreground outline-none appearance-none cursor-pointer"
                       >
-                        <option value="all">Tất cả tỉnh/thành</option>
+                        <option value="all" className="bg-background text-foreground">Tất cả tỉnh/thành</option>
                         {PROVINCES.map(prov => (
-                          <option key={prov} value={prov}>{prov}</option>
+                          <option key={prov} value={prov} className="bg-background text-foreground">{prov}</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -982,6 +1138,177 @@ export function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* User Details Modal */}
+      {isUserViewOpen && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col border border-border dark:border-slate-800">
+            <div className="flex justify-between items-center p-6 border-b border-border dark:border-slate-800">
+              <h3 className="text-xl font-bold dark:text-white">Chi tiết người dùng</h3>
+              <button onClick={() => setIsUserViewOpen(false)} className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-full transition-all text-muted-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="flex items-start gap-6 mb-8">
+                <img 
+                  src={selectedUser.avatarURL || "https://ui-avatars.com/api/?name=" + (selectedUser.fullName || selectedUser.username)} 
+                  alt="Avatar" 
+                  className="w-24 h-24 rounded-full object-cover shadow-md border-4 border-white dark:border-slate-800"
+                />
+                <div>
+                  <h4 className="text-2xl font-bold mb-1 dark:text-white">{selectedUser.fullName || selectedUser.username}</h4>
+                  <p className="text-muted-foreground">{selectedUser.email}</p>
+                  <div className="mt-3 flex gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${selectedUser.isBlocked ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                      {selectedUser.isBlocked ? "Đã chặn" : "Hoạt động"}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs font-semibold">
+                      {selectedUser.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-border dark:border-slate-800">Thông tin cá nhân</h4>
+                  <ul className="space-y-4">
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Tên đăng nhập:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.username}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Mã sinh viên:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.studentCode || "Chưa cập nhật"}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Giới tính:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.gender || "Chưa cập nhật"}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Ngày sinh:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.dateOfBirth ? new Date(selectedUser.dateOfBirth).toLocaleDateString('vi-VN') : "Chưa cập nhật"}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-4 pb-2 border-b border-border dark:border-slate-800">Thông tin hệ thống</h4>
+                  <ul className="space-y-4">
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Ngày tham gia:</span>
+                      <span className="font-medium text-right dark:text-white">{new Date(selectedUser.registrationDate).toLocaleDateString('vi-VN')}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Lần cuối online:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.lastOnline ? new Date(selectedUser.lastOnline).toLocaleString('vi-VN') : "Chưa từng online"}</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-muted-foreground">Tài khoản Premium:</span>
+                      <span className="font-medium text-right dark:text-white">{selectedUser.isPremium ? "Có" : "Không"}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-border dark:border-slate-800 flex justify-end gap-3 bg-gray-50 dark:bg-slate-900">
+              <button onClick={() => setIsUserViewOpen(false)} className="px-6 py-2.5 bg-card dark:bg-slate-800 border border-border dark:border-slate-700 text-foreground dark:text-white rounded-xl hover:bg-muted dark:hover:bg-slate-700 transition-all font-semibold">
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {isUserEditOpen && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col border border-border dark:border-slate-800">
+            <div className="flex justify-between items-center p-6 border-b border-border dark:border-slate-800">
+              <h3 className="text-xl font-bold dark:text-white">Chỉnh sửa người dùng</h3>
+              <button onClick={() => setIsUserEditOpen(false)} className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-full transition-all text-muted-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-slate-300">Họ và tên</label>
+                <input 
+                  type="text"
+                  value={editForm.fullName}
+                  onChange={e => setEditForm({...editForm, fullName: e.target.value})}
+                  className="w-full p-3 bg-muted/50 dark:bg-slate-800 border border-border dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                  placeholder="Nhập họ và tên..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-slate-300">Email</label>
+                <input 
+                  type="email"
+                  value={editForm.email}
+                  onChange={e => setEditForm({...editForm, email: e.target.value})}
+                  className="w-full p-3 bg-muted/50 dark:bg-slate-800 border border-border dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                  placeholder="Nhập email..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-slate-300">Mã sinh viên</label>
+                <input 
+                  type="text"
+                  value={editForm.studentCode}
+                  onChange={e => setEditForm({...editForm, studentCode: e.target.value})}
+                  className="w-full p-3 bg-muted/50 dark:bg-slate-800 border border-border dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                  placeholder="Nhập mã sinh viên..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-slate-300">Giới tính</label>
+                  <select 
+                    value={editForm.gender}
+                    onChange={e => setEditForm({...editForm, gender: e.target.value})}
+                    className="w-full p-3 bg-muted/50 dark:bg-slate-800 border border-border dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all cursor-pointer dark:text-white"
+                  >
+                    <option value="" className="dark:bg-slate-800">Chưa chọn</option>
+                    <option value="Male" className="dark:bg-slate-800">Nam</option>
+                    <option value="Female" className="dark:bg-slate-800">Nữ</option>
+                    <option value="Other" className="dark:bg-slate-800">Khác</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-slate-300">Vai trò</label>
+                  <select 
+                    value={editForm.role}
+                    onChange={e => setEditForm({...editForm, role: e.target.value})}
+                    className="w-full p-3 bg-muted/50 dark:bg-slate-800 border border-border dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all cursor-pointer dark:text-white"
+                  >
+                    <option value="Customer" className="dark:bg-slate-800">Customer</option>
+                    <option value="TourGuide" className="dark:bg-slate-800">TourGuide</option>
+                    <option value="Admin" className="dark:bg-slate-800">Admin</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-border dark:border-slate-800 flex justify-end gap-3 bg-gray-50 dark:bg-slate-900">
+              <button 
+                onClick={() => setIsUserEditOpen(false)} 
+                className="px-6 py-2.5 bg-card dark:bg-slate-800 border border-border dark:border-slate-700 text-foreground dark:text-white rounded-xl hover:bg-muted dark:hover:bg-slate-700 transition-all font-semibold"
+                disabled={isSavingUser}
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={handleSaveUser} 
+                className="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-semibold flex items-center gap-2 shadow-sm"
+                disabled={isSavingUser}
+              >
+                {isSavingUser ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {isSavingUser ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Booking Details Modal */}
       {isBookingModalOpen && selectedBooking && (

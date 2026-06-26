@@ -14,8 +14,9 @@ export function TourSearchPage() {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 12;
 
-  const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
-  const [selectedDurations, setSelectedDurations] = useState<string[]>([]);
+  // GIỮ GIAO DIỆN CŨ - ĐỔI LOGIC: Chuyển từ mảng string[] thành string duy nhất
+  const [selectedPrice, setSelectedPrice] = useState<string>("Tất cả");
+  const [selectedDuration, setSelectedDuration] = useState<string>("Tất cả");
   const [sortOption, setSortOption] = useState("Giá thấp đến cao");
 
   const destination = searchParams.get("destination") || "";
@@ -43,28 +44,22 @@ export function TourSearchPage() {
     fetchTours();
   }, [destination, departureDate, departureLocation, page]);
 
-  // Apply filters and sorting locally
+  // Cập nhật logic filter theo giá trị đơn lẻ
   const filteredTours = tours.filter(tour => {
     let priceMatch = true;
-    if (selectedPrices.length > 0) {
-      priceMatch = selectedPrices.some(priceOpt => {
-        if (priceOpt === "Dưới 5 triệu") return tour.priceVND < 5000000;
-        if (priceOpt === "5 - 10 triệu") return tour.priceVND >= 5000000 && tour.priceVND <= 10000000;
-        if (priceOpt === "10 - 20 triệu") return tour.priceVND > 10000000 && tour.priceVND <= 20000000;
-        if (priceOpt === "Trên 20 triệu") return tour.priceVND > 20000000;
-        return true;
-      });
+    if (selectedPrice !== "Tất cả") {
+      if (selectedPrice === "Dưới 5 triệu") priceMatch = tour.priceVND < 5000000;
+      if (selectedPrice === "5 - 10 triệu") priceMatch = tour.priceVND >= 5000000 && tour.priceVND <= 10000000;
+      if (selectedPrice === "10 - 20 triệu") priceMatch = tour.priceVND > 10000000 && tour.priceVND <= 20000000;
+      if (selectedPrice === "Trên 20 triệu") priceMatch = tour.priceVND > 20000000;
     }
 
     let durationMatch = true;
-    if (selectedDurations.length > 0) {
-      durationMatch = selectedDurations.some(durationOpt => {
-        const d = tour.durationDays;
-        if (durationOpt === "1-3 ngày") return d >= 1 && d <= 3;
-        if (durationOpt === "4-7 ngày") return d >= 4 && d <= 7;
-        if (durationOpt === "Trên 7 ngày") return d > 7;
-        return true;
-      });
+    if (selectedDuration !== "Tất cả") {
+      const d = tour.durationDays;
+      if (selectedDuration === "1-3 ngày") durationMatch = d >= 1 && d <= 3;
+      if (selectedDuration === "4-7 ngày") durationMatch = d >= 4 && d <= 7;
+      if (selectedDuration === "Trên 7 ngày") durationMatch = d > 7;
     }
 
     return priceMatch && durationMatch;
@@ -106,13 +101,13 @@ export function TourSearchPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         
-        {/* Search Bar at the top, pulled up into the header slightly */}
+        {/* Search Bar at the top */}
         <div className="mb-10 -mt-20 relative z-50">
           <TourSearchBar />
         </div>
 
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filters Sidebar */}
+          {/* Filters Sidebar - GIỮ NGUYÊN GIAO DIỆN GỐC CHỈ ĐỔI LOGIC CHỌN 1 */}
           <div className="w-full md:w-64 flex-shrink-0">
             <div className="glass p-6 rounded-2xl sticky top-24">
               <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border">
@@ -121,21 +116,19 @@ export function TourSearchPage() {
               </div>
               
               <div className="space-y-6">
+                {/* Mức giá (Giao diện cũ dạng hàng ngang nhưng chỉ chọn 1) */}
                 <div>
                   <h4 className="font-semibold mb-3">Mức giá</h4>
                   <div className="flex flex-wrap gap-2">
-                    {["Dưới 5 triệu", "5 - 10 triệu", "10 - 20 triệu", "Trên 20 triệu"].map((price, i) => {
-                      const isSelected = selectedPrices.includes(price);
+                    {["Tất cả", "Dưới 5 triệu", "5 - 10 triệu", "10 - 20 triệu", "Trên 20 triệu"].map((price, i) => {
+                      const isSelected = selectedPrice === price;
                       return (
                         <button
                           key={i}
-                          onClick={() => {
-                            if (isSelected) setSelectedPrices(prev => prev.filter(p => p !== price));
-                            else setSelectedPrices(prev => [...prev, price]);
-                          }}
+                          onClick={() => setSelectedPrice(price)}
                           className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all duration-200 border ${
                             isSelected 
-                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" 
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 font-semibold" 
                               : "bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -146,21 +139,19 @@ export function TourSearchPage() {
                   </div>
                 </div>
 
+                {/* Thời gian (Giao diện cũ dạng hàng ngang nhưng chỉ chọn 1) */}
                 <div>
                   <h4 className="font-semibold mb-3">Thời gian</h4>
                   <div className="flex flex-wrap gap-2">
-                    {["1-3 ngày", "4-7 ngày", "Trên 7 ngày"].map((duration, i) => {
-                      const isSelected = selectedDurations.includes(duration);
+                    {["Tất cả", "1-3 ngày", "4-7 ngày", "Trên 7 ngày"].map((duration, i) => {
+                      const isSelected = selectedDuration === duration;
                       return (
                         <button
                           key={i}
-                          onClick={() => {
-                            if (isSelected) setSelectedDurations(prev => prev.filter(d => d !== duration));
-                            else setSelectedDurations(prev => [...prev, duration]);
-                          }}
+                          onClick={() => setSelectedDuration(duration)}
                           className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all duration-200 border ${
                             isSelected 
-                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" 
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 font-semibold" 
                               : "bg-background hover:bg-muted border-border text-muted-foreground hover:text-foreground"
                           }`}
                         >

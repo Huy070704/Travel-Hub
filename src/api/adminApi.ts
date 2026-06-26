@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { AdminUserResponse } from '../types/admin';
+import type { AdminUserResponse, AdminUserDetail, AdminUpdateUserPayload } from '../types/admin';
 
 export const getAdminOverview = async () => {
   const response = await axiosInstance.get('/Admin/overview');
@@ -18,6 +18,21 @@ export const getAllUsers = async (
       offlineFilter: offlineFilter === 'all' ? '' : offlineFilter,
     },
   });
+  return response.data;
+};
+
+export const getUserDetail = async (userId: number): Promise<AdminUserDetail> => {
+  const response = await axiosInstance.get(`/Admin/users/${userId}`);
+  return response.data;
+};
+
+export const updateUser = async (userId: number, payload: AdminUpdateUserPayload) => {
+  const response = await axiosInstance.put(`/Admin/users/${userId}`, payload);
+  return response.data;
+};
+
+export const blockUser = async (userId: number, isBlocked: boolean) => {
+  const response = await axiosInstance.put(`/Admin/users/${userId}/block`, { isBlocked });
   return response.data;
 };
 
