@@ -1,21 +1,44 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Calendar, Navigation } from "lucide-react";
+import { Search, MapPin, Calendar, X } from "lucide-react";
 import { useNavigate } from "react-router";
 import { getPopularDestinations } from "@/api/toursApi";
 
+// Hàm lấy ngày hiện tại chính xác theo múi giờ local (Sửa lỗi UTC của Code 1)
+const getLocalDateString = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Hàm định dạng ngày hiển thị dd/mm/yyyy
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "Chọn ngày đi";
+  const [year, month, day] = dateStr.split("-");
+  if (!year || !month || !day) return dateStr;
+  return `${day}/${month}/${year}`;
+};
+
 export function TourSearchBar() {
   const [destination, setDestination] = useState("");
-  const [departureDate, setDepartureDate] = useState("");
-  const [departureLocation, setDepartureLocation] = useState("");
+  const [departureDate, setDepartureDate] = useState(""); // Để trống mặc định theo Code 2
+  const [departureLocation, setDepartureLocation] = useState("Tất cả");
   const [popularDestinations, setPopularDestinations] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showDepartureSuggestions, setShowDepartureSuggestions] = useState(false);
+  
+  // Logic Code 2: Quản lý trạng thái người dùng đang gõ tìm kiếm điểm khởi hành
+  const [isSearchingDeparture, setIsSearchingDeparture] = useState(false);
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const departureWrapperRef = useRef<HTMLDivElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null); // Ref sửa lỗi không click chọn được ngày của Code 1
   const navigate = useNavigate();
 
   const predefinedDepartureLocations = ["Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
 
+  // Fetch địa điểm hot từ API
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
@@ -28,6 +51,7 @@ export function TourSearchBar() {
     fetchDestinations();
   }, []);
 
+  // Xử lý click ngoài vùng dropdown để đóng menu
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -35,42 +59,138 @@ export function TourSearchBar() {
       }
       if (departureWrapperRef.current && !departureWrapperRef.current.contains(event.target as Node)) {
         setShowDepartureSuggestions(false);
+        setIsSearchingDeparture(false);
+        if (!departureLocation) {
+          setDepartureLocation("Tất cả");
+        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [departureLocation]);
 
+  // Điều hướng tìm kiếm
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (destination) params.append("destination", destination);
     if (departureDate) params.append("date", departureDate);
     if (departureLocation && departureLocation !== "Tất cả") params.append("from", departureLocation);
-    
+
     navigate(`/tours/search?${params.toString()}`);
+  };
+
+  // Kích hoạt mở hộp thoại chọn ngày mượt mà
+  const handleDateContainerClick = () => {
+    if (dateInputRef.current) {
+      if ('showPicker' in HTMLInputElement.prototype) {
+        dateInputRef.current.showPicker();
+      } else {
+        dateInputRef.current.click();
+      }
+    }
   };
 
   return (
     <div className="bg-card/90 dark:bg-card/80 backdrop-blur-xl p-3 md:p-4 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3 items-center border border-border w-full transition-all">
-      {/* Destination Input with Custom Suggestions */}
-      <div className="relative flex-[1.5] w-full" ref={wrapperRef}>
-        <div className="flex items-center gap-3 px-4 py-3 bg-muted/40 hover:bg-muted/60 focus-within:bg-muted/60 rounded-xl border-2 border-transparent focus-within:border-primary/50 transition-all">
-          <Search className="w-5 h-5 text-primary/70" />
+      
+      {/* 1. Điểm khởi hành (Giao diện Code 1 + Logic Code 2) */}
+      <div
+        className="flex-1 w-full h-14 flex items-center gap-3 pl-3 pr-4 bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200/80 dark:hover:bg-slate-800/60 rounded-full border border-transparent focus-within:border-primary/30 focus-within:bg-card transition-all relative"
+        ref={departureWrapperRef}
+      >
+        <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-600 shrink-0">
+          <MapPin className="w-5 h-5 text-slate-500 dark:text-slate-300" />
+        </div>
+        <div className="flex flex-col flex-1 min-w-0 text-left pr-4">
+          <span className="text-[11px] text-muted-foreground font-semibold">Điểm khởi hành</span>
           <input
             type="text"
-            placeholder="Bạn muốn đi đâu?"
-            className="w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground font-medium"
-            value={destination}
+            className="w-full bg-transparent border-none outline-none text-sm text-primary dark:text-primary font-bold placeholder:text-primary"
+            placeholder="Tất cả"
+            value={departureLocation}
             onChange={(e) => {
-              setDestination(e.target.value);
-              setShowSuggestions(true);
+              setDepartureLocation(e.target.value);
+              setShowDepartureSuggestions(true);
+              setIsSearchingDeparture(true); // Đánh dấu đang gõ tìm kiếm chuyên sâu
             }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onFocus={() => {
+              if (departureLocation === "Tất cả") {
+                setDepartureLocation("");
+              }
+              setShowDepartureSuggestions(true);
+            }}
           />
         </div>
-        
-        {/* Dropdown Suggestions */}
+        {departureLocation && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDepartureLocation(departureLocation === "Tất cả" ? "" : "Tất cả");
+              setIsSearchingDeparture(false);
+            }}
+            className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center transition-colors shrink-0"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+
+        {/* Dropdown gợi ý điểm khởi hành */}
+        {showDepartureSuggestions && (
+          <div className="absolute top-[calc(100%+12px)] left-0 w-full min-w-[200px] bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border z-50 p-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2 uppercase tracking-widest opacity-80">
+              <MapPin className="w-4 h-4" />
+              Điểm khởi hành
+            </h4>
+            <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
+              {predefinedDepartureLocations
+                // Áp dụng logic lọc thông minh từ Code 2: Không bị ẩn danh sách khi bấm chọn lại
+                .filter(loc => !isSearchingDeparture || departureLocation === "Tất cả" || loc.toLowerCase().includes(departureLocation.toLowerCase()))
+                .map((loc, i) => (
+                  <button
+                    key={i}
+                    className="text-left px-3 py-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all text-sm font-semibold flex items-center gap-3 group shrink-0"
+                    onClick={() => {
+                      setDepartureLocation(loc);
+                      setShowDepartureSuggestions(false);
+                      setIsSearchingDeparture(false);
+                    }}
+                  >
+                    <span className="truncate">{loc}</span>
+                  </button>
+                ))}
+              {isSearchingDeparture && predefinedDepartureLocations.filter(loc => loc.toLowerCase().includes(departureLocation.toLowerCase())).length === 0 && (
+                <span className="text-xs text-muted-foreground text-center py-2">Không tìm thấy địa điểm</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Điểm đến (Giao diện Code 1 chuẩn chỉnh) */}
+      <div className="relative flex-[1.5] w-full" ref={wrapperRef}>
+        <div className="flex items-center gap-3 pl-3 pr-4 py-2 h-14 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-full border border-slate-200 dark:border-slate-700 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-700 shrink-0">
+            <MapPin className="w-5 h-5 text-slate-500 dark:text-slate-300" />
+          </div>
+          <div className="flex flex-col flex-1 min-w-0 text-left">
+            <span className="text-[11px] text-muted-foreground font-semibold">Điểm đến</span>
+            <input
+              type="text"
+              placeholder="Địa điểm bất kỳ..."
+              className="w-full bg-transparent border-none outline-none text-sm text-foreground focus:text-primary font-bold placeholder:text-muted-foreground/60"
+              value={destination}
+              onChange={(e) => {
+                setDestination(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+        </div>
+
+        {/* Dropdown gợi ý địa điểm hot */}
         {showSuggestions && popularDestinations.length > 0 && (
           <div className="absolute top-[calc(100%+12px)] left-0 w-full md:w-[600px] bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border z-50 p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <h4 className="text-sm font-bold text-primary mb-4 flex items-center gap-2 uppercase tracking-widest opacity-80">
@@ -98,79 +218,40 @@ export function TourSearchBar() {
         )}
       </div>
 
-      {/* Date Input */}
-      <div className="flex-1 w-full flex items-center gap-3 px-4 py-3 bg-muted/40 hover:bg-muted/60 focus-within:bg-muted/60 rounded-xl border-2 border-transparent focus-within:border-primary/50 transition-all">
-        <Calendar className="w-5 h-5 text-primary/70" />
-        <div className="flex flex-col w-full">
-          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Ngày khởi hành</span>
-          <input
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            className="w-full bg-transparent border-none outline-none text-sm text-foreground font-bold cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
-            value={departureDate}
-            onChange={(e) => setDepartureDate(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Departure Location */}
+      {/* 3. Ô Chọn Ngày Đi (Giao diện Code 1 + Fix triệt để lỗi chặn Click) */}
       <div 
-        className="flex-1 w-full flex items-center gap-3 px-4 py-3 bg-muted/40 hover:bg-muted/60 focus-within:bg-muted/60 rounded-xl border-2 border-transparent focus-within:border-primary/50 transition-all relative"
-        ref={departureWrapperRef}
+        onClick={handleDateContainerClick}
+        className="flex-1 w-full h-14 flex items-center gap-3 pl-3 pr-4 bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200/80 dark:hover:bg-slate-800/60 rounded-full border border-transparent focus-within:border-primary/30 transition-all relative cursor-pointer"
       >
-        <Navigation className="w-5 h-5 text-primary/70" />
-        <div className="flex flex-col w-full">
-          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Khởi hành từ</span>
-          <input 
-            type="text"
-            className="w-full bg-transparent border-none outline-none text-sm text-foreground font-bold placeholder:text-muted-foreground/50"
-            placeholder="Điểm khởi hành"
-            value={departureLocation}
-            onChange={(e) => {
-              setDepartureLocation(e.target.value);
-              setShowDepartureSuggestions(true);
-            }}
-            onFocus={() => setShowDepartureSuggestions(true)}
-          />
+        <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-600 shrink-0 pointer-events-none">
+          <Calendar className="w-5 h-5 text-slate-500 dark:text-slate-300" />
         </div>
-
-        {/* Departure Suggestions Dropdown */}
-        {showDepartureSuggestions && (
-          <div className="absolute top-[calc(100%+12px)] left-0 w-full min-w-[200px] bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border z-50 p-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2 uppercase tracking-widest opacity-80">
-              <Navigation className="w-4 h-4" />
-              Điểm khởi hành
-            </h4>
-            <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
-              {predefinedDepartureLocations
-                .filter(loc => departureLocation === "Tất cả" || loc.toLowerCase().includes(departureLocation.toLowerCase()))
-                .map((loc, i) => (
-                  <button
-                    key={i}
-                    className="text-left px-3 py-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all text-sm font-semibold flex items-center gap-3 group shrink-0"
-                    onClick={() => {
-                      setDepartureLocation(loc);
-                      setShowDepartureSuggestions(false);
-                    }}
-                  >
-                    <span className="truncate">{loc}</span>
-                  </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="flex flex-col flex-1 min-w-0 text-left pointer-events-none">
+          <span className="text-[11px] text-muted-foreground font-semibold text-ellipsis overflow-hidden whitespace-nowrap">Ngày đi</span>
+          <span className="text-sm font-bold text-primary dark:text-primary">
+            {formatDate(departureDate)}
+          </span>
+        </div>
+        <input
+          ref={dateInputRef}
+          type="date"
+          min={getLocalDateString()}
+          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none z-0"
+          value={departureDate}
+          onChange={(e) => setDepartureDate(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
 
-      {/* Search Button */}
-      <button 
+      {/* 4. Nút Tìm kiếm (Giữ màu xanh Navy thương hiệu thanh lịch của Code 1) */}
+      <button
         onClick={handleSearch}
-        className="w-full md:w-auto px-10 py-4 bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group"
+        className="w-full md:w-auto h-14 px-10 bg-[#0F4C81] dark:bg-primary hover:bg-[#0d4372] dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-full font-bold text-base shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 group shrink-0 cursor-pointer"
       >
         <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
         <span>Tìm kiếm</span>
       </button>
+
     </div>
   );
 }
-  
-
