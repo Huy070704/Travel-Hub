@@ -28,7 +28,7 @@ import { Coins } from 'lucide-react';
 import type { AiRecommendRequest } from "../../../types/ai";
 
 type PlannerFormData = {
-  departure: string;
+  destination: string;
   budget: string;
   days: string;
   interests: string[];
@@ -63,7 +63,7 @@ export function AIRecommendationPage() {
   const [formData, setFormData] = useState<PlannerFormData>(() => {
     const saved = localStorage.getItem("ai_formData");
     return saved ? JSON.parse(saved) : {
-      departure: "",
+      destination: "",
       budget: "",
       days: "",
       interests: [] as string[],
@@ -87,12 +87,18 @@ export function AIRecommendationPage() {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const fetchRecommendations = async (currentPage: number, isLoadMore: boolean = false) => {
+    // Chuyển đổi ID sở thích (ví dụ: "beach") sang tiếng Việt (ví dụ: "Bãi biển") để Backend tìm kiếm dễ dàng
+    const mappedInterests = formData.interests
+      .map(id => interests.find(i => i.id === id)?.label)
+      .filter(Boolean)
+      .join(", ");
+
     const requestPayload: AiRecommendRequest = {
       budgetVND: Number(formData.budget),
       days: Number(formData.days),
-      interests: formData.interests.join(", "),
-      departure: formData.departure,
-      destination: "",
+      interests: mappedInterests,
+      departure: "",
+      destination: formData.destination || (formData as any).departure || "", // Hỗ trợ cache cũ
       transportationPreference: "no_preference",
       travelGroup: formData.travelGroup,
       destinationType: "",
@@ -253,16 +259,16 @@ export function AIRecommendationPage() {
             <form onSubmit={handleSubmit} className="bg-card dark:bg-card/90 backdrop-blur-xl p-3 md:p-4 rounded-3xl shadow-2xl shadow-primary/10 border border-border/50">
               <div className="flex flex-col md:flex-row items-center gap-2">
 
-                {/* Departure */}
+                {/* Destination */}
                 <div className="flex-1 w-full relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
                     <MapPin className="w-5 h-5" />
                   </div>
                   <input
                     type="text"
-                    value={formData.departure}
-                    onChange={(e) => setFormData({ ...formData, departure: e.target.value })}
-                    placeholder="Bạn xuất phát từ đâu?"
+                    value={formData.destination || (formData as any).departure || ""}
+                    onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                    placeholder="Bạn muốn đi đâu?"
                     className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground selection:bg-blue-500 selection:text-white dark:selection:bg-blue-600 dark:selection:text-white"
                     required
                   />

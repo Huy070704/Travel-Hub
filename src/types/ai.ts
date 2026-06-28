@@ -44,6 +44,7 @@ export type AiGenerateItineraryRequest = {
   destinationID: number;
   days: number;
   travelStyle?: string;
+  budgetVND?: number;
 };
 
 export type AiActivity = {

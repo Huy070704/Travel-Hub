@@ -17,6 +17,10 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isEditMode] = useState(!!initialData);
+  
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryImages, setLibraryImages] = useState<string[]>([]);
+  const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -72,6 +76,21 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
     } finally {
       setIsUploadingImage(false);
       e.target.value = '';
+    }
+  };
+
+  const handleOpenLibrary = async () => {
+    setShowLibrary(true);
+    if (libraryImages.length === 0) {
+      setIsLoadingLibrary(true);
+      try {
+        const images = await tourGuideApi.getLibraryImages();
+        setLibraryImages(images);
+      } catch (error) {
+        toast.error("Lỗi khi tải thư viện ảnh");
+      } finally {
+        setIsLoadingLibrary(false);
+      }
     }
   };
 
@@ -182,7 +201,12 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
 
             {/* Hình ảnh */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold">Thư viện ảnh <span className="text-sm font-normal text-muted-foreground ml-2">(Tải lên 1 hoặc nhiều ảnh)</span></h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold">Thư viện ảnh <span className="text-sm font-normal text-muted-foreground ml-2">(Tải lên 1 hoặc nhiều ảnh)</span></h3>
+                <Button variant="outline" size="sm" onClick={handleOpenLibrary} type="button">
+                  Chọn từ thư viện
+                </Button>
+              </div>
               
               <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[140px]">
                 <input 
@@ -207,6 +231,41 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
                   </>
                 )}
               </div>
+
+              {showLibrary && (
+                  <div className="border border-border rounded-2xl p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-bold">Ảnh đã tải lên trước đây</h4>
+                          <button type="button" onClick={() => setShowLibrary(false)} className="text-muted-foreground hover:text-foreground">
+                              <X className="w-5 h-5" />
+                          </button>
+                      </div>
+                      {isLoadingLibrary ? (
+                          <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                      ) : (
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-h-60 overflow-y-auto p-1">
+                              {libraryImages.length > 0 ? libraryImages.map((img, idx) => (
+                                  <div 
+                                      key={idx} 
+                                      className="relative aspect-square rounded-xl cursor-pointer overflow-hidden border-2 border-transparent hover:border-primary transition-all"
+                                      onClick={() => {
+                                          if (!imageUrls.includes(img)) {
+                                              setImageUrls(prev => [...prev, img]);
+                                              toast.success("Đã thêm ảnh từ thư viện");
+                                          } else {
+                                              toast.error("Ảnh này đã được chọn");
+                                          }
+                                      }}
+                                  >
+                                      <img src={img} alt="library" className="w-full h-full object-cover" />
+                                  </div>
+                              )) : (
+                                  <div className="col-span-full text-center text-muted-foreground py-4">Chưa có ảnh nào trong thư viện.</div>
+                              )}
+                          </div>
+                      )}
+                  </div>
+              )}
 
               {imageUrls.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">

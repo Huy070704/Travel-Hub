@@ -27,7 +27,7 @@ import { getTrendingDestinations } from "@/api/destinationsApi";
 import { getMyProfile } from "@/api/usersApi";
 import { sendDirectMessage } from "@/api/chatApi";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import type { PostDto, CommentDto } from "@/types/feed";
 import type { BuddyRecommendationDto } from "@/types/buddies";
 import type { DestinationDto } from "@/types/destinations";
@@ -55,7 +55,10 @@ export function CommunityFeedPage() {
   const [buddies, setBuddies] = useState<BuddyRecommendationDto[]>([]);
   const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfileDto | null>(null);
-  const [newPostContent, setNewPostContent] = useState("");
+  const location = useLocation();
+  const initialPostContent = (location.state as any)?.initialPostContent || "";
+
+  const [newPostContent, setNewPostContent] = useState(initialPostContent);
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
 

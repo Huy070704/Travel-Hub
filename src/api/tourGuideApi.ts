@@ -65,4 +65,9 @@ export const tourGuideApi = {
     
     return response.data.url;
   },
+
+  getLibraryImages: async (): Promise<string[]> => {
+    const response = await api.get('/uploads/library');
+    return response.data;
+  },
 };

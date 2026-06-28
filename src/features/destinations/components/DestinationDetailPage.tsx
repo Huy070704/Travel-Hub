@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useLocation } from "react-router";
 import { toast } from "sonner";
 import { getDestinationDetails } from "@/api/destinationsApi";
 import { createItinerary } from "@/api/itinerariesApi";
@@ -61,8 +61,13 @@ export function DestinationDetailPage() {
     images: finalImages,
   };
 
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const locationState = (useLocation().state || {}) as { startDate?: string, endDate?: string };
+  const [startDate, setStartDate] = useState<string>(
+    locationState.startDate ? new Date(locationState.startDate).toISOString().split('T')[0] : ""
+  );
+  const [endDate, setEndDate] = useState<string>(
+    locationState.endDate ? new Date(locationState.endDate).toISOString().split('T')[0] : ""
+  );
   const [weatherForecast, setWeatherForecast] = useState<any[]>([]);
 
   const handleSaveForLater = async () => {
@@ -143,6 +148,10 @@ export function DestinationDetailPage() {
     }
   }, [startDate, endDate, realDestination]);
 
+  const baseCost = aiMatch?.estimatedCostValue || realDestination?.totalTourCost || realDestination?.estimatedBaseCostVND || 11500000;
+  // Assume a default of 3 days if not specified
+  const dailyBudget = baseCost / 3;
+
   const expenses = aiMatch?.dailyCostBreakdown ? [
     { category: "Chỗ ở", icon: Hotel, daily: aiMatch.dailyCostBreakdown.accommodation, description: "Từ phòng dorm đến khách sạn bình dân" },
     { category: "Ăn uống", icon: Utensils, daily: aiMatch.dailyCostBreakdown.food, description: "Từ ẩm thực đường phố đến nhà hàng" },
@@ -151,12 +160,12 @@ export function DestinationDetailPage() {
     { category: "Giải trí", icon: Coffee, daily: aiMatch.dailyCostBreakdown.entertainment, description: "Giải trí về đêm, sự kiện" },
     { category: "Mua sắm", icon: ShoppingBag, daily: aiMatch.dailyCostBreakdown.shopping, description: "Quà lưu niệm và chợ địa phương" },
   ] : [
-    { category: "Chỗ ở", icon: Hotel, daily: "300.000đ - 700.000đ", description: "Từ phòng dorm đến khách sạn bình dân" },
-    { category: "Ăn uống", icon: Utensils, daily: "200.000đ - 500.000đ", description: "Từ ẩm thực đường phố đến nhà hàng" },
-    { category: "Di chuyển", icon: Bus, daily: "100.000đ - 250.000đ", description: "Thuê xe máy hoặc phương tiện địa phương" },
-    { category: "Hoạt động", icon: Camera, daily: "200.000đ - 600.000đ", description: "Tham quan đền chùa, tour, thể thao dưới nước" },
-    { category: "Giải trí", icon: Coffee, daily: "100.000đ - 350.000đ", description: "Quán cafe, cuộc sống về đêm, beach clubs" },
-    { category: "Mua sắm", icon: ShoppingBag, daily: "200.000đ - 500.000đ", description: "Quà lưu niệm và chợ địa phương" },
+    { category: "Chỗ ở", icon: Hotel, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.4))}đ`, description: "Phân bổ khoảng 40% ngân sách" },
+    { category: "Ăn uống", icon: Utensils, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.3))}đ`, description: "Phân bổ khoảng 30% ngân sách" },
+    { category: "Di chuyển", icon: Bus, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.1))}đ`, description: "Phân bổ khoảng 10% ngân sách" },
+    { category: "Hoạt động", icon: Camera, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.1))}đ`, description: "Phân bổ khoảng 10% ngân sách" },
+    { category: "Giải trí", icon: Coffee, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.05))}đ`, description: "Phân bổ khoảng 5% ngân sách" },
+    { category: "Mua sắm", icon: ShoppingBag, daily: `~${new Intl.NumberFormat('vi-VN').format(Math.round(dailyBudget * 0.05))}đ`, description: "Phân bổ khoảng 5% ngân sách" },
   ];
 
   const attractions = [
@@ -439,7 +448,9 @@ export function DestinationDetailPage() {
                   state={{
                     days: startDate && endDate 
                       ? Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1) 
-                      : undefined
+                      : undefined,
+                    autoGenerate: !!(startDate && endDate),
+                    budgetVND: baseCost
                   }}
                   className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 mb-3"
                 >

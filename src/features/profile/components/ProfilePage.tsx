@@ -480,7 +480,8 @@ export function ProfilePage() {
                   const destId = trip.details?.[0]?.destinationID;
                   return (
                     <Link
-                      to={destId ? `/destination/${destId}` : "#"}
+                      to={destId ? `/itinerary/${destId}` : "#"}
+                      state={{ startDate: trip.startDate, endDate: trip.endDate, itineraryId: trip.itineraryID }}
                       key={trip.itineraryID}
                       className="flex gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-all cursor-pointer group"
                     >

@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { loginRequest, googleLoginRequest } from "@/api/authApi";
 import type { AuthUser, LoginCredentials } from "@/types/auth";
+import { signalrService } from "@/api/signalrService";
 
 type AuthContextValue = {
   token: string | null;
@@ -84,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(null);
     setUser(null);
+    
+    // Disconnect SignalR to clear old token connection
+    signalrService.disconnect();
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {
