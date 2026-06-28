@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, UploadCloud, Loader2, Save, MapPin } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, UploadCloud, Loader2, Save, MapPin, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createDestination, updateDestination } from "@/api/destinationsApi";
 import { tourGuideApi } from "@/api/tourGuideApi";
@@ -17,10 +17,12 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isEditMode] = useState(!!initialData);
-  
+
   const [showLibrary, setShowLibrary] = useState(false);
   const [libraryImages, setLibraryImages] = useState<string[]>([]);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
+
+  const pasteAreaRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -90,6 +92,33 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
         toast.error("Lỗi khi tải thư viện ảnh");
       } finally {
         setIsLoadingLibrary(false);
+      }
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          try {
+            setIsUploadingImage(true);
+            toast.loading("Đang tải ảnh từ clipboard...", { id: 'paste-upload' });
+            const url = await tourGuideApi.uploadFile(file);
+            setImageUrls(prev => [...prev, url]);
+            toast.success("Paste ảnh thành công!", { id: 'paste-upload' });
+          } catch (error: any) {
+            toast.error(error.response?.data?.message || "Lỗi khi tải ảnh lên", { id: 'paste-upload' });
+          } finally {
+            setIsUploadingImage(false);
+          }
+        }
+        break;
       }
     }
   };
@@ -207,29 +236,56 @@ export function DestinationModal({ onClose, onSaved, initialData }: DestinationM
                   Chọn từ thư viện
                 </Button>
               </div>
-              
-              <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[140px]">
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  disabled={isUploadingImage}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
-                />
-                {isUploadingImage ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
-                    <p className="text-sm font-medium text-primary">Đang tải ảnh lên...</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                      <UploadCloud className="w-5 h-5 text-primary" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Upload từ máy */}
+                <div className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[140px]">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={isUploadingImage}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                  />
+                  {isUploadingImage ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                      <p className="text-sm font-medium text-primary">Đang tải ảnh lên...</p>
                     </div>
-                    <p className="font-bold mb-1">Tải ảnh lên từ máy</p>
-                    <p className="text-xs text-muted-foreground">Nhấp hoặc kéo thả ảnh vào đây</p>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <UploadCloud className="w-5 h-5 text-primary" />
+                      </div>
+                      <p className="font-bold mb-1">Tải ảnh lên từ máy</p>
+                      <p className="text-xs text-muted-foreground">Nhấp hoặc kéo thả ảnh vào đây</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Paste từ clipboard */}
+                <div
+                  ref={pasteAreaRef}
+                  onPaste={handlePaste}
+                  tabIndex={0}
+                  className="border-2 border-dashed border-green-500/30 bg-green-500/5 hover:bg-green-500/10 transition-colors rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer group min-h-[140px] focus:ring-2 focus:ring-green-500/50 outline-none"
+                  onClick={() => pasteAreaRef.current?.focus()}
+                >
+                  {isUploadingImage ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="w-8 h-8 text-green-600 animate-spin mb-2" />
+                      <p className="text-sm font-medium text-green-600">Đang tải ảnh lên...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <Clipboard className="w-5 h-5 text-green-600" />
+                      </div>
+                      <p className="font-bold mb-1 text-green-700 dark:text-green-500">Paste ảnh từ Clipboard</p>
+                      <p className="text-xs text-muted-foreground">Copy ảnh rồi nhấp vào đây và Ctrl+V</p>
+                    </>
+                  )}
+                </div>
               </div>
 
               {showLibrary && (
