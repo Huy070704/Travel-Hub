@@ -62,7 +62,22 @@ export function AIRecommendationPage() {
   });
   const [formData, setFormData] = useState<PlannerFormData>(() => {
     const saved = localStorage.getItem("ai_formData");
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.departure && !parsed.destination) {
+        parsed.destination = parsed.departure;
+      }
+      delete parsed.departure; // Remove legacy key
+      return {
+        destination: parsed.destination || "",
+        budget: parsed.budget || "",
+        days: parsed.days || "",
+        interests: parsed.interests || [],
+        travelGroup: parsed.travelGroup || "",
+        travelStyle: parsed.travelStyle || "Budget",
+      };
+    }
+    return {
       destination: "",
       budget: "",
       days: "",
@@ -98,7 +113,7 @@ export function AIRecommendationPage() {
       days: Number(formData.days),
       interests: mappedInterests,
       departure: "",
-      destination: formData.destination || (formData as any).departure || "", // Hỗ trợ cache cũ
+      destination: formData.destination || "",
       transportationPreference: "no_preference",
       travelGroup: formData.travelGroup,
       destinationType: "",
@@ -266,7 +281,7 @@ export function AIRecommendationPage() {
                   </div>
                   <input
                     type="text"
-                    value={formData.destination || (formData as any).departure || ""}
+                    value={formData.destination}
                     onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
                     placeholder="Bạn muốn đi đâu?"
                     className="w-full h-14 pl-12 pr-4 bg-muted/30 hover:bg-muted/50 focus:bg-background rounded-2xl outline-none border border-transparent focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all text-foreground font-medium placeholder:font-normal placeholder:text-muted-foreground selection:bg-blue-500 selection:text-white dark:selection:bg-blue-600 dark:selection:text-white"
