@@ -244,22 +244,40 @@ export function AdminDashboardPage() {
     if (activeTab === "overview") {
       fetchOverviewData();
     }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (activeTab === "bookings") {
       fetchBookings();
     }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (activeTab === "guides") {
       fetchPendingGuides();
     }
-    if (activeTab === "destinations") {
-      fetchDestinationsData();
-    }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (activeTab === "users") {
       fetchAdminUsersData();
     }
+  }, [activeTab, userCurrentPage, userOfflineFilter]);
+
+  useEffect(() => {
     if (activeTab === "reports") {
       fetchReportsData();
     }
-  }, [activeTab, userCurrentPage, userOfflineFilter, destPage, destSearch, destLocation]);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "destinations") {
+      const timer = setTimeout(() => {
+        fetchDestinationsData();
+      }, 500); // Debounce search
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, destPage, destSearch, destLocation]);
 
   const fetchDestinationsData = async () => {
     setIsLoadingDestinations(true);
