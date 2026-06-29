@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Calendar, X } from "lucide-react";
+import { Search, MapPin, Calendar as CalendarIcon, X } from "lucide-react";
 import { useNavigate } from "react-router";
-import { getPopularDestinations } from "@/api/toursApi";
+import { getPopularDestinations, getDepartureLocations, getGuideTourDates } from "@/api/toursApi";
+import { Calendar } from "@/components/ui/calendar";
+
 
 // Hàm lấy ngày hiện tại chính xác theo múi giờ local (Sửa lỗi UTC của Code 1)
 const getLocalDateString = () => {
@@ -20,6 +22,21 @@ const formatDate = (dateStr: string) => {
   return `${day}/${month}/${year}`;
 };
 
+const parseLocalDate = (dateStr: string) => {
+  if (!dateStr) return undefined;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  return new Date(year, month - 1, day);
+};
+
+const formatDateToYYYYMMDD = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+
 export function TourSearchBar() {
   const [destination, setDestination] = useState("");
   const [departureDate, setDepartureDate] = useState(""); // Để trống mặc định theo Code 2
@@ -33,10 +50,12 @@ export function TourSearchBar() {
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const departureWrapperRef = useRef<HTMLDivElement>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null); // Ref sửa lỗi không click chọn được ngày của Code 1
   const navigate = useNavigate();
 
-  const predefinedDepartureLocations = ["Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
+  const [departureLocations, setDepartureLocations] = useState<string[]>(["Thanh Hóa", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"]);
+  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
+  const [guideTourDates, setGuideTourDates] = useState<string[]>([]);
+  const dateWrapperRef = useRef<HTMLDivElement>(null);
 
   // Fetch địa điểm hot từ API
   useEffect(() => {
@@ -51,6 +70,32 @@ export function TourSearchBar() {
     fetchDestinations();
   }, []);
 
+  // Fetch địa điểm khởi hành từ API
+  useEffect(() => {
+    const fetchDepartureLocations = async () => {
+      try {
+        const locs = await getDepartureLocations();
+        setDepartureLocations(locs);
+      } catch (error) {
+        console.error("Failed to load departure locations", error);
+      }
+    };
+    fetchDepartureLocations();
+  }, []);
+
+  // Fetch ngày khởi hành có sẵn từ TourGuide
+  useEffect(() => {
+    const fetchGuideTourDates = async () => {
+      try {
+        const dates = await getGuideTourDates();
+        setGuideTourDates(dates);
+      } catch (error) {
+        console.error("Failed to load guide tour dates", error);
+      }
+    };
+    fetchGuideTourDates();
+  }, []);
+
   // Xử lý click ngoài vùng dropdown để đóng menu
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -63,6 +108,9 @@ export function TourSearchBar() {
         if (!departureLocation) {
           setDepartureLocation("Tất cả");
         }
+      }
+      if (dateWrapperRef.current && !dateWrapperRef.current.contains(event.target as Node)) {
+        setShowCalendarDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -81,13 +129,7 @@ export function TourSearchBar() {
 
   // Kích hoạt mở hộp thoại chọn ngày mượt mà
   const handleDateContainerClick = () => {
-    if (dateInputRef.current) {
-      if ('showPicker' in HTMLInputElement.prototype) {
-        dateInputRef.current.showPicker();
-      } else {
-        dateInputRef.current.click();
-      }
-    }
+    setShowCalendarDropdown(prev => !prev);
   };
 
   return (
@@ -143,7 +185,7 @@ export function TourSearchBar() {
               Điểm khởi hành
             </h4>
             <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
-              {predefinedDepartureLocations
+              {departureLocations
                 // Áp dụng logic lọc thông minh từ Code 2: Không bị ẩn danh sách khi bấm chọn lại
                 .filter(loc => !isSearchingDeparture || departureLocation === "Tất cả" || loc.toLowerCase().includes(departureLocation.toLowerCase()))
                 .map((loc, i) => (
@@ -159,7 +201,7 @@ export function TourSearchBar() {
                     <span className="truncate">{loc}</span>
                   </button>
                 ))}
-              {isSearchingDeparture && predefinedDepartureLocations.filter(loc => loc.toLowerCase().includes(departureLocation.toLowerCase())).length === 0 && (
+              {isSearchingDeparture && departureLocations.filter(loc => loc.toLowerCase().includes(departureLocation.toLowerCase())).length === 0 && (
                 <span className="text-xs text-muted-foreground text-center py-2">Không tìm thấy địa điểm</span>
               )}
             </div>
@@ -218,13 +260,14 @@ export function TourSearchBar() {
         )}
       </div>
 
-      {/* 3. Ô Chọn Ngày Đi (Giao diện Code 1 + Fix triệt để lỗi chặn Click) */}
+      {/* 3. Ô Chọn Ngày Đi (Giao diện Code 1 + Popover Calendar tùy chỉnh) */}
       <div 
+        ref={dateWrapperRef}
         onClick={handleDateContainerClick}
         className="flex-1 w-full h-14 flex items-center gap-3 pl-3 pr-4 bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200/80 dark:hover:bg-slate-800/60 rounded-full border border-transparent focus-within:border-primary/30 transition-all relative cursor-pointer"
       >
         <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-600 shrink-0 pointer-events-none">
-          <Calendar className="w-5 h-5 text-slate-500 dark:text-slate-300" />
+          <CalendarIcon className="w-5 h-5 text-slate-500 dark:text-slate-300" />
         </div>
         <div className="flex flex-col flex-1 min-w-0 text-left pointer-events-none">
           <span className="text-[11px] text-muted-foreground font-semibold text-ellipsis overflow-hidden whitespace-nowrap">Ngày đi</span>
@@ -232,15 +275,39 @@ export function TourSearchBar() {
             {formatDate(departureDate)}
           </span>
         </div>
-        <input
-          ref={dateInputRef}
-          type="date"
-          min={getLocalDateString()}
-          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none z-0"
-          value={departureDate}
-          onChange={(e) => setDepartureDate(e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-        />
+
+        {/* Dropdown Lịch tùy chỉnh */}
+        {showCalendarDropdown && (
+          <div 
+            className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 w-auto bg-popover/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border z-50 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Calendar
+              mode="single"
+              selected={parseLocalDate(departureDate)}
+              onSelect={(date) => {
+                if (date) {
+                  setDepartureDate(formatDateToYYYYMMDD(date));
+                } else {
+                  setDepartureDate("");
+                }
+                setShowCalendarDropdown(false);
+              }}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
+              modifiers={{
+                hasTour: (date) => guideTourDates.includes(formatDateToYYYYMMDD(date))
+              }}
+              modifiersClassNames={{
+                hasTour: "relative after:absolute after:bottom-[3px] after:left-1/2 after:-translate-x-1/2 after:size-1.5 after:bg-red-500 after:rounded-full after:z-10"
+              }}
+              initialFocus
+            />
+          </div>
+        )}
       </div>
 
       {/* 4. Nút Tìm kiếm (Giữ màu xanh Navy thương hiệu thanh lịch của Code 1) */}

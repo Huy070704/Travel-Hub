@@ -32,6 +32,18 @@ export const getPopularDestinations = async (): Promise<string[]> => {
   return response.data;
 };
 
+export const getDepartureLocations = async (): Promise<string[]> => {
+  const response = await axiosInstance.get('/Tour/departures');
+  return response.data;
+};
+
+export const getGuideTourDates = async (): Promise<string[]> => {
+  const response = await axiosInstance.get('/Tour/guide-tour-dates');
+  return response.data;
+};
+
+
+
 export const getTourDetails = async (id: number): Promise<TourResponse> => {
   const response = await axiosInstance.get(`/Tour/${id}`);
   return response.data;
