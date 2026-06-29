@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getAllTourBookings, updateTourBookingStatus } from "@/api/toursApi";
-import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview, getUserDetail, updateUser, blockUser } from "@/api/adminApi";
+import { getAllUsers, getPendingGuides, approveGuide, getReports, updateReportStatus, getAdminOverview, getUserDetail, updateUser, blockUser, updateUserPoints } from "@/api/adminApi";
 import { getDestinations } from "@/api/destinationsApi";
 import type { TourBooking } from "@/types/tours";
 import type { AdminUser, AdminUserDetail } from "@/types/admin";
@@ -76,6 +76,8 @@ export function AdminDashboardPage() {
   const [userTotalPages, setUserTotalPages] = useState(1);
   const [userOfflineFilter, setUserOfflineFilter] = useState("all");
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [debouncedUserSearch, setDebouncedUserSearch] = useState("");
 
   // User view / edit / block modal state
   const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null);
@@ -120,7 +122,7 @@ export function AdminDashboardPage() {
   const fetchAdminUsersData = async () => {
     setIsLoadingUsers(true);
     try {
-      const response = await getAllUsers(userCurrentPage, 30, userOfflineFilter);
+      const response = await getAllUsers(userCurrentPage, 30, userOfflineFilter, debouncedUserSearch);
       setAdminUsers(response.users);
       setTotalUsers(response.totalUsers);
       setUserTotalPages(response.totalPages);
@@ -195,6 +197,71 @@ export function AdminDashboardPage() {
     }
   };
 
+  const handleAdjustPoints = async (user: AdminUser, offset: number) => {
+    const id = user.userID || (user as any).userId;
+    const currentPoints = user.travelPoints || 0;
+    const newPoints = Math.max(0, currentPoints + offset);
+    try {
+      await updateUserPoints(id, newPoints);
+      toast.success(`Đã cập nhật Travel Point cho ${user.fullName || user.username}`);
+      setAdminUsers(prev => prev.map(u => (u.userID || (u as any).userId) === id ? { ...u, travelPoints: newPoints } : u));
+    } catch (err) {
+      toast.error("Không thể cập nhật số điểm.");
+    }
+  };
+
+  const handlePromptPoints = (user: AdminUser) => {
+    const id = user.userID || (user as any).userId;
+    const currentPoints = user.travelPoints || 0;
+    
+    let inputValue = currentPoints.toString();
+
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3 w-full">
+          <span className="font-semibold text-sm">
+            Nhập số Travel Point cho <strong>{user.fullName || user.username}</strong>
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              defaultValue={currentPoints}
+              onChange={(e) => {
+                inputValue = e.target.value;
+              }}
+              className="flex-1 px-3 py-1.5 bg-muted dark:bg-slate-800 rounded-lg text-sm border border-border dark:border-slate-700 outline-none focus:ring-2 focus:ring-primary text-foreground"
+              placeholder="Nhập số điểm..."
+            />
+            <button
+              onClick={async () => {
+                const newPoints = parseInt(inputValue);
+                if (isNaN(newPoints) || newPoints < 0) {
+                  toast.error("Vui lòng nhập số điểm hợp lệ!");
+                  return;
+                }
+                try {
+                  await updateUserPoints(id, newPoints);
+                  toast.success(`Đã cập nhật Travel Point thành ${newPoints.toLocaleString()}`);
+                  setAdminUsers(prev => prev.map(u => (u.userID || (u as any).userId) === id ? { ...u, travelPoints: newPoints } : u));
+                  toast.dismiss(t);
+                } catch (err) {
+                  toast.error("Không thể cập nhật số điểm.");
+                }
+              }}
+              className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-semibold transition-all"
+            >
+              Lưu
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 15000,
+        className: "border-border dark:border-slate-700 p-4 w-80",
+      }
+    );
+  };
+
   const handleToggleBlock = async (user: AdminUser) => {
     const nextBlocked = !user.isBlocked;
     const confirmMsg = nextBlocked
@@ -250,6 +317,15 @@ export function AdminDashboardPage() {
     return () => clearTimeout(timer);
   }, [destSearch]);
 
+  // Debounce user search so we don't fire a request on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUserSearch(userSearch);
+      setUserCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [userSearch]);
+
   useEffect(() => {
     if (activeTab === "overview") {
       fetchOverviewData();
@@ -272,7 +348,7 @@ export function AdminDashboardPage() {
     if (activeTab === "users") {
       fetchAdminUsersData();
     }
-  }, [activeTab, userCurrentPage, userOfflineFilter]);
+  }, [activeTab, userCurrentPage, userOfflineFilter, debouncedUserSearch]);
 
   useEffect(() => {
     if (activeTab === "reports") {
@@ -618,7 +694,9 @@ export function AdminDashboardPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
-                        placeholder="Tìm người dùng..."
+                        placeholder="Tìm theo Tên, Email, Mã ND..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-muted dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
                       />
                     </div>
@@ -651,7 +729,9 @@ export function AdminDashboardPage() {
                           <thead>
                             <tr className="border-b border-border dark:border-slate-800">
                               <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Người dùng</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Mã ND</th>
                               <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Email</th>
+                              <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Travel Point</th>
                               <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Ngày tham gia</th>
                               <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Thời gian chưa online</th>
                               <th className="text-left py-3 px-4 text-sm text-muted-foreground dark:text-slate-400">Trạng thái</th>
@@ -669,7 +749,40 @@ export function AdminDashboardPage() {
                                     <span className="font-semibold dark:text-white">{user.fullName || user.username}</span>
                                   </div>
                                 </td>
+                                <td className="py-3 px-4">
+                                  <span className="font-mono bg-muted dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-primary select-all">
+                                    {user.userCode || "N/A"}
+                                  </span>
+                                </td>
                                 <td className="py-3 px-4 text-sm text-muted-foreground dark:text-slate-300">{user.email}</td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-amber-500 mr-1">{(user.travelPoints || 0).toLocaleString()}</span>
+                                    <div className="flex items-center border border-border dark:border-slate-800 rounded-lg overflow-hidden bg-background">
+                                      <button 
+                                        onClick={() => handleAdjustPoints(user, -1000)}
+                                        className="px-1.5 py-0.5 bg-muted/40 hover:bg-muted text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors border-r border-border dark:border-slate-800"
+                                        title="-1,000 Points"
+                                      >
+                                        -1K
+                                      </button>
+                                      <button 
+                                        onClick={() => handleAdjustPoints(user, 1000)}
+                                        className="px-1.5 py-0.5 bg-muted/40 hover:bg-muted text-[10px] font-bold text-green-500 hover:text-green-600 transition-colors border-r border-border dark:border-slate-800"
+                                        title="+1,000 Points"
+                                      >
+                                        +1K
+                                      </button>
+                                      <button 
+                                        onClick={() => handlePromptPoints(user)}
+                                        className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                        title="Nhập tay số điểm"
+                                      >
+                                        <Edit className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
                                 <td className="py-3 px-4 text-sm text-muted-foreground dark:text-slate-300">{new Date(user.registrationDate).toLocaleDateString("vi-VN")}</td>
                                 <td className="py-3 px-4">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${

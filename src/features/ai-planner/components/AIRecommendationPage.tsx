@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -23,8 +23,9 @@ import {
   ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
-import { getAiRecommendations } from "../../../api/aiApi";
+import { getAiRecommendations, getAiLimit } from "../../../api/aiApi";
 import { Coins } from 'lucide-react';
+import { useAuth } from "../../../contexts/AuthContext";
 import type { AiRecommendRequest } from "../../../types/ai";
 
 type PlannerFormData = {
@@ -101,6 +102,21 @@ export function AIRecommendationPage() {
   // Scroll ref for results
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  const { isAuthenticated } = useAuth();
+  const [aiLimit, setAiLimit] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+
+  const fetchLimit = () => {
+    if (isAuthenticated) {
+      getAiLimit()
+        .then(data => setAiLimit(data))
+        .catch(err => console.error("Failed to load AI limit", err));
+    }
+  };
+
+  useEffect(() => {
+    fetchLimit();
+  }, [isAuthenticated]);
+
   const fetchRecommendations = async (currentPage: number, isLoadMore: boolean = false) => {
     // Chuyển đổi ID sở thích (ví dụ: "beach") sang tiếng Việt (ví dụ: "Bãi biển") để Backend tìm kiếm dễ dàng
     const mappedInterests = formData.interests
@@ -169,8 +185,16 @@ export function AIRecommendationPage() {
           resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 500);
       }
-    } catch (error) {
+      fetchLimit();
+    } catch (error: any) {
       console.error("Failed to get AI recommendations", error);
+      if (error.response?.status === 403) {
+        toast.error("Bạn đã hết lượt sử dụng AI hôm nay (tối đa 3 lượt/ngày).");
+      } else if (error.response?.status === 401) {
+        toast.error("Bạn cần đăng nhập để sử dụng tính năng này!");
+      } else {
+        toast.error("Có lỗi xảy ra khi gọi gợi ý AI.");
+      }
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -434,6 +458,30 @@ export function AIRecommendationPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* AI Limit Indicator */}
+              {isAuthenticated && aiLimit && (
+                <div className="mt-3 pt-3 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span>Lượt sử dụng AI hôm nay:</span>
+                    <span className="font-semibold text-foreground">
+                      {aiLimit.remaining}/{aiLimit.limit} lượt còn lại
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 sm:w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          aiLimit.remaining === 0 ? "bg-red-500" :
+                          aiLimit.remaining === 1 ? "bg-yellow-500" : "bg-green-500"
+                        }`}
+                        style={{ width: `${(aiLimit.remaining / aiLimit.limit) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </motion.div>

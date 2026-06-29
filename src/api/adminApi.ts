@@ -9,13 +9,15 @@ export const getAdminOverview = async () => {
 export const getAllUsers = async (
   page: number = 1,
   pageSize: number = 30,
-  offlineFilter: string = ''
+  offlineFilter: string = '',
+  search: string = ''
 ): Promise<AdminUserResponse> => {
   const response = await axiosInstance.get('/Admin/users', {
     params: {
       page,
       pageSize,
       offlineFilter: offlineFilter === 'all' ? '' : offlineFilter,
+      search,
     },
   });
   return response.data;
@@ -33,6 +35,11 @@ export const updateUser = async (userId: number, payload: AdminUpdateUserPayload
 
 export const blockUser = async (userId: number, isBlocked: boolean) => {
   const response = await axiosInstance.put(`/Admin/users/${userId}/block`, { isBlocked });
+  return response.data;
+};
+
+export const updateUserPoints = async (userId: number, travelPoints: number) => {
+  const response = await axiosInstance.put(`/Admin/users/${userId}/points`, { travelPoints });
   return response.data;
 };
 

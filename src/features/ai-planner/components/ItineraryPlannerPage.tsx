@@ -25,12 +25,13 @@ import {
   Users
 } from "lucide-react";
 import { toast } from "sonner";
-import { generateAiItinerary } from "../../../api/aiApi";
+import { generateAiItinerary, getAiLimit } from "../../../api/aiApi";
 import { getDestinationDetails } from "@/api/destinationsApi";
 import type { AiGenerateItineraryResponse, AiActivity } from "../../../types/ai";
 import type { DestinationDto } from "@/types/destinations";
 import { createItinerary, getItinerary } from "@/api/itinerariesApi";
 import { useNavigate, useLocation } from "react-router";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export function ItineraryPlannerPage() {
   const { id } = useParams();
@@ -50,6 +51,21 @@ export function ItineraryPlannerPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedItineraryId, setSavedItineraryId] = useState<number | null>(itineraryId || null);
   const navigate = useNavigate();
+
+  const { isAuthenticated } = useAuth();
+  const [aiLimit, setAiLimit] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+
+  const fetchLimit = () => {
+    if (isAuthenticated) {
+      getAiLimit()
+        .then(data => setAiLimit(data))
+        .catch(err => console.error("Failed to load AI limit", err));
+    }
+  };
+
+  useEffect(() => {
+    fetchLimit();
+  }, [isAuthenticated]);
 
   // Form State
   const [days, setDays] = useState<number>(() => {
@@ -157,6 +173,7 @@ export function ItineraryPlannerPage() {
       localStorage.setItem(`ai_itinerary_${destination.destinationID}`, JSON.stringify(data));
       setExpandedDay(1);
       setSavedItineraryId(null);
+      fetchLimit();
     } catch (error: any) {
       console.error("Failed to generate", error);
       const status = error?.response?.status;
@@ -351,6 +368,25 @@ export function ItineraryPlannerPage() {
                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6" />}
                 {isLoading ? "AI đang tạo lịch trình cho bạn..." : "Tạo lịch trình"}
               </button>
+
+              {isAuthenticated && aiLimit && (
+                <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between text-xs text-white/95">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                    <span>Lượt sử dụng AI hôm nay:</span>
+                    <span className="font-semibold text-white">{aiLimit.remaining}/{aiLimit.limit} còn lại</span>
+                  </div>
+                  <div className="w-24 sm:w-32 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        aiLimit.remaining === 0 ? "bg-red-400" :
+                        aiLimit.remaining === 1 ? "bg-yellow-400" : "bg-green-400"
+                      }`}
+                      style={{ width: `${(aiLimit.remaining / aiLimit.limit) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -368,6 +404,21 @@ export function ItineraryPlannerPage() {
                 <DollarSign className="w-4 h-4" />
                 <span className="font-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)} ước tính</span>
               </div>
+              {isAuthenticated && aiLimit && (
+                <div className="flex items-center gap-2.5 px-5 py-2.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/10 text-xs">
+                  <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
+                  <span>AI: {aiLimit.remaining}/{aiLimit.limit}</span>
+                  <div className="w-16 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        aiLimit.remaining === 0 ? "bg-red-400" :
+                        aiLimit.remaining === 1 ? "bg-yellow-400" : "bg-green-400"
+                      }`}
+                      style={{ width: `${(aiLimit.remaining / aiLimit.limit) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               <button onClick={() => {
                 setItineraryData(null);
                 if (destination) localStorage.removeItem(`ai_itinerary_${destination.destinationID}`);

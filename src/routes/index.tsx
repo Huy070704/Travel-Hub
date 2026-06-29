@@ -16,6 +16,7 @@ import { TourSearchPage } from "../features/tours/components/TourSearchPage";
 import { TourDetailPage } from "../features/tours/components/TourDetailPage";
 import { BecomeGuidePage } from "../features/tours/components/BecomeGuidePage";
 import { PremiumUpgradePage } from "../features/premium/components/PremiumUpgradePage";
+import { TravelBankingPage } from "../features/premium/components/TravelBankingPage";
 import { useAuth } from "../contexts/AuthContext";
 
 function ProtectedRoute({ children }: { children?: React.ReactNode }) {
@@ -82,6 +83,7 @@ export const router = createBrowserRouter([
           { path: "profile/:userId", Component: ProfilePage },
           { path: "become-guide", Component: BecomeGuidePage },
           { path: "premium", Component: PremiumUpgradePage },
+          { path: "travel-banking", Component: TravelBankingPage },
           { path: "guide-portal", Component: () => <GuideRoute><GuidePortalPage /></GuideRoute> },
           { path: "admin", Component: () => <AdminRoute><AdminDashboardPage /></AdminRoute> },
           { path: "admin/guides/:profileId", Component: () => <AdminRoute><GuideProfileDetailPage /></AdminRoute> },

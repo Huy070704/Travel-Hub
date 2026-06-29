@@ -9,6 +9,8 @@ export interface AdminUser {
   offlineDurationText: string;
   isBlocked: boolean;
   role: string;
+  userCode?: string | null;
+  travelPoints?: number;
 }
 
 export interface AdminUserDetail {
@@ -25,6 +27,8 @@ export interface AdminUserDetail {
   isPremium: boolean;
   registrationDate: string;
   lastOnline: string | null;
+  userCode?: string | null;
+  travelPoints?: number;
 }
 
 export interface AdminUpdateUserPayload {

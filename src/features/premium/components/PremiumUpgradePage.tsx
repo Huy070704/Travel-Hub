@@ -1,19 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { CheckCircle2, Crown, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import axiosInstance from "@/api/axiosInstance";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function PremiumUpgradePage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
+  const { updateUser, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      axiosInstance.get("/users/me")
+        .then(res => setBalance(res.data.travelPoints))
+        .catch(err => console.error("Failed to load user profile", err));
+    }
+  }, [isAuthenticated]);
 
   const handleUpgrade = async () => {
     try {
       setIsLoading(true);
-      await axiosInstance.post("/payment/upgrade-premium");
+      const res = await axiosInstance.post("/payment/upgrade-premium");
       toast.success("Thanh toán thành công! Chào mừng bạn đến với Premium.");
       
       // Cập nhật trạng thái người dùng trong AuthContext ngay lập tức
@@ -23,8 +34,13 @@ export function PremiumUpgradePage() {
         navigate("/community");
       }, 1500);
 
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi xử lý thanh toán.");
+    } catch (error: any) {
+      const errData = error.response?.data;
+      if (errData && errData.error === "InsufficientPoints") {
+        setShowErrorModal(true);
+      } else {
+        toast.error("Có lỗi xảy ra khi xử lý thanh toán.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +78,7 @@ export function PremiumUpgradePage() {
               </span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto md:mx-0">
-              Chỉ với một cốc cà phê mỗi tháng, bạn có toàn quyền truy cập vào cộng đồng du lịch sôi động nhất.
+              Chỉ với một cốc cá phê mỗi tháng, bạn có toàn quyền truy cập vào cộng đồng du lịch sôi động nhất.
             </p>
           </div>
 
@@ -106,7 +122,7 @@ export function PremiumUpgradePage() {
                   <Loader2 className="w-6 h-6 animate-spin" /> Đang xử lý thanh toán...
                 </>
               ) : (
-                <>Mở khóa ngay <Sparkles className="w-5 h-5" /></>
+                <>Thanh toán ngay <Sparkles className="w-5 h-5" /></>
               )}
             </button>
             <p className="text-center text-xs text-muted-foreground mt-4">
@@ -115,6 +131,48 @@ export function PremiumUpgradePage() {
           </div>
         </div>
       </div>
+
+      {/* Error Modal */}
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-card border-2 border-red-500/30 max-w-md w-full rounded-3xl p-8 shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              {/* Top red glow */}
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
+              
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center text-red-500">
+                  <span className="text-3xl font-black">!</span>
+                </div>
+                <h3 className="text-2xl font-extrabold text-red-500 tracking-tight">ERR! Có rắc rối rồi.</h3>
+                <div className="space-y-2 text-muted-foreground font-medium">
+                  <p className="text-foreground">Rất tiếc, bạn cần <span className="text-red-500 font-bold">50,000 Travel Point</span> để thực hiện hành động này.</p>
+                  <div className="py-2.5 px-4 bg-muted/50 rounded-2xl inline-block text-sm border border-border/50">
+                    Số dư hiện tại: <span className="font-bold text-amber-500">{balance !== null ? balance.toLocaleString() : '?'}</span> Travel Point
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => navigate("/travel-banking")}
+                className="w-full h-13 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-red-500/20"
+              >
+                Nạp Travel Point ngay
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
