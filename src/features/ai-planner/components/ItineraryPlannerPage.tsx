@@ -588,7 +588,7 @@ export function ItineraryPlannerPage() {
 
                       {/* Day Summary */}
                       <div className="mt-8 pt-6 border-t border-border flex items-center justify-between bg-primary/5 dark:bg-primary/10 -mx-6 -mb-6 px-6 py-4">
-                        <div className="text-sm font-medium text-primary flex items-center gap-4">
+                        <div className="text-sm font-medium text-primary flex items-center gap-2">
                           <span>Tổng trong ngày:</span>
                           <span className="font-bold">
                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
