@@ -103,6 +103,7 @@ export function AdminDashboardPage() {
   const [destPage, setDestPage] = useState(1);
   const [destTotalPages, setDestTotalPages] = useState(1);
   const [destSearch, setDestSearch] = useState("");
+  const [debouncedDestSearch, setDebouncedDestSearch] = useState("");
   const [destLocation, setDestLocation] = useState("all");
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<DestinationDto | null>(null);
@@ -240,6 +241,15 @@ export function AdminDashboardPage() {
     );
   };
 
+  // Debounce destination search so we don't fire a request on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDestSearch(destSearch);
+      setDestPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [destSearch]);
+
   useEffect(() => {
     if (activeTab === "overview") {
       fetchOverviewData();
@@ -272,17 +282,14 @@ export function AdminDashboardPage() {
 
   useEffect(() => {
     if (activeTab === "destinations") {
-      const timer = setTimeout(() => {
-        fetchDestinationsData();
-      }, 500); // Debounce search
-      return () => clearTimeout(timer);
+      fetchDestinationsData();
     }
-  }, [activeTab, destPage, destSearch, destLocation]);
+  }, [activeTab, destPage, debouncedDestSearch, destLocation]);
 
   const fetchDestinationsData = async () => {
     setIsLoadingDestinations(true);
     try {
-      const response = await getDestinations(destSearch, undefined, undefined, destPage, 10, destLocation === "all" ? undefined : destLocation);
+      const response = await getDestinations(debouncedDestSearch, undefined, undefined, destPage, 10, destLocation === "all" ? undefined : destLocation);
       setDestinations(response.items);
       setTotalDestinations(response.totalCount);
       setDestTotalPages(response.totalPages);
