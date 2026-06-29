@@ -33,6 +33,60 @@ import type { BuddyRecommendationDto } from "@/types/buddies";
 import type { DestinationDto } from "@/types/destinations";
 import type { UserProfileDto } from "@/types/users";
 import defaultAvatar from "@/assets/default-avatar.png";
+import bienImg from "@/assets/bien.jpg";
+import thanhphoImg from "@/assets/thanhpho.jpg";
+import vanhoaImg from "@/assets/vanhoa.jpg";
+import nuiImg from "@/assets/nui.jpg";
+
+const AVAILABLE_IMAGES = [
+  { id: "bien.jpg", name: "Biển", src: bienImg },
+  { id: "thanhpho.jpg", name: "Thành phố", src: thanhphoImg },
+  { id: "vanhoa.jpg", name: "Văn hóa", src: vanhoaImg },
+  { id: "nui.jpg", name: "Núi", src: nuiImg }
+];
+
+const imageMap: Record<string, string> = {
+  "bien.jpg": bienImg,
+  "thanhpho.jpg": thanhphoImg,
+  "vanhoa.jpg": vanhoaImg,
+  "nui.jpg": nuiImg
+};
+
+interface ParsedContent {
+  text: string;
+  selectedImage?: string;
+  destination?: string;
+  startDate?: string;
+  endDate?: string;
+  peopleNeeded?: number;
+  budgetVND?: string;
+  style?: string;
+  note?: string;
+}
+
+const parsePostContent = (post: PostDto): ParsedContent => {
+  if (!post.content) return { text: "" };
+  const trimmed = post.content.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (post.postType === "BuddyRequest") {
+        return {
+          text: `Tìm bạn đồng hành đi ${parsed.destination || ""}`,
+          selectedImage: parsed.selectedImage,
+          ...parsed
+        };
+      }
+      return {
+        text: parsed.text !== undefined ? parsed.text : post.content,
+        selectedImage: parsed.selectedImage
+      };
+    } catch (e) {
+      // Fallback
+    }
+  }
+  return { text: post.content };
+};
 
 const getPostImage = (id: number) => {
   const images = [
@@ -59,6 +113,8 @@ export function CommunityFeedPage() {
   const initialPostContent = (location.state as any)?.initialPostContent || "";
 
   const [newPostContent, setNewPostContent] = useState(initialPostContent);
+  const [selectedTextPostImage, setSelectedTextPostImage] = useState<string>("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
 
@@ -77,10 +133,56 @@ export function CommunityFeedPage() {
     peopleNeeded: 1,
     budgetVND: "",
     style: "Khám phá",
-    note: ""
+    note: "",
+    selectedImage: ""
   });
   const [isJoining, setIsJoining] = useState<Record<number, boolean>>({});
   const [isDeleting, setIsDeleting] = useState<Record<number, boolean>>({});
+
+  const renderImagePicker = (selectedId: string, onSelect: (id: string) => void) => {
+    return (
+      <div className="border-t border-border/60 pt-4 mt-2">
+        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+          Chọn một ảnh cho bài viết (Không bắt buộc)
+        </label>
+        <div className="grid grid-cols-4 gap-3">
+          {AVAILABLE_IMAGES.map((img) => {
+            const isSelected = selectedId === img.id;
+            return (
+              <button
+                key={img.id}
+                type="button"
+                onClick={() => onSelect(isSelected ? "" : img.id)}
+                className={`relative aspect-[4/3] rounded-xl overflow-hidden group transition-all duration-300 ${
+                  isSelected 
+                    ? "ring-4 ring-primary ring-offset-2 scale-95 shadow-lg" 
+                    : "hover:scale-105 hover:shadow-md border border-border"
+                }`}
+              >
+                <img
+                  src={img.src}
+                  alt={img.name}
+                  className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-1.5">
+                  <span className="text-[10px] md:text-xs font-semibold text-white truncate max-w-full drop-shadow-md">
+                    {img.name}
+                  </span>
+                </div>
+                {isSelected && (
+                  <div className="absolute top-1 right-1 bg-primary text-white p-1 rounded-full shadow-md animate-scale-in">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Share state
   const [shareModalPostId, setShareModalPostId] = useState<number | null>(null);
@@ -159,7 +261,7 @@ export function CommunityFeedPage() {
           title: `Tìm bạn đồng hành đi ${buddyPostData.destination}`,
           content: JSON.stringify(buddyPostData)
         });
-        setBuddyPostData({ destination: "", startDate: "", endDate: "", peopleNeeded: 1, budgetVND: "", style: "Khám phá", note: "" });
+        setBuddyPostData({ destination: "", startDate: "", endDate: "", peopleNeeded: 1, budgetVND: "", style: "Khám phá", note: "", selectedImage: "" });
         setIsBuddyPostMode(false);
         created = true;
         toast.success("Đăng bài tìm bạn đồng hành thành công!");
@@ -173,12 +275,18 @@ export function CommunityFeedPage() {
       if (!newPostContent.trim()) return;
       setIsPosting(true);
       try {
+        const payloadContent = selectedTextPostImage
+          ? JSON.stringify({ text: newPostContent, selectedImage: selectedTextPostImage })
+          : newPostContent;
+
         await createPost({
           postType: "Text",
           title: "Cập nhật cộng đồng",
-          content: newPostContent
+          content: payloadContent
         });
         setNewPostContent("");
+        setSelectedTextPostImage("");
+        setIsExpanded(false);
         created = true;
         toast.success("Đăng bài viết thành công!");
       } catch (error) {
@@ -453,6 +561,7 @@ export function CommunityFeedPage() {
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Ghi chú thêm</label>
                         <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({...buddyPostData, note: e.target.value})} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
                       </div>
+                      {renderImagePicker(buddyPostData.selectedImage, (imgId) => setBuddyPostData({ ...buddyPostData, selectedImage: imgId }))}
                       <div className="flex justify-end gap-2 mt-2">
                         <button onClick={() => setIsBuddyPostMode(false)} className="px-4 py-2 bg-white border border-border rounded-lg text-sm font-semibold hover:bg-muted transition-all">Hủy</button>
                         <button onClick={handleCreatePost} disabled={isPosting || (!user?.isPremium ? false : !buddyPostData.destination.trim())} className={`px-4 py-2 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"} text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-all flex items-center gap-2`}>
@@ -461,23 +570,44 @@ export function CommunityFeedPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
+                    <div className="space-y-4">
+                      <textarea
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
+                        onFocus={() => setIsExpanded(true)}
                         placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
-                        className="flex-1 px-4 py-3 bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all"
+                        className={`w-full bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all ${
+                          isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== ""
+                            ? "min-h-[100px] px-4 py-3 resize-none"
+                            : "h-11 px-4 py-2.5 resize-none overflow-hidden cursor-pointer"
+                        }`}
                         disabled={isPosting}
                       />
-                      <button 
-                        onClick={handleCreatePost}
-                        disabled={isPosting || (!user?.isPremium ? false : !newPostContent.trim())}
-                        className={`p-3 text-white rounded-xl disabled:opacity-50 transition-all ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
-                      >
-                        {!user?.isPremium ? <Lock className="w-5 h-5" /> : (isPosting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />)}
-                      </button>
+                      {(isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== "") && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4">
+                          {renderImagePicker(selectedTextPostImage, setSelectedTextPostImage)}
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNewPostContent("");
+                                setSelectedTextPostImage("");
+                                setIsExpanded(false);
+                              }}
+                              className="px-4 py-2 bg-white border border-border rounded-xl text-sm font-semibold hover:bg-muted transition-all"
+                            >
+                              Hủy
+                            </button>
+                            <button 
+                              onClick={handleCreatePost}
+                              disabled={isPosting || (!user?.isPremium ? false : !newPostContent.trim())}
+                              className={`px-5 py-2 text-white rounded-xl text-sm font-semibold disabled:opacity-50 transition-all flex items-center gap-2 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
+                            >
+                              {!user?.isPremium ? <Lock className="w-4 h-4" /> : (isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />)} Đăng bài
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -613,21 +743,37 @@ export function CommunityFeedPage() {
                   ) : (
                     <>
                       <h3 className="font-bold mb-1">{post.title}</h3>
-                      <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                      <p className="text-foreground mb-4 whitespace-pre-wrap">{parsePostContent(post).text}</p>
                     </>
                   )}
                 </div>
 
-                {/* Optional Post Image (simulated for realism) */}
-                {(post.postID % 2 === 0) && (
-                  <div className="relative aspect-[4/3]">
-                    <img
-                      src={getPostImage(post.postID)}
-                      alt="Post"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+                {/* Post Image */}
+                {(() => {
+                  const parsed = parsePostContent(post);
+                  if (parsed.selectedImage && imageMap[parsed.selectedImage]) {
+                    return (
+                      <div className="relative aspect-[16/9] overflow-hidden border-y border-border">
+                        <img
+                          src={imageMap[parsed.selectedImage]}
+                          alt="Post attachment"
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    );
+                  } else if (!parsed.selectedImage && post.postID % 2 === 0) {
+                    return (
+                      <div className="relative aspect-[16/9] overflow-hidden border-y border-border">
+                        <img
+                          src={getPostImage(post.postID)}
+                          alt="Post fallback"
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
                 {/* Post Actions */}
                 <div className="p-6 pt-4 border-t border-border/50">
