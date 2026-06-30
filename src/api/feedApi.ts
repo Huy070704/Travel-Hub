@@ -41,6 +41,11 @@ export async function addComment(postId: number, data: CreateCommentRequest) {
   return response.data;
 }
 
+export async function deleteComment(commentId: number) {
+  const response = await axiosInstance.delete<{ message: string, commentID: number }>(`/Feed/comments/${commentId}`);
+  return response.data;
+}
+
 export async function reportPost(postId: number, reason: string) {
   const response = await axiosInstance.post<{ message: string }>(`/Feed/posts/${postId}/report`, { reason });
   return response.data;
