@@ -785,7 +785,7 @@ export function AdminDashboardPage() {
                                 </td>
                                 <td className="py-3 px-4 text-sm text-muted-foreground dark:text-slate-300">{new Date(user.registrationDate).toLocaleDateString("vi-VN")}</td>
                                 <td className="py-3 px-4">
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  <span className={`inline-flex whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium ${
                                     user.offlineDurationText === "Vừa mới online" || user.offlineDurationText.includes("phút")
                                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
                                       : user.offlineDurationText === "Chưa từng online"
@@ -797,11 +797,11 @@ export function AdminDashboardPage() {
                                 </td>
                                 <td className="py-3 px-4">
                                   {user.isBlocked ? (
-                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                    <span className="inline-flex whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                       Đã chặn
                                     </span>
                                   ) : (
-                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    <span className="inline-flex whitespace-nowrap px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                       Hoạt động
                                     </span>
                                   )}

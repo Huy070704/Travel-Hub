@@ -9,6 +9,7 @@ export type PostDto = {
   content?: string;
   likesCount: number;
   isLikedByCurrentUser?: boolean;
+  commentsCount: number;
   creationDate: string; // ISO String
 };
 

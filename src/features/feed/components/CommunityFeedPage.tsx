@@ -20,7 +20,7 @@ import {
   Lock
 } from "lucide-react";
 import { toast } from "sonner";
-import { getPosts, createPost, deletePost, toggleLike, getComments, addComment, reportPost } from "@/api/feedApi";
+import { getPosts, createPost, deletePost, toggleLike, getComments, addComment, deleteComment, reportPost } from "@/api/feedApi";
 import { todayISO, isTodayOrFuture, isAfter } from "@/utils/dateValidation";
 import { getBuddyRecommendations, sendBuddyRequest } from "@/api/buddiesApi";
 import { getTrendingDestinations } from "@/api/destinationsApi";
@@ -153,11 +153,10 @@ export function CommunityFeedPage() {
                 key={img.id}
                 type="button"
                 onClick={() => onSelect(isSelected ? "" : img.id)}
-                className={`relative aspect-[4/3] rounded-xl overflow-hidden group transition-all duration-300 ${
-                  isSelected 
-                    ? "ring-4 ring-primary ring-offset-2 scale-95 shadow-lg" 
+                className={`relative aspect-[4/3] rounded-xl overflow-hidden group transition-all duration-300 ${isSelected
+                    ? "ring-4 ring-primary ring-offset-2 scale-95 shadow-lg"
                     : "hover:scale-105 hover:shadow-md border border-border"
-                }`}
+                  }`}
               >
                 <img
                   src={img.src}
@@ -357,13 +356,13 @@ export function CommunityFeedPage() {
           </div>
         </div>
         <div className="flex gap-2 justify-end mt-2">
-          <button 
+          <button
             onClick={() => toast.dismiss(t)}
             className="px-4 py-2 bg-muted text-foreground rounded-xl text-sm font-semibold hover:bg-muted/80 transition-all"
           >
             Hủy
           </button>
-          <button 
+          <button
             onClick={() => {
               toast.dismiss(t);
               performDeletePost(postId);
@@ -437,6 +436,7 @@ export function CommunityFeedPage() {
       try {
         const res = await getComments(postId);
         setComments(prev => ({ ...prev, [postId]: res.items }));
+        setPosts(prevPosts => prevPosts.map(p => p.postID === postId ? { ...p, commentsCount: res.totalCount } : p));
       } catch (error) {
         console.error("Failed to load comments", error);
       }
@@ -454,17 +454,33 @@ export function CommunityFeedPage() {
     setIsSubmittingComment(prev => ({ ...prev, [postId]: true }));
     try {
       await addComment(postId, { content });
-      
+
       // Refresh comments for this post
       const res = await getComments(postId);
       setComments(prev => ({ ...prev, [postId]: res.items }));
-      
+      setPosts(prevPosts => prevPosts.map(p => p.postID === postId ? { ...p, commentsCount: res.totalCount } : p));
+
       // Clear input
       setCommentInputs(prev => ({ ...prev, [postId]: "" }));
     } catch (error) {
       console.error("Failed to add comment", error);
     } finally {
       setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    try {
+      await deleteComment(commentId);
+      toast.success("Xóa bình luận thành công!");
+
+      // Refresh comments for this post
+      const res = await getComments(postId);
+      setComments(prev => ({ ...prev, [postId]: res.items }));
+      setPosts(prevPosts => prevPosts.map(p => p.postID === postId ? { ...p, commentsCount: res.totalCount } : p));
+    } catch (error) {
+      console.error("Failed to delete comment", error);
+      toast.error("Có lỗi xảy ra khi xóa bình luận.");
     }
   };
 
@@ -529,11 +545,11 @@ export function CommunityFeedPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Điểm đến</label>
-                          <input type="text" value={buddyPostData.destination} onChange={e => setBuddyPostData({...buddyPostData, destination: e.target.value})} placeholder="Vd: Đà Lạt" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="text" value={buddyPostData.destination} onChange={e => setBuddyPostData({ ...buddyPostData, destination: e.target.value })} placeholder="Vd: Đà Lạt" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Phong cách</label>
-                          <select value={buddyPostData.style} onChange={e => setBuddyPostData({...buddyPostData, style: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none">
+                          <select value={buddyPostData.style} onChange={e => setBuddyPostData({ ...buddyPostData, style: e.target.value })} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none">
                             <option>Khám phá</option>
                             <option>Tiết kiệm (Budget)</option>
                             <option>Nghỉ dưỡng (Resort)</option>
@@ -542,24 +558,24 @@ export function CommunityFeedPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày đi</label>
-                          <input type="date" value={buddyPostData.startDate} min={todayISO()} onChange={e => setBuddyPostData({...buddyPostData, startDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.startDate} min={todayISO()} onChange={e => setBuddyPostData({ ...buddyPostData, startDate: e.target.value })} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngày về</label>
-                          <input type="date" value={buddyPostData.endDate} min={buddyPostData.startDate || todayISO()} onChange={e => setBuddyPostData({...buddyPostData, endDate: e.target.value})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="date" value={buddyPostData.endDate} min={buddyPostData.startDate || todayISO()} onChange={e => setBuddyPostData({ ...buddyPostData, endDate: e.target.value })} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Số người cần tìm</label>
-                          <input type="number" min="1" value={buddyPostData.peopleNeeded} onChange={e => setBuddyPostData({...buddyPostData, peopleNeeded: parseInt(e.target.value) || 1})} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="number" min="1" value={buddyPostData.peopleNeeded} onChange={e => setBuddyPostData({ ...buddyPostData, peopleNeeded: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-muted-foreground mb-1">Ngân sách dự kiến (VND)</label>
-                          <input type="text" value={buddyPostData.budgetVND} onChange={e => setBuddyPostData({...buddyPostData, budgetVND: e.target.value})} placeholder="Vd: 3.000.000" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
+                          <input type="text" value={buddyPostData.budgetVND} onChange={e => setBuddyPostData({ ...buddyPostData, budgetVND: e.target.value })} placeholder="Vd: 3.000.000" className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">Ghi chú thêm</label>
-                        <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({...buddyPostData, note: e.target.value})} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+                        <textarea value={buddyPostData.note} onChange={e => setBuddyPostData({ ...buddyPostData, note: e.target.value })} placeholder="Chia sẻ thêm về kế hoạch của bạn..." rows={2} className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-border focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
                       </div>
                       {renderImagePicker(buddyPostData.selectedImage, (imgId) => setBuddyPostData({ ...buddyPostData, selectedImage: imgId }))}
                       <div className="flex justify-end gap-2 mt-2">
@@ -576,11 +592,10 @@ export function CommunityFeedPage() {
                         onChange={(e) => setNewPostContent(e.target.value)}
                         onFocus={() => setIsExpanded(true)}
                         placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
-                        className={`w-full bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all ${
-                          isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== ""
+                        className={`w-full bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all ${isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== ""
                             ? "min-h-[100px] px-4 py-3 resize-none"
                             : "h-11 px-4 py-2.5 resize-none overflow-hidden cursor-pointer"
-                        }`}
+                          }`}
                         disabled={isPosting}
                       />
                       {(isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== "") && (
@@ -598,7 +613,7 @@ export function CommunityFeedPage() {
                             >
                               Hủy
                             </button>
-                            <button 
+                            <button
                               onClick={handleCreatePost}
                               disabled={isPosting || (!user?.isPremium ? false : !newPostContent.trim())}
                               className={`px-5 py-2 text-white rounded-xl text-sm font-semibold disabled:opacity-50 transition-all flex items-center gap-2 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
@@ -718,7 +733,7 @@ export function CommunityFeedPage() {
                               )}
                               {post.userID !== userProfile?.userID && (
                                 <div className="p-3 bg-white border-t border-primary/10 flex gap-2">
-                                  <button 
+                                  <button
                                     onClick={() => handleJoinBuddyRequest(post.postID, post.userID)}
                                     disabled={isJoining[post.postID]}
                                     className={`flex-1 py-2 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${!user?.isPremium ? "bg-amber-500 hover:bg-amber-600" : "bg-primary hover:bg-primary/90"}`}
@@ -779,21 +794,24 @@ export function CommunityFeedPage() {
                 <div className="p-6 pt-4 border-t border-border/50">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-6">
-                      <button 
+                      <button
                         onClick={() => handleLike(post.postID)}
                         className={`flex items-center gap-2 transition-all ${!user?.isPremium ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-red-500"}`}
                       >
                         {!user?.isPremium ? <Lock className="w-4 h-4" /> : <Heart className={`w-5 h-5 ${post.isLikedByCurrentUser ? "fill-red-500 text-red-500" : ""}`} />}
                         <span className="text-sm font-semibold">{post.likesCount}</span>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleToggleComments(post.postID)}
                         className={`flex items-center gap-2 transition-all ${showComments[post.postID] ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
                       >
                         <MessageCircle className={`w-5 h-5 ${showComments[post.postID] ? "fill-primary/20" : ""}`} />
                         <span className="text-sm font-semibold">Bình luận</span>
+                        {post.commentsCount > 0 && (
+                          <span className="text-sm font-semibold">{post.commentsCount}</span>
+                        )}
                       </button>
-                      <button 
+                      <button
                         onClick={() => setShareModalPostId(post.postID)}
                         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all"
                       >
@@ -828,16 +846,28 @@ export function CommunityFeedPage() {
                                   className="w-8 h-8 rounded-full object-cover shrink-0 border border-border"
                                 />
                               </Link>
-                              <div className="bg-muted p-3 rounded-2xl rounded-tl-none flex-1">
-                                <div className="flex items-baseline justify-between mb-1">
-                                  <Link to={`/profile/${comment.userID}`} className="font-semibold text-sm hover:text-primary">
+                              <div className="bg-muted p-3 rounded-2xl rounded-tl-none flex-1 flex justify-between gap-4 group">
+                                <div className="flex flex-col">
+                                  <Link to={`/profile/${comment.userID}`} className="font-semibold text-sm hover:text-primary mb-1">
                                     {comment.username}
                                   </Link>
-                                  <span className="text-[10px] text-muted-foreground">
+                                  <p className="text-sm text-foreground">{comment.content}</p>
+                                </div>
+                                <div className="flex flex-col items-end justify-between shrink-0">
+                                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                                     {new Date(comment.commentDate).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
                                   </span>
+                                  {(comment.userID === userProfile?.userID || post.userID === userProfile?.userID) && (
+  <button
+    onClick={() => handleDeleteComment(post.postID, comment.commentID)}
+    title="Xóa bình luận"
+    aria-label="Xóa bình luận"
+    className="text-muted-foreground/60 hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-all mt-1"
+  >
+    <Trash2 className="w-3.5 h-3.5" />
+  </button>
+)}
                                 </div>
-                                <p className="text-sm text-foreground">{comment.content}</p>
                               </div>
                             </div>
                           ))
@@ -862,7 +892,7 @@ export function CommunityFeedPage() {
                           className="flex-1 px-4 py-2 bg-background text-foreground rounded-full border border-border focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
                           disabled={isSubmittingComment[post.postID]}
                         />
-                        <button 
+                        <button
                           onClick={() => handleAddComment(post.postID)}
                           disabled={isSubmittingComment[post.postID] || (!user?.isPremium ? false : !(commentInputs[post.postID]?.trim()))}
                           className={`p-2 rounded-full disabled:opacity-50 transition-all ${!user?.isPremium ? "text-amber-500 hover:bg-amber-100" : "text-primary hover:bg-primary/10"}`}
@@ -933,7 +963,7 @@ export function CommunityFeedPage() {
                       <div className="text-xs text-muted-foreground">{buddy.matchScore}% Phù hợp</div>
                     </div>
                     {buddy.userID !== userProfile?.userID && (
-                      <Link 
+                      <Link
                         to={`/chat/${buddy.userID}`}
                         className="px-4 py-1.5 bg-primary text-white rounded-full text-xs hover:shadow-lg transition-all font-semibold"
                       >
@@ -956,7 +986,7 @@ export function CommunityFeedPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
             <div className="p-4 border-b border-border flex justify-between items-center">
               <h2 className="font-bold text-lg">Chia sẻ đến bạn bè</h2>
-              <button 
+              <button
                 onClick={() => setShareModalPostId(null)}
                 className="p-2 hover:bg-muted rounded-full transition-colors"
               >
@@ -1005,7 +1035,7 @@ export function CommunityFeedPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-4 border-b border-border flex justify-between items-center">
               <h2 className="font-bold text-lg text-red-500 flex items-center gap-2"><Flag className="w-5 h-5" /> Báo cáo bài viết</h2>
-              <button 
+              <button
                 onClick={() => { setReportModalPostId(null); setReportReason(""); }}
                 className="p-2 hover:bg-muted rounded-full transition-colors"
               >
@@ -1014,8 +1044,8 @@ export function CommunityFeedPage() {
             </div>
             <div className="p-6">
               <p className="text-sm text-muted-foreground mb-4">Vui lòng chọn lý do báo cáo bài viết này:</p>
-              <select 
-                value={reportReason} 
+              <select
+                value={reportReason}
                 onChange={e => setReportReason(e.target.value)}
                 className="w-full px-4 py-3 bg-muted rounded-xl border border-border focus:ring-2 focus:ring-red-500 outline-none mb-6"
               >
@@ -1027,13 +1057,13 @@ export function CommunityFeedPage() {
                 <option value="Khác">Lý do khác...</option>
               </select>
               <div className="flex justify-end gap-3">
-                <button 
+                <button
                   onClick={() => { setReportModalPostId(null); setReportReason(""); }}
                   className="px-4 py-2 bg-muted text-foreground rounded-xl font-semibold hover:bg-muted/80 transition-all"
                 >
                   Hủy
                 </button>
-                <button 
+                <button
                   onClick={async () => {
                     if (!reportReason) {
                       toast.error("Vui lòng chọn một lý do!");
