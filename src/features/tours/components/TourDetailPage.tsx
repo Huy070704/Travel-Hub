@@ -285,24 +285,24 @@ export function TourDetailPage() {
 
             {/* Includes / Excludes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-green-50/50 rounded-3xl p-8 border border-green-100">
-                <h4 className="font-bold text-lg mb-4 text-green-800">Dịch vụ bao gồm</h4>
+              <div className="bg-green-50/50 dark:bg-green-900/20 rounded-3xl p-8 border border-green-100 dark:border-green-800/50">
+                <h4 className="font-bold text-lg mb-4 text-green-800 dark:text-green-400">Dịch vụ bao gồm</h4>
                 <ul className="space-y-3">
                   {includedList.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-green-700/80">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                    <li key={i} className="flex items-start gap-2 text-green-700/80 dark:text-green-300/80">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400 shrink-0" />
                       <span>{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-red-50/50 rounded-3xl p-8 border border-red-100">
-                <h4 className="font-bold text-lg mb-4 text-red-800">Không bao gồm</h4>
+              <div className="bg-red-50/50 dark:bg-red-900/20 rounded-3xl p-8 border border-red-100 dark:border-red-800/50">
+                <h4 className="font-bold text-lg mb-4 text-red-800 dark:text-red-400">Không bao gồm</h4>
                 <ul className="space-y-3">
                   {excludedList.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-red-700/80">
-                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <li key={i} className="flex items-start gap-2 text-red-700/80 dark:text-red-300/80">
+                      <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400" />
                       </div>
                       <span>{item}</span>
                     </li>
