@@ -154,8 +154,8 @@ export function CommunityFeedPage() {
                 type="button"
                 onClick={() => onSelect(isSelected ? "" : img.id)}
                 className={`relative aspect-[4/3] rounded-xl overflow-hidden group transition-all duration-300 ${isSelected
-                    ? "ring-4 ring-primary ring-offset-2 scale-95 shadow-lg"
-                    : "hover:scale-105 hover:shadow-md border border-border"
+                  ? "ring-4 ring-primary ring-offset-2 scale-95 shadow-lg"
+                  : "hover:scale-105 hover:shadow-md border border-border"
                   }`}
               >
                 <img
@@ -593,8 +593,8 @@ export function CommunityFeedPage() {
                         onFocus={() => setIsExpanded(true)}
                         placeholder="Chia sẻ kế hoạch du lịch hoặc trải nghiệm của bạn..."
                         className={`w-full bg-background text-foreground rounded-xl border border-border focus:ring-2 focus:ring-primary outline-none transition-all ${isExpanded || newPostContent.trim() !== "" || selectedTextPostImage !== ""
-                            ? "min-h-[100px] px-4 py-3 resize-none"
-                            : "h-11 px-4 py-2.5 resize-none overflow-hidden cursor-pointer"
+                          ? "min-h-[100px] px-4 py-3 resize-none"
+                          : "h-11 px-4 py-2.5 resize-none overflow-hidden cursor-pointer"
                           }`}
                         disabled={isPosting}
                       />
@@ -858,15 +858,15 @@ export function CommunityFeedPage() {
                                     {new Date(comment.commentDate).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
                                   </span>
                                   {(comment.userID === userProfile?.userID || post.userID === userProfile?.userID) && (
-  <button
-    onClick={() => handleDeleteComment(post.postID, comment.commentID)}
-    title="Xóa bình luận"
-    aria-label="Xóa bình luận"
-    className="text-muted-foreground/60 hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-all mt-1"
-  >
-    <Trash2 className="w-3.5 h-3.5" />
-  </button>
-)}
+                                    <button
+                                      onClick={() => handleDeleteComment(post.postID, comment.commentID)}
+                                      title="Xóa bình luận"
+                                      aria-label="Xóa bình luận"
+                                      className="text-muted-foreground/60 hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-all mt-1"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -913,7 +913,7 @@ export function CommunityFeedPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6 sticky top-20 self-start h-fit">
+          <div className="lg:col-span-1 space-y-6 sticky top-20 self-start max-h-[calc(100vh-100px)] overflow-y-auto pr-1">
             {/* Trending Destinations */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -946,7 +946,7 @@ export function CommunityFeedPage() {
                 <Users className="w-5 h-5 text-primary" />
                 Gợi ý bạn đồng hành
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-4 ">
                 {buddies.length > 0 ? buddies.map((buddy) => (
                   <div key={buddy.userID} className="flex items-center gap-3">
                     <Link to={`/profile/${buddy.userID}`}>
