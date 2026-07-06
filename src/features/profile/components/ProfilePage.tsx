@@ -25,6 +25,7 @@ import type { ItineraryDto } from "@/types/itineraries";
 import type { DestinationDto } from "@/types/destinations";
 import type { TourBooking } from "@/types/tours";
 import { getPendingRequests, respondToBuddyRequest } from "@/api/buddiesApi";
+import { tourGuideApi } from "@/api/tourGuideApi";
 import type { BuddyDto } from "@/types/buddies";
 import defaultAvatar from "@/assets/default-avatar.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +60,7 @@ export function ProfilePage() {
   const [itineraries, setItineraries] = useState<ItineraryDto[]>([]);
   const [trendingDestinations, setTrendingDestinations] = useState<DestinationDto[]>([]);
   const [tourBookings, setTourBookings] = useState<TourBooking[]>([]);
+  const [guideRequests, setGuideRequests] = useState<any[]>([]);
   const [editForm, setEditForm] = useState<UpdateProfileRequest>({});
 
   const [pendingRequestsList, setPendingRequestsList] = useState<BuddyDto[]>([]);
@@ -72,12 +74,13 @@ export function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profile, dashboard, myItineraries, topDests, myBookings] = await Promise.all([
+        const [profile, dashboard, myItineraries, topDests, myBookings, myGuideRequests] = await Promise.all([
           isMyProfile ? getMyProfile() : getPublicProfile(Number(userId)) as any,
           isMyProfile ? getDashboardStats() : Promise.resolve(null),
           isMyProfile ? getMyItineraries().catch(() => []) : Promise.resolve([]),
           getTrendingDestinations(4).catch(() => []),
-          isMyProfile ? getUserTourBookings().catch(() => []) : Promise.resolve([])
+          isMyProfile ? getUserTourBookings().catch(() => []) : Promise.resolve([]),
+          isMyProfile ? tourGuideApi.getMyGuideRequests().catch(() => []) : Promise.resolve([])
         ]);
         
         setProfileData(profile);
@@ -85,6 +88,7 @@ export function ProfilePage() {
         setItineraries(myItineraries);
         setTrendingDestinations(topDests);
         setTourBookings(myBookings);
+        setGuideRequests(myGuideRequests);
         
         setEditForm({
           fullName: profile.fullName || "",
@@ -145,6 +149,18 @@ export function ProfilePage() {
       toast.error("Lỗi khi xử lý yêu cầu.");
     } finally {
       setIsProcessingRequest(false);
+    }
+  };
+
+  const handleAcceptGuide = async (applicationId: number) => {
+    try {
+      await tourGuideApi.acceptGuideApplication(applicationId);
+      toast.success("Đã chấp nhận Hướng dẫn viên!");
+      // Refresh list
+      const updated = await tourGuideApi.getMyGuideRequests();
+      setGuideRequests(updated);
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi chấp nhận HDV.");
     }
   };
 
@@ -575,6 +591,56 @@ export function ProfilePage() {
                       </Link>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Guide Requests */}
+            {isMyProfile && guideRequests.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h3 className="font-bold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Yêu cầu Hướng dẫn viên của bạn
+                </h3>
+                <div className="space-y-4">
+                  {guideRequests.map((req) => (
+                    <div key={req.post.postID} className="bg-muted/30 rounded-xl border border-border p-4">
+                      <div className="font-semibold mb-2">{req.post.title}</div>
+                      
+                      {req.applications && req.applications.length > 0 ? (
+                        <div className="mt-4 space-y-3">
+                          <h4 className="text-sm font-semibold text-muted-foreground">HDV Ứng tuyển ({req.applications.length})</h4>
+                          {req.applications.map((app: any) => (
+                            <div key={app.applicationID} className={`flex items-center justify-between p-3 rounded-lg border ${app.status === 'Accepted' ? 'bg-green-50 border-green-200' : 'bg-white border-border'}`}>
+                              <div className="flex items-center gap-3">
+                                <img src={app.guideAvatarURL || getAvatar(app.guideID)} alt={app.guideUsername} className="w-10 h-10 rounded-full object-cover" />
+                                <div>
+                                  <div className="font-semibold">{app.guideUsername}</div>
+                                  {app.message && <div className="text-xs text-muted-foreground line-clamp-1">"{app.message}"</div>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                {app.status === 'Accepted' ? (
+                                  <span className="text-sm font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">Đã chọn</span>
+                                ) : app.status === 'Declined' ? (
+                                  <span className="text-sm text-red-500 bg-red-50 px-3 py-1 rounded-full">Đã từ chối</span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAcceptGuide(app.applicationID)}
+                                    className="px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-all"
+                                  >
+                                    Chọn HDV này
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground mt-2 italic">Chưa có HDV nào ứng tuyển.</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

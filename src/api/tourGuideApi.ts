@@ -70,4 +70,29 @@ export const tourGuideApi = {
     const response = await api.get('/uploads/library');
     return response.data;
   },
+
+  getAvailableGuideRequests: async () => {
+    const response = await api.get('/tourguide/guide-requests/available');
+    return response.data;
+  },
+
+  applyForGuideRequest: async (data: { postID: number; message?: string; proposedPriceVND?: number }) => {
+    const response = await api.post('/tourguide/guide-requests/apply', data);
+    return response.data;
+  },
+
+  getMyApplications: async () => {
+    const response = await api.get('/tourguide/guide-requests/my-applications');
+    return response.data;
+  },
+
+  getMyGuideRequests: async () => {
+    const response = await api.get('/tourguide/guide-requests/my-posts');
+    return response.data;
+  },
+
+  acceptGuideApplication: async (applicationId: number) => {
+    const response = await api.post(`/tourguide/guide-requests/accept-application/${applicationId}`);
+    return response.data;
+  }
 };

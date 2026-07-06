@@ -533,13 +533,22 @@ export function ItineraryPlannerPage() {
                       Tìm tour phù hợp
                     </Link>
 
-                    <Link
-                      to="/community"
+                    <button
+                      onClick={() => {
+                        const summaryText = `Mình đang tìm Hướng dẫn viên cho lịch trình đi ${destination.name} trong ${itineraryData.totalDays} ngày!\n\n` +
+                          `📍 Điểm đến: ${destination.name}\n` +
+                          `⏱️ Thời gian: ${itineraryData.totalDays} ngày\n` +
+                          `💰 Ngân sách dự kiến: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalCost)}\n\n` +
+                          `📋 Chi tiết lịch trình:\n` +
+                          itineraryData.days.map(d => `- Ngày ${d.dayNumber}: ${d.activities.length} hoạt động`).join('\n');
+
+                        navigate('/community', { state: { initialPostContent: summaryText, postType: 'GuideRequest' } });
+                      }}
                       className="w-full flex items-center justify-center gap-2 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 py-2.5 rounded-xl font-semibold hover:bg-green-100 dark:hover:bg-green-500/20 transition-all border border-green-100 dark:border-green-500/20"
                     >
                       <Users className="w-4 h-4" />
-                      Tìm bạn đồng hành
-                    </Link>
+                      Tìm Hướng dẫn viên
+                    </button>
                   </div>
                 </div>
               </div>

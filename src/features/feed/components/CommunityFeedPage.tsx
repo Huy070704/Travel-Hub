@@ -111,8 +111,10 @@ export function CommunityFeedPage() {
   const [userProfile, setUserProfile] = useState<UserProfileDto | null>(null);
   const location = useLocation();
   const initialPostContent = (location.state as any)?.initialPostContent || "";
+  const initialPostType = (location.state as any)?.postType || "Text";
 
   const [newPostContent, setNewPostContent] = useState(initialPostContent);
+  const [postType, setPostType] = useState(initialPostType);
   const [selectedTextPostImage, setSelectedTextPostImage] = useState<string>("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -279,12 +281,13 @@ export function CommunityFeedPage() {
           : newPostContent;
 
         await createPost({
-          postType: "Text",
-          title: "Cập nhật cộng đồng",
+          postType: postType,
+          title: postType === "GuideRequest" ? "Tìm Hướng dẫn viên" : "Cập nhật cộng đồng",
           content: payloadContent
         });
         setNewPostContent("");
         setSelectedTextPostImage("");
+        setPostType("Text");
         setIsExpanded(false);
         created = true;
         toast.success("Đăng bài viết thành công!");
@@ -754,6 +757,54 @@ export function CommunityFeedPage() {
                           return <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>;
                         }
                       })()}
+                    </div>
+                  ) : post.postType === "GuideRequest" ? (
+                    <div className="mb-4">
+                      <h3 className="font-bold mb-3 text-lg text-primary">{post.title}</h3>
+                      <div className="bg-green-50/50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-800 p-4 mb-3">
+                        <p className="text-foreground whitespace-pre-wrap">{parsePostContent(post).text}</p>
+                      </div>
+                      {post.userID !== userProfile?.userID && (
+                        <div className="flex gap-2">
+                          {user?.role === "TourGuide" ? (
+                            <button
+                              onClick={async () => {
+                                if (isJoining[post.postID]) return;
+                                setIsJoining(prev => ({ ...prev, [post.postID]: true }));
+                                try {
+                                  const res = await fetch('/api/TourGuide/guide-requests/apply', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                    },
+                                    body: JSON.stringify({ postID: post.postID })
+                                  });
+                                  if (res.ok) {
+                                    toast.success("Đã ứng tuyển thành công! Vui lòng chờ khách hàng liên hệ.");
+                                  } else {
+                                    const data = await res.json();
+                                    toast.error(data.message || "Bạn đã ứng tuyển hoặc có lỗi xảy ra.");
+                                  }
+                                } catch (e) {
+                                  toast.error("Có lỗi xảy ra khi ứng tuyển.");
+                                } finally {
+                                  setIsJoining(prev => ({ ...prev, [post.postID]: false }));
+                                }
+                              }}
+                              disabled={isJoining[post.postID]}
+                              className="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                              {isJoining[post.postID] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />} 
+                              Ứng tuyển làm HDV
+                            </button>
+                          ) : (
+                            <div className="flex-1 py-2 bg-muted text-muted-foreground rounded-lg text-sm font-semibold text-center border border-border">
+                              Chỉ Hướng dẫn viên mới có thể ứng tuyển
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>
