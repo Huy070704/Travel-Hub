@@ -419,7 +419,7 @@ export function AIRecommendationPage() {
                               type="button"
                               onClick={() => setFormData({ ...formData, travelGroup: id })}
                               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${formData.travelGroup === id
-                                ? "bg-secondary/10 text-secondary ring-1 ring-secondary/50"
+                                ? "bg-secondary/10 text-secondary ring-1 ring-secondary/50 dark:bg-blue-500/20 dark:text-blue-300 dark:ring-blue-400/60"
                                 : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                                 }`}
                             >
