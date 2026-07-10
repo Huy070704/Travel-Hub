@@ -782,6 +782,7 @@ export function CommunityFeedPage() {
                                   });
                                   if (res.ok) {
                                     toast.success("Đã ứng tuyển thành công! Vui lòng chờ khách hàng liên hệ.");
+                                    navigate('/guide-portal?tab=bookings');
                                   } else {
                                     const data = await res.json();
                                     toast.error(data.message || "Bạn đã ứng tuyển hoặc có lỗi xảy ra.");

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import {
   LayoutDashboard,
   Map,
@@ -16,7 +17,20 @@ import { ReviewsRatingsTab } from "./tabs/ReviewsRatingsTab";
 type TabType = "dashboard" | "experiences" | "schedules" | "bookings" | "reviews";
 
 export function GuidePortalPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab") as TabType;
+  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || "dashboard");
+
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   const tabs = [
     { id: "dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
@@ -46,7 +60,7 @@ export function GuidePortalPage() {
               {tabs.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as TabType)}
+                  onClick={() => handleTabChange(item.id as TabType)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     activeTab === item.id
                       ? "bg-primary text-white shadow-md shadow-primary/20"
