@@ -611,7 +611,7 @@ export function ProfilePage() {
                         <div className="mt-4 space-y-3">
                           <h4 className="text-sm font-semibold text-muted-foreground">HDV Ứng tuyển ({req.applications.length})</h4>
                           {req.applications.map((app: any) => (
-                            <div key={app.applicationID} className={`flex items-center justify-between p-3 rounded-lg border ${app.status === 'Accepted' ? 'bg-green-50 border-green-200' : 'bg-white border-border'}`}>
+                            <div key={app.applicationID} className={`flex items-center justify-between p-3 rounded-lg border ${app.status === 'Accepted' ? 'bg-green-50 border-green-200 dark:bg-green-500/10 dark:border-green-500/30' : 'bg-white dark:bg-transparent border-border'}`}>
                               <div className="flex items-center gap-3">
                                 <img src={app.guideAvatarURL || getAvatar(app.guideID)} alt={app.guideUsername} className="w-10 h-10 rounded-full object-cover" />
                                 <div>
@@ -621,9 +621,9 @@ export function ProfilePage() {
                               </div>
                               <div className="flex gap-2">
                                 {app.status === 'Accepted' ? (
-                                  <span className="text-sm font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">Đã chọn</span>
+                                  <span className="text-sm font-bold text-green-600 bg-green-100 dark:bg-green-500/20 dark:text-green-400 px-3 py-1 rounded-full">Đã chọn</span>
                                 ) : app.status === 'Declined' ? (
-                                  <span className="text-sm text-red-500 bg-red-50 px-3 py-1 rounded-full">Đã từ chối</span>
+                                  <span className="text-sm text-red-500 bg-red-50 dark:bg-red-500/20 dark:text-red-400 px-3 py-1 rounded-full">Đã từ chối</span>
                                 ) : (
                                   <button
                                     onClick={() => handleAcceptGuide(app.applicationID)}
